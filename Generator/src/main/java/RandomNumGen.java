@@ -15,6 +15,12 @@ public class RandomNumGen
         return 1 + rand.nextInt(range);
     }
 
+    public int randomIntInterval(int min, int max)
+    {
+        Random rand = new Random();
+        return min + rand.nextInt(max - min + 1);
+    }
+
     public double randomDouble(int range)
     {
         Random rand = new Random();

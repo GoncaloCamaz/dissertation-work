@@ -13,7 +13,7 @@ public class Helper
         {
             if(i - 3 < length)
             {
-                str[i] = String.valueOf(config.getServiceNodes().get(i-3));
+                str[i] = String.valueOf(config.getServiceNodes().get(i-3).getWithservice());
             }
         }
 

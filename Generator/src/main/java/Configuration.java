@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Configuration
@@ -60,20 +61,32 @@ public class Configuration
         return serviceNodes;
     }
 
-    public void insertRandomServices(int maxNodes, int random ,List<Integer> nodesWServices)
+    public void insertRandomServices(int maxNodes, int random)
     {
         int num = 0;
         while(num < maxNodes)
         {
-            Node n = new Node(num+1, 0);
+            Node n = new Node(num, 0);
             this.serviceNodes.add(n);
             num++;
         }
-
-        for(Integer i : nodesWServices)
+        num = 0;
+        while(num < random)
         {
-            Node node = new Node(i, 1); //TODO IF NODES WITH SERVICES WRONG IN 1, DECREASE 1
-            this.serviceNodes.set(i,node);
+            this.serviceNodes.get(num).setWithservice(1);
+            num++;
+        }
+        Collections.shuffle(this.serviceNodes);
+    }
+
+    public void insertAllOne(int maxNodes)
+    {
+        int num = 0;
+        while(num < maxNodes)
+        {
+            Node n = new Node(num+1, 1);
+            this.serviceNodes.add(n);
+            num++;
         }
     }
 }

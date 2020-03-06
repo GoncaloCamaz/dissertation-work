@@ -1,4 +1,3 @@
-import java.awt.image.AreaAveragingScaleFilter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -17,7 +16,7 @@ public class ConfigGen
     private boolean allNodesWServices;
     private int maxNodesWServices;
     private int maxNodes;
-    private int requestsnumber;
+    private int requestnumber;
 
     public ConfigGen()
     {
@@ -27,7 +26,7 @@ public class ConfigGen
         this.allNodesWServices = false;
         this.maxNodesWServices = 0;
         this.maxNodes = 0;
-        this.requestsnumber = 0;
+        this.requestnumber = 0;
         this.configs = new ArrayList<>();
     }
 
@@ -52,7 +51,7 @@ public class ConfigGen
             this.maxNodesWServices = this.maxNodes;
         }
         System.out.println("Please insert the number of requests to generate:\n");
-        this.requestsnumber = scan.nextInt();
+        this.requestnumber = scan.nextInt();
         generateSolutions();
     }
 
@@ -80,10 +79,21 @@ public class ConfigGen
     {
         List<String[]> data = new ArrayList<>();
         List<Integer> nodesWServices = new ArrayList<>();
-        nodesWServices = random.genNodesWServices(this.maxNodes,this.maxNodesWServices);
+        if(this.allNodesWServices)
+        {
+            for(int i = 0; i < maxNodes; i++)
+            {
+                nodesWServices.add(i+1);
+            }
+        }
+        else
+        {
+            nodesWServices = random.genNodesWServices(this.maxNodes,this.maxNodesWServices);
+        }
         data.add(genHeaders(nodesWServices, this.maxNodesWServices));
+
         int rows = 0;
-        while(rows < requestsnumber)
+        while(rows < requestnumber)
         {
             String[] row = genRow(rows);
             data.add(row);
@@ -98,7 +108,14 @@ public class ConfigGen
         c.setId(row + 1);
         c.setOriginNodeID(random.randomInt(maxNodes));
         c.setBandwidthConsumption(random.randomInt(1000));
-
+        if(allNodesWServices)
+        {
+            c.insertAllOne(maxNodes);
+        }
+        else
+        {
+            c.insertRandomServices(maxNodes,1+random.randomInt(maxNodesWServices));
+        }
         return helpers.convertListToString(c, this.headers.size());
     }
 
