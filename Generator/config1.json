@@ -1,0 +1,17 @@
+{
+    "filepath": "./pedidos.csv",
+    "allNodesNFV": false,
+    "nodesWServices": 5,
+    "maxNodes": 15,
+    "solutionsToGen": 100,
+    "headers": [
+        "id",
+        "nodeID",
+  		"bandwidth",
+        "3",
+        "6",
+        "7",
+        "8",
+        "9"
+    ]
+}

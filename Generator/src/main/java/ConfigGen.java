@@ -1,14 +1,15 @@
+import com.opencsv.CSVWriter;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import com.opencsv.*;
 
 public class ConfigGen
 {
-    private static String filepath = "./pedidos.csv";
+    private String filepath;
     private List<String> headers;
     private ArrayList<Configuration> configs;
     private RandomNumGen random;
@@ -20,14 +21,15 @@ public class ConfigGen
 
     public ConfigGen()
     {
-        this.headers = new ArrayList<>();
+        this.filepath = "./pedidos.csv";
+        this.headers = new ArrayList<String>();
         this.random = new RandomNumGen();
         this.helpers = new Helper();
         this.allNodesWServices = false;
         this.maxNodesWServices = 0;
         this.maxNodes = 0;
         this.requestnumber = 0;
-        this.configs = new ArrayList<>();
+        this.configs = new ArrayList<Configuration>();
     }
 
     public void startConfiguration()
@@ -53,6 +55,18 @@ public class ConfigGen
         System.out.println("Please insert the number of requests to generate:\n");
         this.requestnumber = scan.nextInt();
         generateSolutions();
+        System.out.println("Do you wish to save this configurations for further work? [Y/N]\n");
+        input = scan.next("[a-zA-Z]");
+        if(input.equals("y") || input.equals("Y"))
+        {
+            saveConfigurations();
+        }
+    }
+
+    private void saveConfigurations()
+    {
+        JSONSaver saver = new JSONSaver();
+        saver.saveConfigurations(this);
     }
 
     public void generateSolutions() {
@@ -65,7 +79,7 @@ public class ConfigGen
                     CSVWriter.DEFAULT_ESCAPE_CHARACTER,
                     CSVWriter.DEFAULT_LINE_END);
 
-            List<String[]> data = new ArrayList<String[]>();
+            List<String[]> data = new ArrayList<>();
             data = genData();
             writer.writeAll(data);
             writer.close();
@@ -90,7 +104,14 @@ public class ConfigGen
         {
             nodesWServices = random.genNodesWServices(this.maxNodes,this.maxNodesWServices);
         }
-        data.add(genHeaders(nodesWServices, this.maxNodesWServices));
+
+        if(this.headers.size() == 0){
+            data.add(genHeaders(nodesWServices, this.maxNodesWServices, false));
+        }
+        else
+        {
+            data.add(genHeaders(nodesWServices, this.maxNodesWServices, true));
+        }
 
         int rows = 0;
         while(rows < requestnumber)
@@ -106,30 +127,122 @@ public class ConfigGen
     {
         Configuration c = new Configuration();
         c.setId(row + 1);
-        c.setOriginNodeID(random.randomInt(maxNodes));
-        c.setBandwidthConsumption(random.randomInt(1000));
+        c.setOriginNodeID(random.getRandomFromRage(1,maxNodes));
+        c.setBandwidthConsumption(random.getRandomFromRage(1,1000));
         if(allNodesWServices)
         {
             c.insertAllOne(maxNodes);
         }
         else
         {
-            c.insertRandomServices(maxNodes,1+random.randomInt(maxNodesWServices));
+            c.insertRandomServices(maxNodesWServices,random.getRandomFromRage(1,maxNodesWServices));
         }
         return helpers.convertListToString(c, this.headers.size());
     }
 
-    private String[] genHeaders(List<Integer> nodesWithServices, int maxNodesWServices)
+    private String[] genHeaders(List<Integer> nodesWithServices, int maxNodesWServices, boolean configurationAvailable)
     {
-        this.headers.add("id");
-        this.headers.add("nodeID");
-        this.headers.add("bandwidth");
-        int i = 0;
-        while(i < maxNodesWServices)
+        if(!configurationAvailable)
         {
-            this.headers.add(String.valueOf(nodesWithServices.get(i)));
-            i++;
+            List<String> headers = new ArrayList<>();
+            headers.add("id");
+            headers.add("nodeID");
+            headers.add("bandwidth");
+            int i = 0;
+            while(i < maxNodesWServices)
+            {
+                headers.add(String.valueOf(nodesWithServices.get(i)));
+                i++;
+            }
+            this.setHeaders(headers);
+            return helpers.genHeaders(headers);
         }
-        return helpers.genHeaders(this.headers);
+        else
+        {
+            return helpers.genHeaders(headers);
+        }
+    }
+
+    public void genRequests(ConfigGen c)
+    {
+        this.headers = c.getHeaders();
+        this.filepath = c.getFilepath();
+        this.maxNodes = c.getMaxNodes();
+        this.maxNodesWServices = c.getMaxNodesWServices();
+        this.allNodesWServices = c.isAllNodesWServices();
+        this.requestnumber = c.getRequestnumber();
+        generateSolutions();
+    }
+
+    public String getFilepath() {
+        return filepath;
+    }
+
+    public void setFilepath(String filepath) {
+        this.filepath = filepath;
+    }
+
+    public List<String> getHeaders() {
+        return headers;
+    }
+
+    public void setHeaders(List<String> headers) {
+        this.headers = headers;
+    }
+
+    public ArrayList<Configuration> getConfigs() {
+        return configs;
+    }
+
+    public void setConfigs(ArrayList<Configuration> configs) {
+        this.configs = configs;
+    }
+
+    public RandomNumGen getRandom() {
+        return random;
+    }
+
+    public void setRandom(RandomNumGen random) {
+        this.random = random;
+    }
+
+    public Helper getHelpers() {
+        return helpers;
+    }
+
+    public void setHelpers(Helper helpers) {
+        this.helpers = helpers;
+    }
+
+    public boolean isAllNodesWServices() {
+        return allNodesWServices;
+    }
+
+    public void setAllNodesWServices(boolean allNodesWServices) {
+        this.allNodesWServices = allNodesWServices;
+    }
+
+    public int getMaxNodesWServices() {
+        return maxNodesWServices;
+    }
+
+    public void setMaxNodesWServices(int maxNodesWServices) {
+        this.maxNodesWServices = maxNodesWServices;
+    }
+
+    public int getMaxNodes() {
+        return maxNodes;
+    }
+
+    public void setMaxNodes(int maxNodes) {
+        this.maxNodes = maxNodes;
+    }
+
+    public int getRequestnumber() {
+        return requestnumber;
+    }
+
+    public void setRequestnumber(int requestnumber) {
+        this.requestnumber = requestnumber;
     }
 }

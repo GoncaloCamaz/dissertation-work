@@ -14,15 +14,14 @@ public class Configuration
         this.id = id;
         this.originNodeID = 0;
         this.bandwidthConsumption = 0;
-        this.serviceNodes = new ArrayList();
+        this.serviceNodes = new ArrayList<>();
     }
 
-    public Configuration(int id, int originNodeID, int bandwidthConsumption, List<Integer> nodesWServices, int maxNodes) {
+    public Configuration(int id, int originNodeID, int bandwidthConsumption) {
         this.id = id;
         this.originNodeID = originNodeID;
         this.bandwidthConsumption = bandwidthConsumption;
         this.serviceNodes = new ArrayList<>();
-        int num = 0;
     }
 
     public Configuration()
@@ -30,7 +29,7 @@ public class Configuration
         this.id = 0;
         this.originNodeID = 0;
         this.bandwidthConsumption = 0;
-        this.serviceNodes = new ArrayList();
+        this.serviceNodes = new ArrayList<>();
     }
 
     public int getId() {
@@ -64,16 +63,19 @@ public class Configuration
     public void insertRandomServices(int maxNodes, int random)
     {
         int num = 0;
+        int service;
         while(num < maxNodes)
         {
-            Node n = new Node(num, 0);
+            if(num < random)
+            {
+                service = 1;
+            }
+            else
+            {
+                service = 0;
+            }
+            Node n = new Node(num, service);
             this.serviceNodes.add(n);
-            num++;
-        }
-        num = 0;
-        while(num < random)
-        {
-            this.serviceNodes.get(num).setWithservice(1);
             num++;
         }
         Collections.shuffle(this.serviceNodes);
@@ -87,6 +89,22 @@ public class Configuration
             Node n = new Node(num+1, 1);
             this.serviceNodes.add(n);
             num++;
+        }
+    }
+
+    public void validateNodes(int random)
+    {
+        boolean validation = false;
+        for(Node n : this.serviceNodes)
+        {
+            if(n.getWithservice() == 1)
+            {
+                validation = true;
+            }
+        }
+        if(validation == false)
+        {
+            this.serviceNodes.get(random).setWithservice(1);
         }
     }
 }

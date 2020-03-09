@@ -9,11 +9,13 @@ public class Helper
         str[1] = String.valueOf(config.getOriginNodeID());
         str[2] = String.valueOf(config.getBandwidthConsumption());
         int length = config.getServiceNodes().size();
+        int val = 0;
         for(int i = 3; i < headersLen; i++)
         {
             if(i - 3 < length)
             {
-                str[i] = String.valueOf(config.getServiceNodes().get(i-3).getWithservice());
+                val = config.getServiceNodes().get(i-3).getWithservice();
+                str[i] = String.valueOf(val);
             }
         }
 

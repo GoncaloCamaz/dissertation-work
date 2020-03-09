@@ -30,4 +30,12 @@ public class Node
     public void setWithservice(int withservice) {
         this.withservice = withservice;
     }
+
+    @Override
+    public String toString() {
+        return "Node{" +
+                "nodeID=" + nodeID +
+                ", withservice=" + withservice +
+                '}';
+    }
 }
