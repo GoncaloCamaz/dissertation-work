@@ -6,6 +6,7 @@ public class Configuration
 {
     private int id;
     private int originNodeID;
+    private int destinationNodeID;
     private int bandwidthConsumption;
     private List<Node> serviceNodes;
 
@@ -13,13 +14,15 @@ public class Configuration
     {
         this.id = id;
         this.originNodeID = 0;
+        this.destinationNodeID = 0;
         this.bandwidthConsumption = 0;
         this.serviceNodes = new ArrayList<>();
     }
 
-    public Configuration(int id, int originNodeID, int bandwidthConsumption) {
+    public Configuration(int id, int originNodeID, int destinationNodeID ,int bandwidthConsumption) {
         this.id = id;
         this.originNodeID = originNodeID;
+        this.destinationNodeID = destinationNodeID;
         this.bandwidthConsumption = bandwidthConsumption;
         this.serviceNodes = new ArrayList<>();
     }
@@ -28,8 +31,21 @@ public class Configuration
     {
         this.id = 0;
         this.originNodeID = 0;
+        this.destinationNodeID = 0;
         this.bandwidthConsumption = 0;
         this.serviceNodes = new ArrayList<>();
+    }
+
+    public int getDestinationNodeID() {
+        return destinationNodeID;
+    }
+
+    public void setDestinationNodeID(int destinationNodeID) {
+        this.destinationNodeID = destinationNodeID;
+    }
+
+    public void setServiceNodes(List<Node> serviceNodes) {
+        this.serviceNodes = serviceNodes;
     }
 
     public int getId() {
@@ -89,22 +105,6 @@ public class Configuration
             Node n = new Node(num+1, 1);
             this.serviceNodes.add(n);
             num++;
-        }
-    }
-
-    public void validateNodes(int random)
-    {
-        boolean validation = false;
-        for(Node n : this.serviceNodes)
-        {
-            if(n.getWithservice() == 1)
-            {
-                validation = true;
-            }
-        }
-        if(validation == false)
-        {
-            this.serviceNodes.get(random).setWithservice(1);
         }
     }
 }

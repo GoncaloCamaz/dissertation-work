@@ -3,15 +3,16 @@
     "allNodesNFV": false,
     "nodesWServices": 5,
     "maxNodes": 15,
-    "solutionsToGen": 100,
+    "solutionsToGen": 1000,
     "headers": [
         "id",
-        "nodeID",
+        "originNodeID",
+        "destinationNodeID",
   		"bandwidth",
+        "1",
+        "2",
         "3",
-        "6",
-        "7",
-        "8",
-        "9"
+        "4",
+        "5"
     ]
 }

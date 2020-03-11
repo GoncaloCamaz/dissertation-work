@@ -45,4 +45,17 @@ public class RandomNumGen
         Collections.shuffle(numbers);
         return numbers.get(0);
     }
+
+    public int getRandomFromRageExcept(int i, int maxNodes, int originNode)
+    {
+        Random random = new Random();
+        int alreadyPickedNumber=originNode;
+
+        int number= getRandomFromRage(i, maxNodes);
+        while(number==alreadyPickedNumber){
+            number= getRandomFromRage(i, maxNodes);
+        }
+
+        return number;
+    }
 }

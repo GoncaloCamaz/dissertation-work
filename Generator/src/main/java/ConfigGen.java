@@ -127,7 +127,9 @@ public class ConfigGen
     {
         Configuration c = new Configuration();
         c.setId(row + 1);
-        c.setOriginNodeID(random.getRandomFromRage(1,maxNodes));
+        int originNode = random.getRandomFromRage(1,maxNodes);
+        c.setOriginNodeID(originNode);
+        c.setDestinationNodeID(random.getRandomFromRageExcept(1,maxNodes, originNode));
         c.setBandwidthConsumption(random.getRandomFromRage(1,1000));
         if(allNodesWServices)
         {
@@ -146,7 +148,8 @@ public class ConfigGen
         {
             List<String> headers = new ArrayList<>();
             headers.add("id");
-            headers.add("nodeID");
+            headers.add("originNodeID");
+            headers.add("destinationNodeID");
             headers.add("bandwidth");
             int i = 0;
             while(i < maxNodesWServices)

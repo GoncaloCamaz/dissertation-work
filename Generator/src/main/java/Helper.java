@@ -7,14 +7,15 @@ public class Helper
         String[] str = new String[headersLen];
         str[0] = String.valueOf(config.getId());
         str[1] = String.valueOf(config.getOriginNodeID());
-        str[2] = String.valueOf(config.getBandwidthConsumption());
+        str[2] = String.valueOf(config.getDestinationNodeID());
+        str[3] = String.valueOf(config.getBandwidthConsumption());
         int length = config.getServiceNodes().size();
         int val = 0;
-        for(int i = 3; i < headersLen; i++)
+        for(int i = 4; i < headersLen; i++)
         {
-            if(i - 3 < length)
+            if(i - 4 < length)
             {
-                val = config.getServiceNodes().get(i-3).getWithservice();
+                val = config.getServiceNodes().get(i-4).getWithservice();
                 str[i] = String.valueOf(val);
             }
         }
