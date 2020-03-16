@@ -219,9 +219,10 @@ public class MCFPhiNodeUtilizationSolver {
         }
 
         // equation 2
-        for(Arc arc : arcs)
+        //
+        for(NFRequest req : requests.values())
         {
-            for(NFRequest req : requests.values())
+            for(Arc arc : arcs)
             {
                 cplex.prod(b[req.getId()][arc.getFromNode()][arc.getToNode()], req.getBandwidth());
             }
@@ -230,7 +231,7 @@ public class MCFPhiNodeUtilizationSolver {
         // equation 4
         for(NFNode node : nodes.values())
         {
-            
+
         }
 
         // OBJECTIVE FUNCTION: alpha* phi + (1-alpha) * gamma
@@ -263,12 +264,14 @@ public class MCFPhiNodeUtilizationSolver {
                 IloLinearNumExpr ev = cplex.linearNumExpr();
                 // xi
                 for (Arc arc : toV) {
+                    // request x_i
                     List<IloNumVar> x = xa.get(arc);
                     for(IloNumVar n : x)
                         ev.addTerm(-1, n);
                 }
                 // - xi
                 for (Arc arc : fromV) {
+                    // request x_i
                     List<IloNumVar> x = xa.get(arc);
                     for(IloNumVar n : x)
                         ev.addTerm(1, n);
@@ -302,7 +305,13 @@ public class MCFPhiNodeUtilizationSolver {
 
         // TODO EQUATION 12
         // utilization costs sum at each node n
+        for(NFRequest request : requests.values())
+        {
+            for(Arc arc : arcs)
+            {
 
+            }
+        }
 
         // Convex piecewise linear function Phi
         // As the problem is a minimization problem, the penalizing function can
@@ -348,11 +357,10 @@ public class MCFPhiNodeUtilizationSolver {
 
         if (this.saveLoads) {
             double[][] u = new double[topology.getDimension()][topology.getDimension()];
-            for (int i = 0; i < arcsNumber; i++) {
-                double utilization = cplex.getValue(l[i]);
-                int src = arcs.getArc(i).getFromNode();
-                int dst = arcs.getArc(i).getToNode();
-                u[src][dst] = utilization;
+            for (Arc arc : arcs) {
+                SourceDestinationPair pair = new SourceDestinationPair(arc.getFromNode(), arc.getToNode());
+                double utilization = cplex.getValue(l_a.get(pair));
+                u[arc.getFromNode()][arc.getToNode()] = utilization;
             }
             this.loads = new NetworkLoads(u,topology);
             this.loads.printLoads();
