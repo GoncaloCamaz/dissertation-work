@@ -128,7 +128,8 @@ public class MCFPhiNodeUtilizationSolver {
         for (int i = 0; i < nodesNumber; i++)
             for (int j = 0; j < nodesNumber; j++)
                 if (capacity[i][j] > 0) {
-                    Arc a = new Arc(arcID, i, j, capacity[i][j]);
+                    // node ID starts at 1
+                    Arc a = new Arc(arcID, i+1, j+1, capacity[i][j]);
                     arcID++;
                     arcs.add(a);
                     List<IloNumVar> x = new ArrayList<>();
