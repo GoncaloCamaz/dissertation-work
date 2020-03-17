@@ -137,7 +137,7 @@ public class MCFPhiNodeUtilizationSolver {
                         int reqID = request.getId();
                         int fromNode = a.getFromNode();
                         int toNode = a.getToNode();
-                        xi.put(reqID, cplex.numVar(0, Double.MAX_VALUE, "x" + reqID + "_" + fromNode + "_" + toNode));
+                        xi.put(reqID, cplex.numVar(0, request.getBandwidth(), "x" + reqID + "_" + fromNode + "_" + toNode));
                     }
                     xia.put(a, xi);
                 }
@@ -228,36 +228,47 @@ public class MCFPhiNodeUtilizationSolver {
 
         // equation 4
         // a[i][n][s] i -> request id; n -> node; s -> service
-        for(NFNode node : nodes.values())
-        {
-            List<Arc> arcsToNode = arcs.getAllArcsTo(node.getId());
-            IloNumExpr xi = cplex.linearNumExpr();
-            for(NFRequest request : requests.values())
-            {
-                for(NFService service : request.getServiceList())
-                {
-                    for(Arc arc : arcsToNode)
-                    {
-                        xi = cplex.prod(a[request.getId()][node.getId()][service.getId()],xia.get(arc).get(request.getId()));
-                    }
-                }
-            }
-            cplex.addEq(xi,1);
-        }
-
-        // EQUATION 12
         for(Arc arc : arcs)
         {
-            IloNumExpr rn = cplex.linearNumExpr();
+            HashMap<Integer,IloNumVar> xi = new HashMap<>();
             for(NFService serv : services.values())
             {
                 for(NFRequest request : requests.values())
                 {
                     // custo de cK = pedido
-                    rn = cplex.prod(xia.get(arc).get(request.getId()), a[request.getId()][arc.getToNode()][serv.getId()],xia.get(arc).get(request.getId()));
+                    IloNumVar xiAux = cplex.numVar(0,Double.MAX_VALUE);
+                    int arcToNode = arc.getToNode();
+                    int requestID = request.getId();
+                    int sID = serv.getId();
+                    cplex.addEq(cplex.prod(cplex.prod(a[requestID][arcToNode][sID],xia.get(arc).get(requestID)), xia.get(arc).get(requestID)),xiAux);
+                    xi.put(requestID, xiAux);
                 }
             }
-            cplex.addEq(rn,1);
+            xia.put(arc,xi);
+        }
+
+
+        // EQUATION 12
+        for(NFNode node : nodes.values())
+        {
+            List<Arc> arcsToN = arcs.getAllArcsTo(node.getId());
+            IloNumVar rn = cplex.numVar(0,Double.MAX_VALUE);
+            for(Arc arc : arcsToN)
+            {
+                List<NFService> servicesAvailable = node.getAvailableServices();
+                for(NFService serv : servicesAvailable)
+                {
+                    for(NFRequest request : requests.values())
+                    {
+                        // custo de cK = pedido
+                        int arcid = arc.getIndex(); int arcToNode = arc.getToNode();
+                        int requestID = request.getId();
+                        int sID = serv.getId();
+                        cplex.addEq(cplex.prod(cplex.prod(a[requestID][arcToNode][sID],xia.get(arc).get(requestID)), xia.get(arc).get(requestID)),rn);
+                    }
+                }
+            }
+            r_n.put(node.getId(),rn);
         }
 
 
@@ -324,6 +335,17 @@ public class MCFPhiNodeUtilizationSolver {
                 la.addTerm(1,x);
             }
             cplex.addEq(li,la);
+        }
+
+        // EQUATION 2
+        for(Arc arc : arcs)
+        {
+            HashMap<Integer, IloNumVar> xi = xia.get(arc);
+            for(Integer i : xi.keySet())
+            {
+                IloNumVar xi_aux = xi.get(i);
+                cplex.prod(xi_aux,1,b[1][arc.getFromNode()][arc.getToNode()]);
+            }
         }
 
         // Convex piecewise linear function Phi
