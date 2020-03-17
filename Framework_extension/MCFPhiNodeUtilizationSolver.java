@@ -27,7 +27,6 @@ import pt.uminho.algoritmi.netopt.cplex.utils.SourceDestinationPair;
 import pt.uminho.algoritmi.netopt.nfv.*;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkLoads;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
-import pt.uminho.algoritmi.netopt.ospf.simulation.Simul;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -108,10 +107,8 @@ public class MCFPhiNodeUtilizationSolver {
         cplex.setName("Multi commodity flow Phi and Node optimization");
 
         // assuming that there are multiple requests with same origin and destination
-        HashMap<Arc, List<IloNumVar>> xa = new HashMap<>();
-
+        HashMap<Arc, HashMap<Integer,IloNumVar>> xia = new HashMap<>();
         Arcs arcs = new Arcs();
-
         // variable for objective function
         double alpha = 0.5;
 
@@ -132,35 +129,35 @@ public class MCFPhiNodeUtilizationSolver {
                     Arc a = new Arc(arcID, i+1, j+1, capacity[i][j]);
                     arcID++;
                     arcs.add(a);
-                    List<IloNumVar> x = new ArrayList<>();
+                    HashMap<Integer, IloNumVar> xi = new HashMap<>();
                     for (NFRequest request : requests.values())
                     {
                         // cplex x_ request id _ origin node from arc a _ destination node from arc a
                         // u -> id pedido;
-                        x.add(cplex.numVar(0, Double.MAX_VALUE, "x" + request.getId() + "_" + a.getFromNode() + "_" + a.getToNode()));
+                        int reqID = request.getId();
+                        int fromNode = a.getFromNode();
+                        int toNode = a.getToNode();
+                        xi.put(reqID, cplex.numVar(0, Double.MAX_VALUE, "x" + reqID + "_" + fromNode + "_" + toNode));
                     }
-                    xa.put(a, x);
+                    xia.put(a, xi);
                 }
 
         // the l(a) variables, load of arc a, being a = (u,v)
-        HashMap<SourceDestinationPair, IloNumVar> l_a = new HashMap<>();
+        HashMap<Arc, IloNumVar> l_a = new HashMap<>();
         for (Arc arc : arcs)
         {
             int source = arc.getFromNode();
             int dest = arc.getToNode();
-            SourceDestinationPair pair = new SourceDestinationPair(source,dest);
-            l_a.put(pair,cplex.numVar(0, Double.MAX_VALUE, "l_" + source + "_" + dest));
-
+            l_a.put(arc,cplex.numVar(0, Double.MAX_VALUE, "l_" + source + "_" + dest));
         }
 
         // the Phi(a) variables
-        HashMap<SourceDestinationPair, IloNumVar> phi_a = new HashMap<>();
+        HashMap<Arc, IloNumVar> phi_a = new HashMap<>();
         for (Arc arc : arcs)
         {
             int source = arc.getFromNode();
             int dest = arc.getToNode();
-            SourceDestinationPair pair = new SourceDestinationPair(source,dest);
-            phi_a.put(pair,cplex.numVar(0, Double.MAX_VALUE, "Phi_" + source + "_" + dest));
+            phi_a.put(arc,cplex.numVar(0, Double.MAX_VALUE, "Phi_" + source + "_" + dest));
 
         }
 
@@ -183,7 +180,7 @@ public class MCFPhiNodeUtilizationSolver {
         // variáveis alpha: a e beta: b
         // a[i][n][s] i -> request id; n -> node; s -> service
         // a either 1 or 0 if n is the node to execute the s service for the i request
-        IloNumVar a[][][] = new IloNumVar[requestNumber][nodesNumber][servicesNumber];
+        IloNumVar[][][] a = new IloNumVar[requestNumber][nodesNumber][servicesNumber];
         for(NFRequest req : requests.values())
         {
             int reqID = req.getId();
@@ -195,11 +192,11 @@ public class MCFPhiNodeUtilizationSolver {
                     int sID = s.getId();
                     if(nd.getAvailableServices().contains(s))
                     {
-                        a[reqID][nodeID][sID] = cplex.numVar(0,1, IloNumVarType.Int,"alpha_" + reqID + "_" + nodeID + "_" + sID);
+                        a[reqID][nodeID][sID] = cplex.intVar(0,1,"alpha_" + reqID + "_" + nodeID + "_" + sID);
                     }
                     else
                     {
-                        a[req.getId()][nd.getId()][s.getId()] = cplex.numVar(0,0,IloNumVarType.Int,"alpha_" + req.getId() + "_" + nd.getId() + "_" + s.getId());
+                        a[req.getId()][nd.getId()][s.getId()] = cplex.intVar(0,0,"alpha_" + req.getId() + "_" + nd.getId() + "_" + s.getId());
                     }
                 }
 
@@ -207,7 +204,7 @@ public class MCFPhiNodeUtilizationSolver {
         }
 
         // b[i][from][to] i -> request id; from -> arc node id; to -> arc node id
-        IloNumVar b[][][] = new IloNumVar[requestNumber][nodesNumber][nodesNumber];
+        IloNumVar[][][] b = new IloNumVar[requestNumber][nodesNumber][nodesNumber];
         for(NFRequest req : requests.values())
         {
             int id = req.getId();
@@ -215,7 +212,7 @@ public class MCFPhiNodeUtilizationSolver {
             {
                 int from = arc.getFromNode();
                 int to = arc.getToNode();
-                b[id][from][to] = cplex.numVar(0,1, IloNumVarType.Int,"beta_" + id + "_" + from + "_" + to);
+                b[id][from][to] = cplex.intVar(0,1,"beta_" + id + "_" + from + "_" + to);
             }
         }
 
@@ -230,10 +227,39 @@ public class MCFPhiNodeUtilizationSolver {
         }
 
         // equation 4
+        // a[i][n][s] i -> request id; n -> node; s -> service
         for(NFNode node : nodes.values())
         {
-
+            List<Arc> arcsToNode = arcs.getAllArcsTo(node.getId());
+            IloNumExpr xi = cplex.linearNumExpr();
+            for(NFRequest request : requests.values())
+            {
+                for(NFService service : request.getServiceList())
+                {
+                    for(Arc arc : arcsToNode)
+                    {
+                        xi = cplex.prod(a[request.getId()][node.getId()][service.getId()],xia.get(arc).get(request.getId()));
+                    }
+                }
+            }
+            cplex.addEq(xi,1);
         }
+
+        // EQUATION 12
+        for(Arc arc : arcs)
+        {
+            IloNumExpr rn = cplex.linearNumExpr();
+            for(NFService serv : services.values())
+            {
+                for(NFRequest request : requests.values())
+                {
+                    // custo de cK = pedido
+                    rn = cplex.prod(xia.get(arc).get(request.getId()), a[request.getId()][arc.getToNode()][serv.getId()],xia.get(arc).get(request.getId()));
+                }
+            }
+            cplex.addEq(rn,1);
+        }
+
 
         // OBJECTIVE FUNCTION: alpha* phi + (1-alpha) * gamma
         // minimize the sum of all Phi(a)
@@ -266,16 +292,14 @@ public class MCFPhiNodeUtilizationSolver {
                 // xi
                 for (Arc arc : toV) {
                     // request x_i
-                    List<IloNumVar> x = xa.get(arc);
-                    for(IloNumVar n : x)
-                        ev.addTerm(-1, n);
+                    IloNumVar x = xia.get(arc).get(req.getId());
+                    ev.addTerm(-1, x);
                 }
                 // - xi
                 for (Arc arc : fromV) {
                     // request x_i
-                    List<IloNumVar> x = xa.get(arc);
-                    for(IloNumVar n : x)
-                        ev.addTerm(1, n);
+                    IloNumVar x = xia.get(arc).get(req.getId());
+                    ev.addTerm(1, x);
                 }
                 // if v is a producer, consumer or transient node
                 if (nd.getId() == req.getSource())
@@ -288,30 +312,18 @@ public class MCFPhiNodeUtilizationSolver {
             }
         }
 
-
+        // EQUATION 1
         // link loads are the sum of flows traveling over it, l(a) =
         for(Arc arc : arcs)
         {
             IloLinearNumExpr la = cplex.linearNumExpr();
-            int source = arc.getFromNode(); int destination = arc.getToNode();
-            SourceDestinationPair pair = new SourceDestinationPair(source, destination);
-            IloNumVar li = l_a.get(pair);
-            List<IloNumVar> x = xa.get(arc);
-            for(IloNumVar n : x)
+            IloNumVar li = l_a.get(arc);
+            for(NFRequest request : requests.values())
             {
-                la.addTerm(1,n);
+                IloNumVar x = xia.get(arc).get(request.getId()); // all IloNumVar associated to Arc arc
+                la.addTerm(1,x);
             }
             cplex.addEq(li,la);
-        }
-
-        // TODO EQUATION 12
-        // utilization costs sum at each node n
-        for(NFRequest request : requests.values())
-        {
-            for(Arc arc : arcs)
-            {
-
-            }
         }
 
         // Convex piecewise linear function Phi
@@ -330,9 +342,8 @@ public class MCFPhiNodeUtilizationSolver {
         for (Arc arc : arcs) {
             for (int j = 0; j < points.length; j++) {
                 IloLinearNumExpr exp = cplex.linearNumExpr();
-                SourceDestinationPair pair = new SourceDestinationPair(arc.getFromNode(),arc.getToNode());
-                exp.addTerm(1, phi_a.get(pair));
-                exp.addTerm(-1 * slopes[j], l_a.get(pair));
+                exp.addTerm(1, phi_a.get(arc));
+                exp.addTerm(-1 * slopes[j], l_a.get(arc));
                 double bi = -1 * points[j] * arc.getCapacity();
                 cplex.addGe(exp, bi);
             }
@@ -359,8 +370,7 @@ public class MCFPhiNodeUtilizationSolver {
         if (this.saveLoads) {
             double[][] u = new double[topology.getDimension()][topology.getDimension()];
             for (Arc arc : arcs) {
-                SourceDestinationPair pair = new SourceDestinationPair(arc.getFromNode(), arc.getToNode());
-                double utilization = cplex.getValue(l_a.get(pair));
+                double utilization = cplex.getValue(l_a.get(arc));
                 u[arc.getFromNode()][arc.getToNode()] = utilization;
             }
             this.loads = new NetworkLoads(u,topology);
