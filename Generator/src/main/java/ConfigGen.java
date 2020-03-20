@@ -32,6 +32,9 @@ public class ConfigGen
         this.configs = new ArrayList<Configuration>();
     }
 
+    /**
+     * IO interaction
+     */
     public void startConfiguration()
     {
         Scanner scan = new Scanner(System.in);
@@ -55,20 +58,21 @@ public class ConfigGen
         System.out.println("Please insert the number of requests to generate:\n");
         this.requestnumber = scan.nextInt();
         generateSolutions();
-        System.out.println("Do you wish to save this configurations for further work? [Y/N]\n");
-        input = scan.next("[a-zA-Z]");
-        if(input.equals("y") || input.equals("Y"))
-        {
-            saveConfigurations();
-        }
     }
 
+    /**
+     * This method saves the configuration done by IO to future loadings
+     */
     private void saveConfigurations()
     {
         JSONSaver saver = new JSONSaver();
         saver.saveConfigurations(this);
+        saver.saveFrameworkConfigurations(this, random);
     }
 
+    /**
+     * This method will write in csv the generated data
+     */
     public void generateSolutions() {
         File file = new File(filepath);
         try
@@ -83,10 +87,17 @@ public class ConfigGen
             data = genData();
             writer.writeAll(data);
             writer.close();
+            Scanner scan = new Scanner(System.in);
+            String input;
+            System.out.println("Do you wish to save this configurations for further work? [Y/N]\n");
+            input = scan.next("[a-zA-Z]");
+            if(input.equals("y") || input.equals("Y"))
+            {
+                saveConfigurations();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     private List<String[]> genData()
@@ -128,8 +139,9 @@ public class ConfigGen
         Configuration c = new Configuration();
         c.setId(row + 1);
         int originNode = random.getRandomFromRage(1,maxNodes);
+        int destinationNode = random.getRandomFromRage(1,maxNodes);
         c.setOriginNodeID(originNode);
-        c.setDestinationNodeID(random.getRandomFromRageExcept(1,maxNodes, originNode));
+        c.setDestinationNodeID(destinationNode);
         c.setBandwidthConsumption(random.getRandomFromRage(1,1000));
         if(allNodesWServices)
         {
@@ -142,6 +154,15 @@ public class ConfigGen
         return helpers.convertListToString(c, this.headers.size());
     }
 
+    /**
+     * Method responsible for generate the headers for the csv file
+     * the configurationAvailable Boolean will determinate if the file config.json is available
+     * if so all the configuration will be loaded from it
+     * @param nodesWithServices
+     * @param maxNodesWServices
+     * @param configurationAvailable
+     * @return
+     */
     private String[] genHeaders(List<Integer> nodesWithServices, int maxNodesWServices, boolean configurationAvailable)
     {
         if(!configurationAvailable)

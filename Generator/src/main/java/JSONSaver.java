@@ -3,11 +3,12 @@ import org.json.simple.JSONObject;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class JSONSaver
 {
-
     public void saveConfigurations(ConfigGen configGen)
     {
         String fileName = "./config.json";
@@ -36,6 +37,65 @@ public class JSONSaver
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void saveFrameworkConfigurations(ConfigGen configGen, RandomNumGen random)
+    {
+        String fileName = "frameworkConfiguration.json";
+        int nodesWServices = configGen.getMaxNodesWServices();
+        int maxNodes = configGen.getMaxNodes();
+        List<String> headers = configGen.getHeaders().subList(4,configGen.getHeaders().size());
+        JSONArray servicesArray = new JSONArray();
+
+        JSONObject obj = new JSONObject();
+        obj.put("nodesWServices", nodesWServices);
+        obj.put("maxNodes", maxNodes);
+        List<Integer> servicesID = new ArrayList<>();
+        int sID = 1;
+        for(String s : headers)
+        {
+            JSONObject service = new JSONObject();
+            service.put("id", Integer.parseInt(s));
+            service.put("name", "service " + sID );
+            service.put("cost", 50);
+            sID++;
+            servicesID.add(Integer.parseInt(s));
+            servicesArray.add(service);
+        }
+        obj.put("services", servicesArray);
+
+        JSONArray nodes = getJsonArray(configGen, random, servicesID);
+        obj.put("nodes", nodes);
+
+        try {
+            save(obj, fileName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private JSONArray getJsonArray(ConfigGen configGen, RandomNumGen random, List<Integer> servicesID) {
+        JSONArray nodes = new JSONArray();
+        for(int i = 1; i<=configGen.getMaxNodes(); i++)
+        {
+            JSONObject nodesObj = new JSONObject();
+            nodesObj.put("id", i);
+            nodesObj.put("capacity", 1000);
+            int numberOfServices = random.getRandomFromRage(1,servicesID.size());
+            JSONArray serv = new JSONArray();
+            if(i - 1 < configGen.getMaxNodesWServices())
+            {
+                Collections.shuffle(servicesID);
+                for(int k = 0; k < numberOfServices; k++)
+                {
+                    int s = servicesID.get(k);
+                    serv.add(s);
+                }
+            }
+            nodesObj.put("availableServices", serv);
+            nodes.add(nodesObj);
+        }
+        return nodes;
     }
 
     private void save(JSONObject obj, String filename) throws IOException {
