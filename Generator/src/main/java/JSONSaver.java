@@ -14,6 +14,7 @@ public class JSONSaver
         String fileName = "./config.json";
         String filepath = configGen.getFilepath();
         boolean allNodesNFV = configGen.isAllNodesWServices();
+        boolean allservicesAllNodes = configGen.isNodesWAllServices();
         int nodesWServices = configGen.getMaxNodesWServices();
         int maxNodes = configGen.getMaxNodes();
         int requests = configGen.getRequestnumber();
@@ -24,6 +25,7 @@ public class JSONSaver
         obj.put("filepath", filepath);
         obj.put("allNodesNFV", allNodesNFV);
         obj.put("nodesWServices", nodesWServices);
+        obj.put("nodesWAllServices", allservicesAllNodes);
         obj.put("maxNodes", maxNodes);
         obj.put("solutionsToGen", requests);
         for(String s : headers)
@@ -57,7 +59,7 @@ public class JSONSaver
             JSONObject service = new JSONObject();
             service.put("id", s);
             service.put("name", "service " + sID );
-            service.put("cost",""+ 50);
+            service.put("cost",""+ random.getRandomFromRage(30,50));
             sID++;
             servicesID.add(Integer.parseInt(s));
             servicesArray.add(service);
@@ -74,27 +76,46 @@ public class JSONSaver
         }
     }
 
+    // Insert nodes section to json
     private JSONArray getJsonArray(ConfigGen configGen, RandomNumGen random, List<Integer> servicesID) {
         JSONArray nodes = new JSONArray();
-        for(int i = 1; i<=configGen.getMaxNodes(); i++)
+        int maxNodes = configGen.getMaxNodes();
+        int maxNodesWServices = configGen.getMaxNodesWServices();
+        for(int i = 1; i<=maxNodes; i++)
         {
             JSONObject nodesObj = new JSONObject();
             nodesObj.put("id", i + "");
             nodesObj.put("capacity", "" + 1000);
-            int numberOfServices = random.getRandomFromRage(1,servicesID.size());
             JSONArray serv = new JSONArray();
-            if(i - 1 < configGen.getMaxNodesWServices())
+            if(!configGen.isNodesWAllServices())
             {
-                Collections.shuffle(servicesID);
-                for(int k = 0; k < numberOfServices; k++)
+                int numberOfServices = random.getRandomFromRage(1,servicesID.size());
+
+                if(i - 1 < maxNodesWServices)
                 {
-                    int s = servicesID.get(k);
-                    serv.add("" + s);
+                    Collections.shuffle(servicesID);
+                    for(int k = 0; k < numberOfServices; k++)
+                    {
+                        int s = servicesID.get(k);
+                        serv.add("" + s);
+                    }
+                }
+            }
+            else
+            {
+                if(i - 1 < maxNodesWServices)
+                {
+                    for(int k = 0; k < servicesID.size(); k++)
+                    {
+                        int s = servicesID.get(k);
+                        serv.add("" + s);
+                    }
                 }
             }
             nodesObj.put("availableServices", serv);
             nodes.add(nodesObj);
         }
+
         return nodes;
     }
 

@@ -15,6 +15,7 @@ public class ConfigGen
     private RandomNumGen random;
     private Helper helpers;
     private boolean allNodesWServices;
+    private boolean nodesWAllServices;
     private int maxNodesWServices;
     private int maxNodes;
     private int requestnumber;
@@ -26,6 +27,7 @@ public class ConfigGen
         this.random = new RandomNumGen();
         this.helpers = new Helper();
         this.allNodesWServices = false;
+        this.nodesWAllServices = false;
         this.maxNodesWServices = 0;
         this.maxNodes = 0;
         this.requestnumber = 0;
@@ -48,6 +50,12 @@ public class ConfigGen
         {
             System.out.println("Insert the maximum number of nodes with services:\n");
             this.maxNodesWServices = scan.nextInt();
+        }
+        System.out.println("Do you pretend to have NFV nodes with all NFV services available? [Y/N]\n");
+        String inputA = scan.next("[a-zA-Z]");
+        if(inputA.equals("y") || input.equals("Y"))
+        {
+            this.nodesWAllServices = true;
         }
         System.out.println("Please insert the number of nodes of the topology:\n");
         this.maxNodes = scan.nextInt();
@@ -143,14 +151,8 @@ public class ConfigGen
         c.setOriginNodeID(originNode);
         c.setDestinationNodeID(destinationNode);
         c.setBandwidthConsumption(random.getRandomFromRage(1,1000));
-        if(allNodesWServices)
-        {
-            c.insertAllOne(maxNodes);
-        }
-        else
-        {
-            c.insertRandomServices(maxNodesWServices,random.getRandomFromRage(1,maxNodesWServices));
-        }
+        c.insertRandomServices(maxNodesWServices,random.getRandomFromRage(1,maxNodesWServices));
+
         return helpers.convertListToString(c, this.headers.size());
     }
 
@@ -268,5 +270,13 @@ public class ConfigGen
 
     public void setRequestnumber(int requestnumber) {
         this.requestnumber = requestnumber;
+    }
+
+    public boolean isNodesWAllServices() {
+        return nodesWAllServices;
+    }
+
+    public void setNodesWAllServices(boolean nodesWAllServices) {
+        this.nodesWAllServices = nodesWAllServices;
     }
 }

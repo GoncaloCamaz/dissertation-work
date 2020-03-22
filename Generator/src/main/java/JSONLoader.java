@@ -33,6 +33,7 @@ public class JSONLoader {
         JSONObject jsonObj = (JSONObject) obj;
         String filepath = (String) jsonObj.get("filepath");
         boolean allnodesNFV = (boolean) jsonObj.get("allNodesNFV");
+        boolean nodesWALLNFV = (boolean) jsonObj.get("nodesWAllServices");
         int nodesNFV = ((Long) jsonObj.get("nodesWServices")).intValue();
         int maxNodes = ((Long) jsonObj.get("maxNodes")).intValue();
         int requestNumber = ((Long) jsonObj.get("solutionsToGen")).intValue();
@@ -47,11 +48,9 @@ public class JSONLoader {
         c.setFilepath(filepath);
         c.setMaxNodes(maxNodes);
         c.setMaxNodesWServices(nodesNFV);
+        c.setNodesWAllServices(nodesWALLNFV);
         c.setRequestnumber(requestNumber);
 
         return c;
     }
-
-
-
 }
