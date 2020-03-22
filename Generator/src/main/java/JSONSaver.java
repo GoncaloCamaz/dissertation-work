@@ -55,9 +55,9 @@ public class JSONSaver
         for(String s : headers)
         {
             JSONObject service = new JSONObject();
-            service.put("id", Integer.parseInt(s));
+            service.put("id", s);
             service.put("name", "service " + sID );
-            service.put("cost", 50);
+            service.put("cost",""+ 50);
             sID++;
             servicesID.add(Integer.parseInt(s));
             servicesArray.add(service);
@@ -79,8 +79,8 @@ public class JSONSaver
         for(int i = 1; i<=configGen.getMaxNodes(); i++)
         {
             JSONObject nodesObj = new JSONObject();
-            nodesObj.put("id", i);
-            nodesObj.put("capacity", 1000);
+            nodesObj.put("id", i + "");
+            nodesObj.put("capacity", "" + 1000);
             int numberOfServices = random.getRandomFromRage(1,servicesID.size());
             JSONArray serv = new JSONArray();
             if(i - 1 < configGen.getMaxNodesWServices())
@@ -89,7 +89,7 @@ public class JSONSaver
                 for(int k = 0; k < numberOfServices; k++)
                 {
                     int s = servicesID.get(k);
-                    serv.add(s);
+                    serv.add("" + s);
                 }
             }
             nodesObj.put("availableServices", serv);

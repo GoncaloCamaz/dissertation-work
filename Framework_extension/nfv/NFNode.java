@@ -7,7 +7,7 @@ public class NFNode
 {
     private int id;
     private int processCapacity;
-    private List<NFService> availableServices;
+    private List<Integer> availableServices;
 
     public NFNode()
     {
@@ -16,7 +16,7 @@ public class NFNode
         this.availableServices = new ArrayList<>();
     }
 
-    public NFNode(int id, int processCapacity, List<NFService> availableServices) {
+    public NFNode(int id, int processCapacity, List<Integer> availableServices) {
         this.id = id;
         this.processCapacity = processCapacity;
         this.availableServices = availableServices;
@@ -45,11 +45,11 @@ public class NFNode
         this.processCapacity = processCapacity;
     }
 
-    public List<NFService> getAvailableServices() {
+    public List<Integer> getAvailableServices() {
         return availableServices;
     }
 
-    public void setAvailableServices(List<NFService> availableServices) {
+    public void setAvailableServices(List<Integer> availableServices) {
         this.availableServices = availableServices;
     }
 }

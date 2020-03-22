@@ -6,23 +6,14 @@ import java.util.Map;
 public class NFServicesMap
 {
     private Map<Integer, NFService> services;
-    private String filename;
 
     public NFServicesMap()
     {
         this.services = new HashMap<>();
-        this.filename = "";
     }
 
-    public NFServicesMap(String filename)
-    {
-        this.filename = filename;
-        this.services = new HashMap<>();
-    }
-
-    public NFServicesMap(Map<Integer, NFService> services, String filename) {
+    public NFServicesMap(Map<Integer, NFService> services) {
         this.services = services;
-        this.filename = filename;
     }
 
     public Map<Integer, NFService> getServices() {
@@ -31,13 +22,5 @@ public class NFServicesMap
 
     public void setServices(Map<Integer, NFService> services) {
         this.services = services;
-    }
-
-    public String getFilename() {
-        return filename;
-    }
-
-    public void setFilename(String filename) {
-        this.filename = filename;
     }
 }

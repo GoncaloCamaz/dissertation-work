@@ -9,7 +9,7 @@ public class NFRequest
     private int source;
     private int destination;
     private int bandwidth;
-    private List<NFService> serviceList;
+    private List<Integer> serviceList;
 
     public NFRequest()
     {
@@ -20,7 +20,7 @@ public class NFRequest
         this.serviceList = new ArrayList<>();
     }
 
-    public NFRequest(int id, int source, int destination, int bandwidth, List<NFService> serviceList) {
+    public NFRequest(int id, int source, int destination, int bandwidth, List<Integer> serviceList) {
         this.id = id;
         this.source = source;
         this.destination = destination;
@@ -69,11 +69,11 @@ public class NFRequest
         this.bandwidth = bandwidth;
     }
 
-    public List<NFService> getServiceList() {
+    public List<Integer> getServiceList() {
         return serviceList;
     }
 
-    public void setServiceList(List<NFService> serviceList) {
+    public void setServiceList(List<Integer> serviceList) {
         this.serviceList = serviceList;
     }
 }

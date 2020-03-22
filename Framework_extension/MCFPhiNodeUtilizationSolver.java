@@ -54,14 +54,15 @@ public class MCFPhiNodeUtilizationSolver {
         String nodesFile = args[0];
         String edgesFile = args[1];
         String servicesFile = args[2];
-        String nodesInfoFile = args[3];
-        String requests = args[4];
+        String requests = args[3];
 
         try {
             NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
-            NFServicesMap services = new NFServicesMap(servicesFile);
-            NFNodesMap map = new NFNodesMap(nodesInfoFile);
-            NFRequestsMap req = new NFRequestsMap(requests);
+            NFVState state = new NFVState(servicesFile, requests);
+            NFServicesMap services = state.getServices();
+            NFNodesMap map = state.getNodes();
+            NFRequestsMap req = state.getRequests();
+
             MCFPhiNodeUtilizationSolver solver = new MCFPhiNodeUtilizationSolver(topology, services, req, map);
             solver.setSaveLoads(true);
             solver.optimize();
@@ -320,7 +321,6 @@ public class MCFPhiNodeUtilizationSolver {
 
                     // on this version of the problem, the cost associated to the Service can
                     // be considered as Ck(request) = request.getBandwidth()
-                    IloNumVar xiAux = xia.get(arc).get(request.getId());
                     int arcToNode = arc.getToNode();
                     int requestID = request.getId();
                     int sID = serv.getId();
@@ -349,9 +349,10 @@ public class MCFPhiNodeUtilizationSolver {
             IloNumExpr exp = cplex.linearNumExpr();
             for(Arc arc : arcsToN)
             {
-                List<NFService> servicesAvailable = node.getAvailableServices();
-                for(NFService serv : servicesAvailable)
+                List<Integer> servicesAvailable = node.getAvailableServices();
+                for(Integer servID : servicesAvailable)
                 {
+                    NFService serv = this.services.getServices().get(servID);
                     for(NFRequest request : requests.values())
                     {
                         // custo de cK = pedido
