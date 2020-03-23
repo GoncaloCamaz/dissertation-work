@@ -54,9 +54,10 @@ public class ConfigGen
         System.out.println("Do you pretend to have NFV nodes with all NFV services available? [Y/N]\n");
         String inputA = scan.next("[a-zA-Z]");
         if(inputA.equals("y") || input.equals("Y"))
-        {
             this.nodesWAllServices = true;
-        }
+        else
+            this.nodesWAllServices = false;
+
         System.out.println("Please insert the number of nodes of the topology:\n");
         this.maxNodes = scan.nextInt();
         if(this.allNodesWServices == true)

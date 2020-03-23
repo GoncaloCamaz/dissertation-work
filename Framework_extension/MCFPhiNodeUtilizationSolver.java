@@ -41,6 +41,10 @@ public class MCFPhiNodeUtilizationSolver {
     private NFRequestsMap NFRequestsMap;
     private NFNodesMap nodesMap;
     private boolean saveLoads;
+    private static String nodesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/50_4/isno_50_4.nodes";
+    private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/50_4/isno_50_4.edges";
+    private static String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidos.csv";
+    private static String servicesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/frameworkConfiguration.json";
 
     public MCFPhiNodeUtilizationSolver(NetworkTopology topology, NFServicesMap servicesMap, NFRequestsMap r , NFNodesMap n) {
         this.topology = topology;
@@ -50,11 +54,13 @@ public class MCFPhiNodeUtilizationSolver {
         this.setSaveLoads(false);
     }
 
+
+
     public static void main(String[] args) {
-        String nodesFile = args[0];
-        String edgesFile = args[1];
-        String servicesFile = args[2];
-        String requests = args[3];
+        //String nodesFile = args[0];
+        //String edgesFile = args[1];
+        //String servicesFile = args[2];
+        //String requests = args[3];
 
         try {
             NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
@@ -69,7 +75,9 @@ public class MCFPhiNodeUtilizationSolver {
             NetworkLoads loads= solver.getNetworkLoads();
             //System.out.println("Congestion = "+loads.getCongestion());
             System.out.println("MLU = "+loads.getMLU());
-        } catch (Exception e) {
+        } catch (Exception e)
+        {
+            e.printStackTrace();
         }
 
     }
@@ -191,7 +199,7 @@ public class MCFPhiNodeUtilizationSolver {
         // alpha: a; beta: b
         // a[i][n][s] i -> request id; n -> node; s -> service
         // a either 1 or 0 if n is the node that will execute the s service for the i request
-        IloIntVar[][][] a = new IloIntVar[requestNumber][nodesNumber][servicesNumber];
+        IloIntVar[][][] a = new IloIntVar[requestNumber+1][nodesNumber+1][servicesNumber+1];
         for(NFRequest req : requests.values())
         {
             int reqID = req.getId();
@@ -217,7 +225,7 @@ public class MCFPhiNodeUtilizationSolver {
         }
 
         // b[i][from][to] i -> request id; from -> arc node id; to -> arc node id
-        IloIntVar[][][] b = new IloIntVar[requestNumber][nodesNumber][nodesNumber];
+        IloIntVar[][][] b = new IloIntVar[requestNumber+1][nodesNumber+1][nodesNumber+1];
         for(NFRequest req : requests.values())
         {
             int id = req.getId();

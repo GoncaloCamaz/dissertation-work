@@ -76,9 +76,10 @@ public class NFVStateLoader
         Reader input = Files.newBufferedReader(Paths.get(filename));
         CSVReader reader = new CSVReader(input, ';');
         String[] headers = reader.readNext();
-        while(reader != null)
+        List<String[]> rows = reader.readAll();
+        for(String[] r : rows)
         {
-            String[] row = reader.readNext();
+            String[] row = r;
             List<Integer> req = new ArrayList<>();
             int requestID = Integer.parseInt(row[0]);
             int from = Integer.parseInt(row[1]);
@@ -88,8 +89,8 @@ public class NFVStateLoader
             int i = 4;
             while(i < size)
             {
-                int r = Integer.parseInt(row[i]);
-                if(r == 1)
+                int rq = Integer.parseInt(row[i]);
+                if(rq == 1)
                 {
                     req.add(Integer.parseInt(headers[i]));
                 }
