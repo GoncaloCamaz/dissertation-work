@@ -92,7 +92,6 @@ public class JSONSaver
         {
             JSONObject nodesObj = new JSONObject();
             nodesObj.put("id", i + "");
-            nodesObj.put("capacity", "" + 1000);
             JSONArray serv = new JSONArray();
             if(!configGen.isNodesWAllServices())
             {
@@ -121,6 +120,14 @@ public class JSONSaver
             }
             serv.sort(String.CASE_INSENSITIVE_ORDER);
             nodesObj.put("availableServices", serv);
+            if(serv.size() > 0)
+            {
+                nodesObj.put("capacity", "" + 1000);
+            }
+            else
+            {
+                nodesObj.put("capacity", "" + 0);
+            }
             nodes.add(nodesObj);
         }
 
