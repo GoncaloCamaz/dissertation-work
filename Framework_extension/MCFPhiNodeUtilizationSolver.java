@@ -253,7 +253,7 @@ public class MCFPhiNodeUtilizationSolver {
             {
                 la.addTerm(request.getBandwidth(),b[request.getId()][arc.getFromNode()][arc.getToNode()]);
             }
-            cplex.addEq(li,la);
+            cplex.addEq(li,la,"EQ1_Arc_"+arc.getFromNode()+"_"+arc.getToNode());
         }
 
         // EQUATION 3
@@ -271,7 +271,7 @@ public class MCFPhiNodeUtilizationSolver {
                 // xi
                 for (Arc arc : toV) {
                     // request x_i
-                    ev.addTerm(-1*dst, b[req.getId()][arc.getFromNode()][arc.getToNode()]);
+                    ev.addTerm(-1*dst,b[req.getId()][arc.getFromNode()][arc.getToNode()]);
                 }
                 // - xi
                 for (Arc arc : fromV) {
@@ -280,11 +280,11 @@ public class MCFPhiNodeUtilizationSolver {
                 }
                 // if v is a producer, consumer or transient node
                 if (nd.getId() == req.getSource())
-                    cplex.addEq(ev, dst);
+                    cplex.addEq(ev, dst, "EQ3_Request_"+req.getId());
                 else if (nd.getId() == req.getDestination())
-                    cplex.addEq(ev, -1*dst);
+                    cplex.addEq(ev, -1*dst, "EQ3_Request_"+req.getId());
                 else
-                    cplex.addEq(ev, 0);
+                    cplex.addEq(ev, 0, "EQ3_Request_"+req.getId());
             }
         }
 
@@ -295,14 +295,15 @@ public class MCFPhiNodeUtilizationSolver {
         for(NFRequest request : requests.values())
         {
             IloLinearNumExpr exp = cplex.linearNumExpr();
-            for(Arc arc : arcs)
+            int rID = request.getId();
+            for(NFNode node : nodes.values())
             {
                 for(NFService service : services.values())
                 {
-                    exp.addTerm(request.getBandwidth(), a[request.getId()][arc.getToNode()][service.getId()]);
+                    exp.addTerm(request.getBandwidth(), a[request.getId()][node.getId()][service.getId()]);
                 }
             }
-            cplex.addEq(exp, request.getBandwidth());
+            cplex.addEq(exp, request.getBandwidth(),"EQ4_Request_"+rID);
         }
 
         // EQUATION 5 - 10
@@ -337,7 +338,7 @@ public class MCFPhiNodeUtilizationSolver {
                     }
                 }
             }
-            cplex.addEq(r_n.get(node.getId()),exp);
+            cplex.addEq(r_n.get(node.getId()),exp, "EQ12_Node_"+node.getId());
         }
 
         // EQUATION 13-18
