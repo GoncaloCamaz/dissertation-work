@@ -172,7 +172,7 @@ public class MCFPhiNodeUtilizationSolver {
         for (NFNode node : nodes.values())
         {
             int nodeID = node.getId();
-            gamma_n.put(nodeID,cplex.numVar(0, Double.MAX_VALUE, "Gamma_" + node));
+            gamma_n.put(nodeID,cplex.numVar(0, Double.MAX_VALUE, "Gamma_" + nodeID));
         }
 
         // the r(n) variables
@@ -197,7 +197,7 @@ public class MCFPhiNodeUtilizationSolver {
                 for(NFService s : services.values())
                 {
                     int sID = s.getId();
-                    if(nd.getAvailableServices().contains(s))
+                    if(nd.getAvailableServices().contains(s.getId()))
                     {
                         // service available at node nd, so the a may assume values from 0 to 1
                         a[reqID][nodeID][sID] = cplex.intVar(0,1,"alpha_" + reqID + "_" + nodeID + "_" + sID);
@@ -352,7 +352,7 @@ public class MCFPhiNodeUtilizationSolver {
         }
 
         // Saves the model
-        // cplex.exportModel("lpex1.lp");
+        cplex.exportModel("lpex1.lp");
 
         // Solve
         cplex.solve();
@@ -371,7 +371,6 @@ public class MCFPhiNodeUtilizationSolver {
             //System.out.println(congestion);
             //this.loads.setCongestion(congestion);
         }
-
         cplex.end();
         return res;
     }
