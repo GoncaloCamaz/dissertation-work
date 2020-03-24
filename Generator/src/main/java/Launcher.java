@@ -6,10 +6,11 @@ public class Launcher
     public static void main(String[] args)
     {
         ConfigGen configGen = new ConfigGen();
-        JSONLoader loader = new JSONLoader();
-        configGen = loader.getConfiguration();
+
         if(printGreetings())
         {
+            JSONLoader loader = new JSONLoader();
+            configGen = loader.getConfiguration();
             loader = new JSONLoader();
             configGen.genRequests(loader.getConfiguration());
         }

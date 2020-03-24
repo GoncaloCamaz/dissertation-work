@@ -32,24 +32,40 @@ public class JSONLoader {
         Object obj = parser.parse(new FileReader("config.json"));
         JSONObject jsonObj = (JSONObject) obj;
         String filepath = (String) jsonObj.get("filepath");
-        boolean allnodesNFV = (boolean) jsonObj.get("allNodesNFV");
+        boolean allnodesNFV = (boolean) jsonObj.get("allNodesWServices");
         boolean nodesWALLNFV = (boolean) jsonObj.get("nodesWAllServices");
-        int nodesNFV = ((Long) jsonObj.get("nodesWServices")).intValue();
-        int maxNodes = ((Long) jsonObj.get("maxNodes")).intValue();
-        int requestNumber = ((Long) jsonObj.get("solutionsToGen")).intValue();
+        int nodesNFV = ((Long) jsonObj.get("numberOfNodesWServices")).intValue();
+        int maxNodes = ((Long) jsonObj.get("numberOfNodes")).intValue();
+        int requestNumber = ((Long) jsonObj.get("reqsToGen")).intValue();
         JSONArray headers = (JSONArray) jsonObj.get("headers");
         ArrayList<String> headersList = new ArrayList<>();
         for(Object s : headers)
         {
             headersList.add((String) s);
         }
+
+        JSONArray nodesArray = (JSONArray) jsonObj.get("nodesWServices");
+        ArrayList<Integer> nodesWServices = new ArrayList<>();
+        for(Object s : nodesArray)
+        {
+            nodesWServices.add(Integer.parseInt((String) s));
+        }
+        JSONArray servicesIDArray = (JSONArray) jsonObj.get("ServicesUD");
+        ArrayList<Integer> servicesID = new ArrayList<>();
+        for(Object s : servicesIDArray)
+        {
+            servicesID.add(Integer.parseInt((String) s));
+        }
+
         c.setAllNodesWServices(allnodesNFV);
         c.setHeaders(headersList);
         c.setFilepath(filepath);
-        c.setMaxNodes(maxNodes);
-        c.setMaxNodesWServices(nodesNFV);
+        c.setNumberOfNodes(maxNodes);
+        c.setNumberOfNodesWServices(nodesNFV);
         c.setNodesWAllServices(nodesWALLNFV);
-        c.setRequestnumber(requestNumber);
+        c.setReqsToGen(requestNumber);
+        c.setServicesID(servicesID);
+        c.setNodesWServices(nodesWServices);
 
         return c;
     }

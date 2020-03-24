@@ -1,1 +1,1 @@
-{"nodesWAllServices":true,"headers":["id","originNodeID","destinationNodeID","bandwidth","1","2","3","4","5"],"filepath":".\/pedidos.csv","allNodesNFV":false,"solutionsToGen":100,"maxNodes":20,"nodesWServices":5}
+{"numberOfNodesWServices":5,"nodesWAllServices":false,"reqsToGen":50,"headers":["id","originNodeID","destinationNodeID","bandwidth","0","1","2","3","4"],"filepath":".\/pedidos.csv","numberOfNodes":30,"allNodesWServices":false,"ServicesID":["0","1","2","3","4"],"nodesWServices":["5","9","12","15","25"]}

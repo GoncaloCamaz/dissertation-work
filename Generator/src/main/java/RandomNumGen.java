@@ -11,7 +11,7 @@ public class RandomNumGen
     {
         Random rand = new Random();
 
-        return 1 + rand.nextInt(range);
+        return rand.nextInt(range);
     }
 
     public double randomDouble(int range)
@@ -26,7 +26,7 @@ public class RandomNumGen
     {
         List<Integer> range = new ArrayList<Integer>();
 
-        range = ThreadLocalRandom.current().ints(1, maxNodes).distinct().boxed().limit(maxWServices)
+        range = ThreadLocalRandom.current().ints(0, maxNodes-1).distinct().boxed().limit(maxWServices)
                                            .collect(Collectors.toCollection(ArrayList::new));
         Collections.sort(range);
         return range;
@@ -34,7 +34,7 @@ public class RandomNumGen
 
     public int getRandomFromRage(int min, int max)
     {
-        int val = 0;
+        int val;
         val = ThreadLocalRandom.current().ints(min, max).distinct().boxed().limit(1)
                 .collect(Collectors.toCollection(ArrayList::new)).get(0);
         return val;

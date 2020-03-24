@@ -11,27 +11,31 @@ public class ConfigGen
 {
     private String filepath;
     private List<String> headers;
-    private ArrayList<Configuration> configs;
-    private RandomNumGen random;
-    private Helper helpers;
+    private List<Integer> nodesWServices;
+    private List<Integer> servicesID;
     private boolean allNodesWServices;
     private boolean nodesWAllServices;
-    private int maxNodesWServices;
-    private int maxNodes;
-    private int requestnumber;
+    private int numberOfNodesWServices;
+    private int numberOfNodes;
+    private int reqsToGen;
+    private ArrayList<RequestConfig> configs;
+    private RandomNumGen random;
+    private Helper helpers;
 
     public ConfigGen()
     {
         this.filepath = "./pedidos.csv";
-        this.headers = new ArrayList<String>();
-        this.random = new RandomNumGen();
-        this.helpers = new Helper();
+        this.headers = new ArrayList<>();
+        this.nodesWServices = new ArrayList<>();
+        this.servicesID = new ArrayList<>();
         this.allNodesWServices = false;
         this.nodesWAllServices = false;
-        this.maxNodesWServices = 0;
-        this.maxNodes = 0;
-        this.requestnumber = 0;
-        this.configs = new ArrayList<Configuration>();
+        this.numberOfNodesWServices = 0;
+        this.numberOfNodes = 0;
+        this.reqsToGen = 0;
+        this.configs = new ArrayList<>();
+        this.random = new RandomNumGen();
+        this.helpers = new Helper();
     }
 
     /**
@@ -48,24 +52,28 @@ public class ConfigGen
         }
         else
         {
-            System.out.println("Insert the maximum number of nodes with services:\n");
-            this.maxNodesWServices = scan.nextInt();
+            System.out.println("Insert the number of nodes with services:\n");
+            this.numberOfNodesWServices = scan.nextInt();
         }
+        System.out.println("Insert the number of services to generate\n");
+        int servicesNum = scan.nextInt();
+        setNumberOfServices(servicesNum);
+
         System.out.println("Do you pretend to have NFV nodes with all NFV services available? [Y/N]\n");
-        String inputA = scan.next("[a-zA-Z]");
-        if(inputA.equals("y") || input.equals("Y"))
+        String inputB = scan.next("[a-zA-Z]");
+        if(inputB.equals("y") || inputB.equals("Y"))
             this.nodesWAllServices = true;
         else
             this.nodesWAllServices = false;
 
         System.out.println("Please insert the number of nodes of the topology:\n");
-        this.maxNodes = scan.nextInt();
+        this.numberOfNodes = scan.nextInt();
         if(this.allNodesWServices == true)
         {
-            this.maxNodesWServices = this.maxNodes;
+            this.numberOfNodesWServices = this.numberOfNodes;
         }
         System.out.println("Please insert the number of requests to generate:\n");
-        this.requestnumber = scan.nextInt();
+        this.reqsToGen = scan.nextInt();
         generateSolutions();
     }
 
@@ -112,29 +120,28 @@ public class ConfigGen
     private List<String[]> genData()
     {
         List<String[]> data = new ArrayList<>();
-        List<Integer> nodesWServices = new ArrayList<>();
         if(this.allNodesWServices)
         {
-            for(int i = 0; i < maxNodes; i++)
+            for(int i = 0; i < numberOfNodes; i++)
             {
-                nodesWServices.add(i+1);
+                nodesWServices.add(i);
             }
         }
         else
         {
-            nodesWServices = random.genNodesWServices(this.maxNodes,this.maxNodesWServices);
+            setNodesWServices(random.genNodesWServices(this.numberOfNodes,this.numberOfNodesWServices));
         }
 
         if(this.headers.size() == 0){
-            data.add(genHeaders(nodesWServices, this.maxNodesWServices, false));
+            data.add(genHeaders(false));
         }
         else
         {
-            data.add(genHeaders(nodesWServices, this.maxNodesWServices, true));
+            data.add(genHeaders(true));
         }
 
         int rows = 0;
-        while(rows < requestnumber)
+        while(rows < reqsToGen)
         {
             String[] row = genRow(rows);
             data.add(row);
@@ -145,14 +152,14 @@ public class ConfigGen
 
     private String[] genRow(int row)
     {
-        Configuration c = new Configuration();
-        c.setId(row + 1);
-        int originNode = random.getRandomFromRage(1,maxNodes);
-        int destinationNode = random.getRandomFromRage(1,maxNodes);
+        RequestConfig c = new RequestConfig();
+        c.setId(row);
+        int originNode = random.getRandomFromRage(0, numberOfNodes);
+        int destinationNode = random.getRandomFromRage(0, numberOfNodes);
         c.setOriginNodeID(originNode);
         c.setDestinationNodeID(destinationNode);
-        c.setBandwidthConsumption(random.getRandomFromRage(1,1000));
-        c.insertRandomServices(maxNodesWServices,random.getRandomFromRage(1,maxNodesWServices));
+        c.setBandwidthConsumption(random.getRandomFromRage(50,500));
+        c.insertRandomServices(numberOfNodesWServices,random.getRandomFromRage(1, numberOfNodesWServices));
 
         return helpers.convertListToString(c, this.headers.size());
     }
@@ -161,12 +168,10 @@ public class ConfigGen
      * Method responsible for generate the headers for the csv file
      * the configurationAvailable Boolean will determinate if the file config.json is available
      * if so all the configuration will be loaded from it
-     * @param nodesWithServices
-     * @param maxNodesWServices
      * @param configurationAvailable
      * @return
      */
-    private String[] genHeaders(List<Integer> nodesWithServices, int maxNodesWServices, boolean configurationAvailable)
+    private String[] genHeaders(boolean configurationAvailable)
     {
         if(!configurationAvailable)
         {
@@ -176,9 +181,9 @@ public class ConfigGen
             headers.add("destinationNodeID");
             headers.add("bandwidth");
             int i = 0;
-            while(i < maxNodesWServices)
+            while(i < this.getNumberOfServices())
             {
-                headers.add(String.valueOf(nodesWithServices.get(i)));
+                headers.add(String.valueOf(i));
                 i++;
             }
             this.setHeaders(headers);
@@ -194,10 +199,11 @@ public class ConfigGen
     {
         this.headers = c.getHeaders();
         this.filepath = c.getFilepath();
-        this.maxNodes = c.getMaxNodes();
-        this.maxNodesWServices = c.getMaxNodesWServices();
+        this.numberOfNodes = c.getNumberOfNodes();
+        this.numberOfNodesWServices = c.getNumberOfNodesWServices();
         this.allNodesWServices = c.isAllNodesWServices();
-        this.requestnumber = c.getRequestnumber();
+        this.reqsToGen = c.getReqsToGen();
+        this.nodesWAllServices = c.isNodesWAllServices();
         generateSolutions();
     }
 
@@ -217,11 +223,11 @@ public class ConfigGen
         this.headers = headers;
     }
 
-    public ArrayList<Configuration> getConfigs() {
+    public ArrayList<RequestConfig> getConfigs() {
         return configs;
     }
 
-    public void setConfigs(ArrayList<Configuration> configs) {
+    public void setConfigs(ArrayList<RequestConfig> configs) {
         this.configs = configs;
     }
 
@@ -249,28 +255,28 @@ public class ConfigGen
         this.allNodesWServices = allNodesWServices;
     }
 
-    public int getMaxNodesWServices() {
-        return maxNodesWServices;
+    public int getNumberOfNodesWServices() {
+        return numberOfNodesWServices;
     }
 
-    public void setMaxNodesWServices(int maxNodesWServices) {
-        this.maxNodesWServices = maxNodesWServices;
+    public void setNumberOfNodesWServices(int numberOfNodesWServices) {
+        this.numberOfNodesWServices = numberOfNodesWServices;
     }
 
-    public int getMaxNodes() {
-        return maxNodes;
+    public int getNumberOfNodes() {
+        return numberOfNodes;
     }
 
-    public void setMaxNodes(int maxNodes) {
-        this.maxNodes = maxNodes;
+    public void setNumberOfNodes(int numberOfNodes) {
+        this.numberOfNodes = numberOfNodes;
     }
 
-    public int getRequestnumber() {
-        return requestnumber;
+    public int getReqsToGen() {
+        return reqsToGen;
     }
 
-    public void setRequestnumber(int requestnumber) {
-        this.requestnumber = requestnumber;
+    public void setReqsToGen(int reqsToGen) {
+        this.reqsToGen = reqsToGen;
     }
 
     public boolean isNodesWAllServices() {
@@ -279,5 +285,32 @@ public class ConfigGen
 
     public void setNodesWAllServices(boolean nodesWAllServices) {
         this.nodesWAllServices = nodesWAllServices;
+    }
+
+    public List<Integer> getNodesWServices() {
+        return nodesWServices;
+    }
+
+    public void setNodesWServices(List<Integer> nodesWServices) {
+        this.nodesWServices = nodesWServices;
+    }
+
+    public int getNumberOfServices() {
+        return this.servicesID.size();
+    }
+
+    public void setNumberOfServices(int numberOfServices) {
+        for(int i = 0; i < numberOfServices; i++)
+        {
+            this.servicesID.add(i);
+        }
+    }
+
+    public List<Integer> getServicesID() {
+        return servicesID;
+    }
+
+    public void setServicesID(List<Integer> servicesID) {
+        this.servicesID = servicesID;
     }
 }

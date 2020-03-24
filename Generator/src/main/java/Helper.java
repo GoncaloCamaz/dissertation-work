@@ -2,7 +2,7 @@ import java.util.List;
 
 public class Helper
 {
-    public String[] convertListToString(Configuration config, int headersLen)
+    public String[] convertListToString(RequestConfig config, int headersLen)
     {
         String[] str = new String[headersLen];
         str[0] = String.valueOf(config.getId());
@@ -10,7 +10,7 @@ public class Helper
         str[2] = String.valueOf(config.getDestinationNodeID());
         str[3] = String.valueOf(config.getBandwidthConsumption());
         int length = config.getServiceNodes().size();
-        int val = 0;
+        int val;
         for(int i = 4; i < headersLen; i++)
         {
             if(i - 4 < length)
