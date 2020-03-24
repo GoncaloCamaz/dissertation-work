@@ -358,12 +358,17 @@ public class MCFPhiNodeUtilizationSolver {
         // Solve
         cplex.solve();
         double res = cplex.getObjValue();
-
+        System.out.println("Resultado: " + res);
         if (this.saveLoads) {
             double[][] u = new double[topology.getDimension()][topology.getDimension()];
             for (Arc arc : arcs) {
                 double utilization = cplex.getValue(l_a.get(arc));
                 u[arc.getFromNode()][arc.getToNode()] = utilization;
+            }
+            for(NFNode node : nodes.values())
+            {
+                double ut = cplex.getValue(r_n.get(node.getId()));
+                System.out.println("Node " + node.getId()+ " utilization: " + ut);
             }
             this.loads = new NetworkLoads(u,topology);
             this.loads.printLoads();
