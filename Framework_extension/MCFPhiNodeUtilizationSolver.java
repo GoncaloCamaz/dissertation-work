@@ -350,9 +350,14 @@ public class MCFPhiNodeUtilizationSolver {
                         int toNode = arc.getToNode();
                         int fromNode = arc.getFromNode();
                         exp.addTerm(1,b[request.getId()][fromNode][toNode]);
+                        if (request.getSource() == request.getDestination() && request.getSource() == toNode)
+                        {
+                            exp.addTerm(1, cplex.intVar(1,1,"Request_source_" + request.getSource() + "_tonode_" + toNode));
+                        }
                     }
                     cplex.addGe(exp, a[request.getId()][node.getId()][serviceID], "EQ13");
                 }
+
             }
         }
 
