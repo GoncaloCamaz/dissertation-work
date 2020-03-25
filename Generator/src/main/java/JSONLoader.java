@@ -50,7 +50,7 @@ public class JSONLoader {
         {
             nodesWServices.add(Integer.parseInt((String) s));
         }
-        JSONArray servicesIDArray = (JSONArray) jsonObj.get("ServicesUD");
+        JSONArray servicesIDArray = (JSONArray) jsonObj.get("ServicesID");
         ArrayList<Integer> servicesID = new ArrayList<>();
         for(Object s : servicesIDArray)
         {

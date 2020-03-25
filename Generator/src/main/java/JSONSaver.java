@@ -51,7 +51,7 @@ public class JSONSaver
 
     public void saveFrameworkConfigurations(ConfigGen configGen, RandomNumGen random)
     {
-        String fileName = "frameworkConfiguration.json";
+        String fileName = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/frameworkConfiguration.json";
         int nodesWServices = configGen.getNumberOfNodesWServices();
         int maxNodes = configGen.getNumberOfNodes();
 
@@ -72,7 +72,7 @@ public class JSONSaver
         }
         obj.put("services", servicesArray);
 
-        JSONArray nodes = getJsonArray(configGen, random, servicesID);
+        JSONArray nodes = genNodes(configGen, random, servicesID);
         obj.put("nodes", nodes);
 
         try {
@@ -83,7 +83,7 @@ public class JSONSaver
     }
 
     // Insert nodes section to json
-    private JSONArray getJsonArray(ConfigGen configGen, RandomNumGen random, List<Integer> servicesID) {
+    private JSONArray genNodes(ConfigGen configGen, RandomNumGen random, List<Integer> servicesID) {
         JSONArray nodes = new JSONArray();
         int maxNodes = configGen.getNumberOfNodes();
         int maxNodesWServices = configGen.getNumberOfNodesWServices();

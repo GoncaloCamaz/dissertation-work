@@ -24,7 +24,7 @@ public class ConfigGen
 
     public ConfigGen()
     {
-        this.filepath = "./pedidos.csv";
+        this.filepath = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidos.csv";
         this.headers = new ArrayList<>();
         this.nodesWServices = new ArrayList<>();
         this.servicesID = new ArrayList<>();
