@@ -41,8 +41,8 @@ public class MCFPhiNodeUtilizationSolver {
     private NFRequestsMap NFRequestsMap;
     private NFNodesMap nodesMap;
     private boolean saveLoads;
-    private static String nodesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.nodes";
-    private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.edges";
+    private static String nodesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";
+    private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.edges";
     private static String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidos.csv";
     private static String servicesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/frameworkConfiguration.json";
 
@@ -73,7 +73,7 @@ public class MCFPhiNodeUtilizationSolver {
             solver.setSaveLoads(true);
             solver.optimize();
             NetworkLoads loads= solver.getNetworkLoads();
-            //System.out.println("Congestion = "+loads.getCongestion());
+            System.out.println("Congestion = "+loads.getCongestion());
             System.out.println("MLU = "+loads.getMLU());
         } catch (Exception e)
         {
@@ -95,7 +95,7 @@ public class MCFPhiNodeUtilizationSolver {
         Map<Integer, NFRequest> r = req.getRequestMap();
         Map<Integer, NFNode> n = nodes.getNodes();
         double res = optimize(cp, serv, r, n);
-       // Simul s = new Simul(topology);
+        //Simul s = new Simul(topology);
         //double uncap = s.phiUncap(demands);
         //double normalized = res / uncap;
         return res;
@@ -124,8 +124,6 @@ public class MCFPhiNodeUtilizationSolver {
         int requestNumber = requests.size();
         // number of services in services map
         int servicesNumber = services.size();
-        // number of arcs; Arc a => int fromNode; int toNode; double capacity; int index;
-        int arcsNumber = arcs.getNumberOfArcs();
 
         // Convex piecewise linear function Phi
         // As the problem is a minimization problem, the penalizing function can
@@ -147,6 +145,9 @@ public class MCFPhiNodeUtilizationSolver {
                     arcID++;
                     arcs.add(a);
                 }
+
+        // number of arcs; Arc a => int fromNode; int toNode; double capacity; int index;
+        int arcsNumber = arcs.getNumberOfArcs();
 
         // the l(a) variables, load of arc a, being a = (u,v)
         HashMap<Arc, IloNumVar> l_a = new HashMap<>();
@@ -229,14 +230,16 @@ public class MCFPhiNodeUtilizationSolver {
         // double alpha = 0.5 (defined at the top)
         // minimize the sum of all Phi(a)
         IloLinearNumExpr obj = cplex.linearNumExpr();
+        double norm1 = alpha/arcsNumber;
         for (IloNumVar ph : phi_a.values())
         {
-            obj.addTerm(alpha, ph);
+            obj.addTerm(norm1, ph);
         }
         // minimize the sum of node utilization gamma(n)
+        double norm2 = (1-alpha)/nodesNumber;
         for(IloNumVar gm : gamma_n.values())
         {
-            obj.addTerm(1-alpha, gm);
+            obj.addTerm(norm2, gm);
         }
         cplex.addMinimize(obj);
 
@@ -300,10 +303,10 @@ public class MCFPhiNodeUtilizationSolver {
             {
                 for(NFService service : services.values())
                 {
-                    exp.addTerm(request.getBandwidth(), a[request.getId()][node.getId()][service.getId()]);
+                    exp.addTerm(1, a[request.getId()][node.getId()][service.getId()]);
                 }
             }
-            cplex.addEq(exp, request.getBandwidth(),"EQ4_Request_"+rID);
+            cplex.addEq(exp, 1,"EQ4_Request_"+rID);
         }
 
         // EQUATION 5 - 10
@@ -320,28 +323,40 @@ public class MCFPhiNodeUtilizationSolver {
         // EQUATION 12
         for(NFNode node : nodes.values())
         {
-            List<Arc> arcsToN = arcs.getAllArcsTo(node.getId());
+            List<Integer> servicesAvailable = node.getAvailableServices();
             IloLinearNumExpr exp = cplex.linearNumExpr();
-            for(Arc arc : arcsToN)
+            for(NFRequest request : requests.values())
             {
-                List<Integer> servicesAvailable = node.getAvailableServices();
                 for(Integer servID : servicesAvailable)
                 {
-                    NFService serv = this.services.getServices().get(servID);
-                    for(NFRequest request : requests.values())
-                    {
-                        // custo de cK = pedido
-                        int arcToNode = arc.getToNode();
-                        int requestID = request.getId();
-                        int sID = serv.getId();
-                        exp.addTerm(request.getBandwidth()*2, a[requestID][arcToNode][sID]);
-                    }
+                    NFService service = services.get(servID);
+                    exp.addTerm(request.getBandwidth()*2, a[request.getId()][node.getId()][service.getId()]);
                 }
             }
-            cplex.addEq(r_n.get(node.getId()),exp, "EQ12_Node_"+node.getId());
+            cplex.addEq(r_n.get(node.getId()), exp, "EQ12_Node_"+node.getId());
         }
 
-        // EQUATION 13-18
+        //EQUATION 13
+        for(NFRequest request : requests.values())
+        {
+            for(NFNode node : nodes.values())
+            {
+                List<Integer> servicesAvailable = node.getAvailableServices();
+                for(Integer serviceID : servicesAvailable)
+                {
+                    IloLinearNumExpr exp = cplex.linearNumExpr();
+                    for(Arc arc : arcs.getAllArcsTo(node.getId()))
+                    {
+                        int toNode = arc.getToNode();
+                        int fromNode = arc.getFromNode();
+                        exp.addTerm(1,b[request.getId()][fromNode][toNode]);
+                    }
+                    cplex.addGe(exp, a[request.getId()][node.getId()][serviceID], "EQ13");
+                }
+            }
+        }
+
+        // EQUATION 14-19
         for (NFNode node : nodes.values()) {
             for (int j = 0; j < points.length; j++) {
                 IloLinearNumExpr exp = cplex.linearNumExpr();
