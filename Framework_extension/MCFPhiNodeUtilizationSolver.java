@@ -24,6 +24,7 @@ import ilog.cplex.*;
 import pt.uminho.algoritmi.netopt.cplex.utils.Arc;
 import pt.uminho.algoritmi.netopt.cplex.utils.Arcs;
 import pt.uminho.algoritmi.netopt.nfv.*;
+import pt.uminho.algoritmi.netopt.nfv.optimization.OptimizationResultObject;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkLoads;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
 
@@ -41,8 +42,8 @@ public class MCFPhiNodeUtilizationSolver {
     private NFRequestsMap NFRequestsMap;
     private NFNodesMap nodesMap;
     private boolean saveLoads;
-    private static String nodesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";
-    private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.edges";
+    private static String nodesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/50_4/isno_50_4.nodes";
+    private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/50_4/isno_50_4.edges";
     private static String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidos.csv";
     private static String servicesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/frameworkConfiguration.json";
 
@@ -82,19 +83,19 @@ public class MCFPhiNodeUtilizationSolver {
 
     }
 
-    public double optimize() throws IloException {
+    public OptimizationResultObject optimize() throws IloException {
         return this.optimize(this.topology, this.services, this.NFRequestsMap, this.nodesMap);
     }
 
     /**
      * @throws IloException
      */
-    public double optimize(NetworkTopology topology, NFServicesMap servicesMap, NFRequestsMap req, NFNodesMap nodes) throws IloException {
+    public OptimizationResultObject optimize(NetworkTopology topology, NFServicesMap servicesMap, NFRequestsMap req, NFNodesMap nodes) throws IloException {
         double[][] cp = topology.getNetGraph().createGraph().getCapacitie();
         Map<Integer, NFService> serv = servicesMap.getServices();
         Map<Integer, NFRequest> r = req.getRequestMap();
         Map<Integer, NFNode> n = nodes.getNodes();
-        double res = optimize(cp, serv, r, n);
+        OptimizationResultObject res = optimize(cp, serv, r, n);
         //Simul s = new Simul(topology);
         //double uncap = s.phiUncap(demands);
         //double normalized = res / uncap;
@@ -108,16 +109,15 @@ public class MCFPhiNodeUtilizationSolver {
      * @param nodes Map with all the nodes
      * @throws IloException
      */
-    public double optimize(double[][] capacity, Map<Integer, NFService> services, Map<Integer,NFRequest> requests, Map<Integer, NFNode> nodes) throws IloException {
+    public OptimizationResultObject optimize(double[][] capacity, Map<Integer, NFService> services, Map<Integer,NFRequest> requests, Map<Integer, NFNode> nodes) throws IloException {
 
         IloCplex cplex = new IloCplex();
         cplex.setName("Multi commodity flow Phi and Node optimization");
-
         // Set of arcs regarding the topology
         Arcs arcs = new Arcs();
         // variable for objective function
         double alpha = 0.5;
-
+        cplex.setParam(IloCplex.Param.TimeLimit, 29000);
         // number of nodes
         int nodesNumber = nodes.size();
         // number of requests in map requests
@@ -274,20 +274,22 @@ public class MCFPhiNodeUtilizationSolver {
                 // xi
                 for (Arc arc : toV) {
                     // request x_i
-                    ev.addTerm(-1*dst,b[req.getId()][arc.getFromNode()][arc.getToNode()]);
+                    ev.addTerm(-1,b[req.getId()][arc.getFromNode()][arc.getToNode()]);
                 }
                 // - xi
                 for (Arc arc : fromV) {
                     // request x_i
-                    ev.addTerm(1*dst,b[req.getId()][arc.getFromNode()][arc.getToNode()]);
+                    ev.addTerm(1,b[req.getId()][arc.getFromNode()][arc.getToNode()]);
                 }
                 // if v is a producer, consumer or transient node
-                if (nd.getId() == req.getSource())
-                    cplex.addEq(ev, dst, "EQ3_Request_"+req.getId());
+                if (nd.getId() == req.getSource() && nd.getId() == req.getDestination())
+                    cplex.addEq(ev, 0, "EQ3_Request_"+req.getId()+"_at_"+nd.getId());
+                else if (nd.getId() == req.getSource())
+                    cplex.addEq(ev, 1, "EQ3_Request_"+req.getId()+"_at_"+nd.getId());
                 else if (nd.getId() == req.getDestination())
-                    cplex.addEq(ev, -1*dst, "EQ3_Request_"+req.getId());
+                    cplex.addEq(ev, -1, "EQ3_Request_"+req.getId()+"_at_"+nd.getId());
                 else
-                    cplex.addEq(ev, 0, "EQ3_Request_"+req.getId());
+                    cplex.addEq(ev, 0, "EQ3_Request_"+req.getId()+"_at_"+nd.getId());
             }
         }
 
@@ -377,19 +379,24 @@ public class MCFPhiNodeUtilizationSolver {
 
         // Solve
         cplex.solve();
+        OptimizationResultObject object = new OptimizationResultObject(nodesNumber);
         double res = cplex.getObjValue();
-        System.out.println("Resultado: " + res);
         if (this.saveLoads) {
             double[][] u = new double[topology.getDimension()][topology.getDimension()];
             for (Arc arc : arcs) {
                 double utilization = cplex.getValue(l_a.get(arc));
                 u[arc.getFromNode()][arc.getToNode()] = utilization;
             }
+            object.setLinkLoads(u);
+            double[] uNodes = new double[nodesNumber];
             for(NFNode node : nodes.values())
             {
                 double ut = cplex.getValue(r_n.get(node.getId()));
+                uNodes[node.getId()] = ut;
                 System.out.println("Node " + node.getId()+ " utilization: " + ut);
             }
+            object.setNodeUtilization(uNodes);
+            object.setLoadValue(res);
             this.loads = new NetworkLoads(u,topology);
             this.loads.printLoads();
             //Simul simul = new Simul(topology);
@@ -398,7 +405,7 @@ public class MCFPhiNodeUtilizationSolver {
             //this.loads.setCongestion(congestion);
         }
         cplex.end();
-        return res;
+        return object;
     }
 
     public boolean isSaveLoads() {

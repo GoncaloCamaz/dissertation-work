@@ -16,6 +16,11 @@ public class NFNodesMap
         this.nodes = nodes;
     }
 
+    public NFNodesMap(NFNodesMap map)
+    {
+        this.nodes = map.getNodes();
+    }
+
     public Map<Integer, NFNode> getNodes() {
         return nodes;
     }

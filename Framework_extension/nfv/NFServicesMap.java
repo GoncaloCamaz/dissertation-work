@@ -16,6 +16,11 @@ public class NFServicesMap
         this.services = services;
     }
 
+    public NFServicesMap(NFServicesMap serv)
+    {
+        this.services = serv.getServices();
+    }
+
     public Map<Integer, NFService> getServices() {
         return services;
     }
