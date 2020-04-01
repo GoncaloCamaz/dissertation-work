@@ -6,6 +6,8 @@ public class OptimizationResultObject
     private double[] nodeUtilization;
     private int numberOfNodes;
     private double loadValue;
+    private double gammaValue;
+    private double phiValue;
 
     public OptimizationResultObject(int numberOfNodes)
     {
@@ -13,13 +15,17 @@ public class OptimizationResultObject
         this.nodeUtilization = new double[numberOfNodes];
         this.numberOfNodes = numberOfNodes;
         this.loadValue = 0;
+        this.gammaValue = 0;
+        this.phiValue = 0;
     }
 
-    public OptimizationResultObject(double[][] linkLoads, double[] nodeUtilization, int numberOfNodes, double loadvalue) {
+    public OptimizationResultObject(double[][] linkLoads, double[] nodeUtilization, int numberOfNodes, double loadvalue, double phi, double gamma) {
         this.linkLoads = linkLoads;
         this.nodeUtilization = nodeUtilization;
         this.numberOfNodes = numberOfNodes;
         this.loadValue = loadvalue;
+        this.phiValue = phi;
+        this.gammaValue = gamma;
     }
 
     public double[][] getLinkLoads() {
@@ -52,5 +58,21 @@ public class OptimizationResultObject
 
     public void setLoadValue(double loadValue) {
         this.loadValue = loadValue;
+    }
+
+    public double getGammaValue() {
+        return gammaValue;
+    }
+
+    public void setGammaValue(double gammaValue) {
+        this.gammaValue = gammaValue;
+    }
+
+    public double getPhiValue() {
+        return phiValue;
+    }
+
+    public void setPhiValue(double phiValue) {
+        this.phiValue = phiValue;
     }
 }

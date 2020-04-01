@@ -7,7 +7,7 @@ import java.util.List;
 public class ParamsNFV
 {
     public enum  AlgorithmSelectionOption{
-        SOEA("Single Objective");
+        NSGAII("NSGAII");
         private final String name;
         AlgorithmSelectionOption(String name){
             this.name=name;
@@ -102,7 +102,6 @@ public class ParamsNFV
         this.numberGenerations = numberGenerations;
     }
 
-
     public boolean hasInitialPopulation(){
         return (this.percentage>0 && this.population!=null && this.population.getNumberOfSolutions()>0);
     }
@@ -158,8 +157,6 @@ public class ParamsNFV
         return ret;
     }
 
-
-
     public ParamsNFV copy(){
         ParamsNFV p= new ParamsNFV();
         p.setAlfa(this.alfa);
@@ -172,7 +169,4 @@ public class ParamsNFV
         p.setPopulationSize(populationSize);
         return p;
     }
-
-
-
 }

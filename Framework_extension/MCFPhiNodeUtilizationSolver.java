@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 import ilog.concert.*;
+import pt.uminho.algoritmi.netopt.ospf.simulation.Simul;
 
 public class MCFPhiNodeUtilizationSolver {
 
@@ -379,30 +380,49 @@ public class MCFPhiNodeUtilizationSolver {
 
         // Solve
         cplex.solve();
+
         OptimizationResultObject object = new OptimizationResultObject(nodesNumber);
         double res = cplex.getObjValue();
+
         if (this.saveLoads) {
             double[][] u = new double[topology.getDimension()][topology.getDimension()];
             for (Arc arc : arcs) {
                 double utilization = cplex.getValue(l_a.get(arc));
                 u[arc.getFromNode()][arc.getToNode()] = utilization;
             }
+
             object.setLinkLoads(u);
             double[] uNodes = new double[nodesNumber];
             for(NFNode node : nodes.values())
             {
                 double ut = cplex.getValue(r_n.get(node.getId()));
                 uNodes[node.getId()] = ut;
-                System.out.println("Node " + node.getId()+ " utilization: " + ut);
             }
+
             object.setNodeUtilization(uNodes);
             object.setLoadValue(res);
             this.loads = new NetworkLoads(u,topology);
-            this.loads.printLoads();
-            //Simul simul = new Simul(topology);
-            //double congestion = simul.congestionMeasure(loads, this.demands);
-            //System.out.println(congestion);
-            //this.loads.setCongestion(congestion);
+            //this.loads.printLoads();
+
+            NetworkLoads l = new NetworkLoads(u, topology);
+            Simul s = new Simul(topology);
+            double[][] demands = new double[nodesNumber][nodesNumber];
+            for(int i = 0; i < nodesNumber; i++)
+                for(int j = 0; j < nodesNumber; i++)
+                    for(NFRequest req : requests.values())
+                    {
+                        if(req.getSource() == i && req.getDestination() == j)
+                            demands[i][j] += req.getBandwidth();
+                    }
+
+            double congestion = s.congestionMeasure(l, demands);
+            object.setPhiValue(congestion);
+            double maxNodeUtilization = 0;
+            for(NFNode node : nodes.values())
+            {
+                maxNodeUtilization += cplex.getValue(gamma_n.get(node.getId()));
+            }
+            object.setGammaValue(maxNodeUtilization);
         }
         cplex.end();
         return object;

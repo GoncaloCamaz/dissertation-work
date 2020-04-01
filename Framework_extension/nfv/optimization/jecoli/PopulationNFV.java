@@ -4,18 +4,18 @@ import pt.uminho.algoritmi.netopt.ospf.comparator.FitnessComparator;
 import pt.uminho.algoritmi.netopt.ospf.comparator.SingleObjectiveComparator;
 import pt.uminho.algoritmi.netopt.ospf.comparator.TradeOffComparator;
 import pt.uminho.algoritmi.netopt.ospf.listener.PopulationChangedListener;
-import pt.uminho.algoritmi.netopt.ospf.simulation.OSPFWeights;
 import pt.uminho.algoritmi.netopt.ospf.simulation.solution.ASolution;
 import pt.uminho.algoritmi.netopt.ospf.simulation.solution.ASolutionSet;
 import pt.uminho.algoritmi.netopt.ospf.simulation.solution.Atributes;
 import pt.uminho.algoritmi.netopt.ospf.simulation.solution.IntegerSolution;
 
+import java.io.Serializable;
 import java.util.*;
 
-public class PopulationNFV
+public class PopulationNFV implements Serializable
 {
     public enum Encoding{
-        NODES;
+        NODES, WEIGHTS;
     }
 
     private static final long serialVersionUID = 1L;
@@ -148,6 +148,20 @@ public class PopulationNFV
     }
 
     /**
+     * changes weight at index for all genomes on the population
+     *
+     * @param index
+     * @param weigth
+     */
+    public void changeWeight(int index, int weigth) {
+
+        for (int i = 0; i < getNumberOfSolutions(); i++) {
+            IntegerSolution s = getSolution(i);
+            s.setVariableValue(index, weigth);
+        }
+    }
+
+    /**
      *
      * @return double[number of objectives][size]
      */
@@ -208,8 +222,8 @@ public class PopulationNFV
     /**
      * Adds a collection of solutions to this population.
      *
-     * @param it
-     *            the collection of solutions to be added
+     *
+     *
      * @return {@code true} if the population was modified as a result of this
      *         method; {@code false} otherwise
      */
@@ -324,6 +338,22 @@ public class PopulationNFV
             if(next.getEncoding().equals(Encoding.NODES)){
                 int[] var = data.get(index).getVariablesArray();
                 return Arrays.copyOfRange(var,next.getStartPosition(),next.getEndPosition());
+            }
+        }
+        throw new NullPointerException();
+    }
+
+    public int[] getWeights(int index) throws NullPointerException{
+        if(types.size()==0){
+            return data.get(index).getVariablesArray();
+        }else{
+            Iterator<SolutionType> it=types.iterator();
+            while(it.hasNext()){
+                SolutionType next = it.next();
+                if(next.getEncoding().equals(Encoding.WEIGHTS)){
+                    int[] var = data.get(index).getVariablesArray();
+                    return Arrays.copyOfRange(var,next.getStartPosition(),next.getEndPosition());
+                }
             }
         }
         throw new NullPointerException();

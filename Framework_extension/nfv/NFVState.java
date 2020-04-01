@@ -1,6 +1,7 @@
 package pt.uminho.algoritmi.netopt.nfv;
 
 import org.json.simple.parser.ParseException;
+import sun.security.pkcs.ParsingException;
 
 import java.io.IOException;
 
@@ -29,6 +30,16 @@ public class NFVState
         this.nsfile = filename;
         this.reqfile = requestsFile;
         this.loadState(filename,requestsFile);
+    }
+
+    public NFVState(String requestsFile)
+    {
+        this.requests = new NFRequestsMap();
+        this.nodes = new NFNodesMap();
+        this.services = new NFServicesMap();
+        this.nsfile = "";
+        this.reqfile = requestsFile;
+        this.loadRequests(requestsFile);
     }
 
     public NFVState(NFRequestsMap requests, NFNodesMap nodes, NFServicesMap services, String filename, String requestsfile) {
@@ -100,4 +111,17 @@ public class NFVState
             e.printStackTrace();
         }
     }
+
+    public void loadRequests(String requestsFile)
+    {
+        try
+        {
+            this.requests = NFVStateLoader.loadRequests(requestsFile);
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
 }

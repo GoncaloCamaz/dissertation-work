@@ -3,6 +3,7 @@ package pt.uminho.algoritmi.netopt.nfv.optimization.jecoli;
 import jecoli.algorithm.components.algorithm.IAlgorithmResult;
 import jecoli.algorithm.components.algorithm.IAlgorithmStatistics;
 import jecoli.algorithm.components.algorithm.writer.IAlgorithmResultWriter;
+import jecoli.algorithm.components.configuration.InvalidConfigurationException;
 import jecoli.algorithm.components.evaluationfunction.IEvaluationFunction;
 import jecoli.algorithm.components.operator.container.ReproductionOperatorContainer;
 import jecoli.algorithm.components.operator.reproduction.linear.IntegerAddMutation;
@@ -10,6 +11,7 @@ import jecoli.algorithm.components.operator.reproduction.linear.LinearGenomeRand
 import jecoli.algorithm.components.operator.reproduction.linear.TwoPointCrossOver;
 import jecoli.algorithm.components.operator.reproduction.linear.UniformCrossover;
 import jecoli.algorithm.components.operator.selection.TournamentSelection;
+import jecoli.algorithm.components.operator.selection.TournamentSelection2;
 import jecoli.algorithm.components.randomnumbergenerator.DefaultRandomNumberGenerator;
 import jecoli.algorithm.components.randomnumbergenerator.IRandomNumberGenerator;
 import jecoli.algorithm.components.representation.integer.IntegerRepresentationFactory;
@@ -30,13 +32,19 @@ import jecoli.algorithm.multiobjective.archive.components.ProcessingStrategy;
 import jecoli.algorithm.multiobjective.archive.plotting.IPlotter;
 import jecoli.algorithm.multiobjective.archive.trimming.ITrimmingFunction;
 import jecoli.algorithm.multiobjective.archive.trimming.ZitzlerTruncation;
+import jecoli.algorithm.multiobjective.nsgaII.NSGAIIConfiguration;
 import jecoli.algorithm.singleobjective.evolutionary.EvolutionaryConfiguration;
 import jecoli.algorithm.singleobjective.evolutionary.RecombinationParameters;
 import pt.uminho.algoritmi.netopt.SystemConf;
 import pt.uminho.algoritmi.netopt.nfv.*;
 import pt.uminho.algoritmi.netopt.nfv.optimization.ParamsNFV;
+import pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.evaluation.NFVEvaluationMO;
+import pt.uminho.algoritmi.netopt.ospf.optimization.Params;
 import pt.uminho.algoritmi.netopt.ospf.optimization.jecoli.SolutionParser;
 import pt.uminho.algoritmi.netopt.ospf.optimization.jecoli.algorithm.AlgorithmInterface;
+import pt.uminho.algoritmi.netopt.ospf.optimization.jecoli.algorithm.OSPFNSGAII;
+import pt.uminho.algoritmi.netopt.ospf.optimization.jecoli.evaluation.EvaluationType;
+import pt.uminho.algoritmi.netopt.ospf.optimization.jecoli.evaluation.ospf.OSPFIntegerEvaluationMO;
 import pt.uminho.algoritmi.netopt.ospf.simulation.*;
 import pt.uminho.algoritmi.netopt.ospf.simulation.exception.DimensionErrorException;
 import pt.uminho.algoritmi.netopt.ospf.simulation.solution.ASolution;
@@ -62,11 +70,11 @@ public class JecoliNFV
     private String info;
     protected IRandomNumberGenerator randomNumberGenerator;
     protected ArchiveManager<Integer, ILinearRepresentation<Integer>> archive;
-    private int lowerBound = 0;
-    private int upperBound= 7;
-    private int NUMObjectives = 1;
+    private int NUMObjectives = 2;
+    private int MAXServicesSolutions;
+    private int MINServicesSolutions;
 
-    public JecoliNFV(NetworkTopology topology, NFNodesMap nodes, NFRequestsMap requestsMap, NFServicesMap services) {
+    public JecoliNFV(NetworkTopology topology, NFNodesMap nodes, NFRequestsMap requestsMap, NFServicesMap services, int lowerBound, int upperBound) {
         this.topology = topology.copy();
         this.requestsMap = requestsMap;
         this.nodesMap = nodes;
@@ -75,6 +83,8 @@ public class JecoliNFV
         this.results = null;
         this.statistics = null;
         randomNumberGenerator = new DefaultRandomNumberGenerator();
+        this.MINServicesSolutions = lowerBound;
+        this.MAXServicesSolutions = upperBound;
     }
 
     /**
@@ -177,70 +187,79 @@ public class JecoliNFV
 
         newSolutionSet = solutionFactory.generateSolutionSet(q, new DefaultRandomNumberGenerator());
 
-        // Selection could be random or consider some kind of sorting
-        // for now just select the p first individuals
-
         if (p > 0) {
             PopulationNFV clonedPop = params.getInitialPopulation().copy(numberOfObjective);
             List<IntegerSolution> l = clonedPop.getLowestValuedSolutions(p);
             Iterator<IntegerSolution> it = l.iterator();
             while (it.hasNext())
-                newSolutionSet.add(SolutionParser.convert(it.next(), 1));
+                newSolutionSet.add(SolutionParser.convert(it.next(), NUMObjectives));
         }
 
         return newSolutionSet;
     }
 
     /**
-     *
-     * Pre configuration for EA
+     * Pre-configuration for NSGAII
      *
      * @param params
      * @return
      * @throws Exception
+     * @throws InvalidConfigurationException
      */
+    public NSGAIIConfiguration<ILinearRepresentation<Integer>, ILinearRepresentationFactory<Integer>> preConfigureNSGAII(
+            ParamsNFV params) throws Exception, InvalidConfigurationException {
 
-    private EvolutionaryConfiguration<ILinearRepresentation<Integer>, ILinearRepresentationFactory<Integer>> buildPreConfigurationEA(
-            ParamsNFV params) throws Exception {
-
-        ILinearRepresentationFactory<Integer> solutionFactory = new IntegerRepresentationFactory(
-                topology.getDimension(), upperBound, lowerBound);
-
-        ITerminationCriteria terminationCriteria;
-        if (params.getCriteria().equals(ParamsNFV.TerminationCriteria.ITERATION))
-            terminationCriteria = new IterationTerminationCriteria(params.getNumberGenerations());
-        else
-            terminationCriteria = new FitnessTargetTerminationCriteria(params.getCriteriaValue());
-
-        ReproductionOperatorContainer<ILinearRepresentation<Integer>, ILinearRepresentationFactory<Integer>> reproductionOperatorContainer = getContainer();
-
-        EvolutionaryConfiguration<ILinearRepresentation<Integer>, ILinearRepresentationFactory<Integer>> configuration = new EvolutionaryConfiguration<ILinearRepresentation<Integer>, ILinearRepresentationFactory<Integer>>();
-
+        NSGAIIConfiguration<ILinearRepresentation<Integer>, ILinearRepresentationFactory<Integer>> configuration = new NSGAIIConfiguration<ILinearRepresentation<Integer>, ILinearRepresentationFactory<Integer>>();
+        configuration.setStatisticsConfiguration(new StatisticsConfiguration());
+        configuration.setRandomNumberGenerator(randomNumberGenerator);
+        IntegerRepresentationFactory solutionFactory = new IntegerRepresentationFactory(topology.getNumberEdges(),
+                MAXServicesSolutions, MINServicesSolutions, NUMObjectives);
         configuration.setSolutionFactory(solutionFactory);
-        configuration.setTerminationCriteria(terminationCriteria);
+        configuration.setNumberOfObjectives(NUMObjectives);
+
+        configuration.setPopulationSize(params.getPopulationSize());
+
+        configuration.getStatisticConfiguration().setNumberOfBestSolutionsToKeepPerRun(params.getPopulationSize());
 
         ISolutionSet<ILinearRepresentation<Integer>> newSolutions = buildInitialPopulation(params, solutionFactory);
         configuration.setInitialPopulation(newSolutions);
         configuration.setPopulationInitialization(false);
 
-        RecombinationParameters recombinationParameters = new RecombinationParameters(
-                newSolutions.getNumberOfSolutions());
+        ITerminationCriteria terminationCriteria = new IterationTerminationCriteria(params.getNumberGenerations());
+        configuration.setTerminationCriteria(terminationCriteria);
 
+        RecombinationParameters recombinationParameters = new RecombinationParameters(0, params.getPopulationSize(), 0,
+                true);
         configuration.setRecombinationParameters(recombinationParameters);
-        configuration.setSelectionOperator(new TournamentSelection<ILinearRepresentation<Integer>>(1, 2));
-        configuration.setSurvivorSelectionOperator(new TournamentSelection<ILinearRepresentation<Integer>>(1, 2));
-        configuration.setPopulationSize(newSolutions.getNumberOfSolutions());
-        configuration.setReproductionOperatorContainer(reproductionOperatorContainer);
-        configuration.setRandomNumberGenerator(randomNumberGenerator);
-        configuration.setProblemBaseDirectory("nullDirectory");
-        configuration.setAlgorithmStateFile("nullFile");
-        configuration.setSaveAlgorithmStateDirectoryPath("nullDirectory");
-        configuration
-                .setAlgorithmResultWriterList(new ArrayList<IAlgorithmResultWriter<ILinearRepresentation<Integer>>>());
-        configuration.setStatisticsConfiguration(new StatisticsConfiguration());
+
+        configuration.setSelectionOperator(
+                new TournamentSelection2<ILinearRepresentation<Integer>>(1, 2, randomNumberGenerator));
+        configuration.setReproductionOperatorContainer(this.getContainer());
+        this.info = params.toString();
 
         return configuration;
     }
+
+    /**
+     * NSGAII
+     *
+     * @param params
+     * @throws Exception
+     * @throws InvalidConfigurationException
+     */
+
+    public void configureNSGAII(ParamsNFV params) throws Exception, InvalidConfigurationException {
+
+        NSGAIIConfiguration<ILinearRepresentation<Integer>, ILinearRepresentationFactory<Integer>> configuration = this
+                .preConfigureNSGAII(params);
+
+        NFVEvaluationMO nfvEvaluation = new NFVEvaluationMO(topology, requestsMap,nodesMap,servicesMap);
+
+        configuration.setEvaluationFunction(nfvEvaluation);
+
+        algorithm = new OSPFNSGAII(configuration);
+    }
+
     //TODO CONFIGURE ALGORITHM
     /**
      *
