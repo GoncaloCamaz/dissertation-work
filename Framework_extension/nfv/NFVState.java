@@ -1,7 +1,6 @@
 package pt.uminho.algoritmi.netopt.nfv;
 
 import org.json.simple.parser.ParseException;
-import sun.security.pkcs.ParsingException;
 
 import java.io.IOException;
 

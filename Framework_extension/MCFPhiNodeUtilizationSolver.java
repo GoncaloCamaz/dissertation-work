@@ -28,6 +28,7 @@ import pt.uminho.algoritmi.netopt.nfv.optimization.OptimizationResultObject;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkLoads;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -118,7 +119,7 @@ public class MCFPhiNodeUtilizationSolver {
         Arcs arcs = new Arcs();
         // variable for objective function
         double alpha = 0.5;
-        cplex.setParam(IloCplex.Param.TimeLimit, 29000);
+        //cplex.setParam(IloCplex.Param.TimeLimit, 29000);
         // number of nodes
         int nodesNumber = nodes.size();
         // number of requests in map requests
@@ -406,26 +407,76 @@ public class MCFPhiNodeUtilizationSolver {
 
             NetworkLoads l = new NetworkLoads(u, topology);
             Simul s = new Simul(topology);
-            double[][] demands = new double[nodesNumber][nodesNumber];
-            for(int i = 0; i < nodesNumber; i++)
-                for(int j = 0; j < nodesNumber; i++)
-                    for(NFRequest req : requests.values())
-                    {
-                        if(req.getSource() == i && req.getDestination() == j)
-                            demands[i][j] += req.getBandwidth();
-                    }
-
-            double congestion = s.congestionMeasure(l, demands);
+            double congestion = getCongestion(requests, nodesNumber, l, s);
             object.setPhiValue(congestion);
-            double maxNodeUtilization = 0;
-            for(NFNode node : nodes.values())
-            {
-                maxNodeUtilization += cplex.getValue(gamma_n.get(node.getId()));
-            }
+            double maxNodeUtilization = getMaxNodeUtilization(nodes, cplex, gamma_n);
             object.setGammaValue(maxNodeUtilization);
+            HashMap<Integer,Integer> servicesDeployed = new HashMap<>();
+            servicesDeployed = getServicesDeployed(this.nodesMap.getNodes(), this.services.getServices());
+            object.setServicesDeployed(servicesDeployed);
+            boolean nodesInfo = allNodesWServices(this.nodesMap.getNodes());
+            object.setAllNodesWServices(nodesInfo);
         }
         cplex.end();
         return object;
+    }
+
+    private boolean allNodesWServices(Map<Integer, NFNode> nodes)
+    {
+        boolean ret = true;
+        for(NFNode node : nodes.values())
+        {
+            if(node.getAvailableServices().size() == 0)
+            {
+                ret = false;
+                break;
+            }
+        }
+        return ret;
+    }
+
+
+    private HashMap<Integer, Integer> getServicesDeployed(Map<Integer, NFNode> nodes, Map<Integer, NFService> servicesAvail)
+    {
+        HashMap<Integer, Integer> services = new HashMap<>();
+        for(NFService service : servicesAvail.values())
+        {
+            services.put(service.getId(), 0);
+        }
+
+        for(NFNode node : nodes.values())
+        {
+            List<Integer> servicesAtNode = node.getAvailableServices();
+            for(Integer i : servicesAtNode)
+            {
+                int oldVal = services.get(i);
+                services.replace(i, oldVal, oldVal+1);
+            }
+        }
+
+        return services;
+    }
+
+    private double getMaxNodeUtilization(Map<Integer, NFNode> nodes, IloCplex cplex, HashMap<Integer, IloNumVar> gamma_n) throws IloException {
+        double maxNodeUtilization = 0;
+        for(NFNode node : nodes.values())
+        {
+            maxNodeUtilization += cplex.getValue(gamma_n.get(node.getId()));
+        }
+        return maxNodeUtilization;
+    }
+
+    private double getCongestion(Map<Integer, NFRequest> requests, int nodesNumber, NetworkLoads l, Simul s) {
+        double[][] demands = new double[nodesNumber][nodesNumber];
+        for(int i = 0; i < nodesNumber; i++)
+            for(int j = 0; j < nodesNumber; i++)
+                for(NFRequest req : requests.values())
+                {
+                    if(req.getSource() == i && req.getDestination() == j)
+                        demands[i][j] += req.getBandwidth();
+                }
+
+        return s.congestionMeasure(l, demands);
     }
 
     public boolean isSaveLoads() {

@@ -1,5 +1,7 @@
 package pt.uminho.algoritmi.netopt.nfv.optimization;
 
+import java.util.HashMap;
+
 public class OptimizationResultObject
 {
     private double[][] linkLoads;
@@ -8,6 +10,8 @@ public class OptimizationResultObject
     private double loadValue;
     private double gammaValue;
     private double phiValue;
+    private HashMap<Integer, Integer> servicesDeployed;
+    private boolean allNodesWServices;
 
     public OptimizationResultObject(int numberOfNodes)
     {
@@ -17,15 +21,20 @@ public class OptimizationResultObject
         this.loadValue = 0;
         this.gammaValue = 0;
         this.phiValue = 0;
+        this.servicesDeployed = new HashMap<>();
+        this.allNodesWServices = false;
     }
 
-    public OptimizationResultObject(double[][] linkLoads, double[] nodeUtilization, int numberOfNodes, double loadvalue, double phi, double gamma) {
+    public OptimizationResultObject(double[][] linkLoads, double[] nodeUtilization, int numberOfNodes, double loadvalue, double phi, double gamma, HashMap<
+            Integer,Integer> map, boolean allNodesWServices) {
         this.linkLoads = linkLoads;
         this.nodeUtilization = nodeUtilization;
         this.numberOfNodes = numberOfNodes;
         this.loadValue = loadvalue;
         this.phiValue = phi;
         this.gammaValue = gamma;
+        this.servicesDeployed = map;
+        this.allNodesWServices = allNodesWServices;
     }
 
     public double[][] getLinkLoads() {
@@ -74,5 +83,48 @@ public class OptimizationResultObject
 
     public void setPhiValue(double phiValue) {
         this.phiValue = phiValue;
+    }
+
+    public HashMap<Integer, Integer> getServicesDeployed() {
+        return servicesDeployed;
+    }
+
+    public void setServicesDeployed(HashMap<Integer, Integer> servicesDeployed) {
+        this.servicesDeployed = servicesDeployed;
+    }
+
+    public int getNumberOfServicesDeployed()
+    {
+        int val = 0;
+
+        for(Integer i : servicesDeployed.values())
+        {
+            val += servicesDeployed.get(i);
+        }
+
+        return val;
+    }
+
+    public boolean allServicesAvailable()
+    {
+        boolean ret = true;
+
+        for(Integer i : servicesDeployed.values())
+        {
+            if(servicesDeployed.get(i) == 0)
+            {
+                ret = false;
+            }
+        }
+
+        return ret;
+    }
+
+    public boolean isAllNodesWServices() {
+        return allNodesWServices;
+    }
+
+    public void setAllNodesWServices(boolean allNodesWServices) {
+        this.allNodesWServices = allNodesWServices;
     }
 }

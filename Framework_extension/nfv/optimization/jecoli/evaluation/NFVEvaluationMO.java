@@ -51,8 +51,23 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
         MCFPhiNodeUtilizationSolver solver = new MCFPhiNodeUtilizationSolver(topology, servicesMap, requestsMap, nodes);
         OptimizationResultObject object = solver.optimize();
 
+        // penalization added if there are services not available
+        // and if all nodes of the topology pocess implemented services
+        int penalizationVal = 0;
+        if(!object.allServicesAvailable())
+        {
+            penalizationVal = 10000;
+        }
+        else
+        {
+            if(object.isAllNodesWServices())
+            {
+                penalizationVal = 1000;
+            }
+        }
+
         resultList[0] = new Double(object.getPhiValue());
-        resultList[1] = new Double(object.getGammaValue());
+        resultList[1] = new Double(object.getGammaValue()) + penalizationVal;
 
         return resultList;
     }

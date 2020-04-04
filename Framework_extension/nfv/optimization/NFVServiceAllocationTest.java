@@ -16,17 +16,22 @@ import java.io.IOException;
 
 public class NFVServiceAllocationTest
 {
-    public static void main(String[] args) throws Exception {
-        if(args.length!=4)
-            System.exit(1);
+    private static String nodesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";
+    private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.edges";
+    private static String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidos.csv";
+    private static String servicesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/frameworkConfiguration.json";
 
-        String nodesFile = args[0];
-        String edgesFile = args[1];
-        String requestsFile = args[2];
-        String servicesFile = args[3];
+    public static void main(String[] args) throws Exception {
+        //if(args.length!=4)
+          //  System.exit(1);
+
+        //String nodesFile = args[0];
+        //String edgesFile = args[1];
+        //String requestsFile = args[2];
+        //String servicesFile =args[3];
 
         NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
-        NFVState state = new NFVState(servicesFile, requestsFile);
+        NFVState state = new NFVState(servicesFile, requests);
         NFServicesMap services = state.getServices();
         NFNodesMap map = state.getNodes();
         NFRequestsMap req = state.getRequests();
