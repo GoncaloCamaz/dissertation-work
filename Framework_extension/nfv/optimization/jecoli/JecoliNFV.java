@@ -2,7 +2,6 @@ package pt.uminho.algoritmi.netopt.nfv.optimization.jecoli;
 
 import jecoli.algorithm.components.algorithm.IAlgorithmResult;
 import jecoli.algorithm.components.algorithm.IAlgorithmStatistics;
-import jecoli.algorithm.components.algorithm.writer.IAlgorithmResultWriter;
 import jecoli.algorithm.components.configuration.InvalidConfigurationException;
 import jecoli.algorithm.components.evaluationfunction.IEvaluationFunction;
 import jecoli.algorithm.components.operator.container.ReproductionOperatorContainer;
@@ -10,7 +9,6 @@ import jecoli.algorithm.components.operator.reproduction.linear.IntegerAddMutati
 import jecoli.algorithm.components.operator.reproduction.linear.LinearGenomeRandomMutation;
 import jecoli.algorithm.components.operator.reproduction.linear.TwoPointCrossOver;
 import jecoli.algorithm.components.operator.reproduction.linear.UniformCrossover;
-import jecoli.algorithm.components.operator.selection.TournamentSelection;
 import jecoli.algorithm.components.operator.selection.TournamentSelection2;
 import jecoli.algorithm.components.randomnumbergenerator.DefaultRandomNumberGenerator;
 import jecoli.algorithm.components.randomnumbergenerator.IRandomNumberGenerator;
@@ -23,7 +21,6 @@ import jecoli.algorithm.components.solution.ISolutionContainer;
 import jecoli.algorithm.components.solution.ISolutionFactory;
 import jecoli.algorithm.components.solution.ISolutionSet;
 import jecoli.algorithm.components.statistics.StatisticsConfiguration;
-import jecoli.algorithm.components.terminationcriteria.FitnessTargetTerminationCriteria;
 import jecoli.algorithm.components.terminationcriteria.ITerminationCriteria;
 import jecoli.algorithm.components.terminationcriteria.IterationTerminationCriteria;
 import jecoli.algorithm.multiobjective.archive.components.ArchiveManager;
@@ -41,7 +38,6 @@ import pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.evaluation.NFVEvaluati
 import pt.uminho.algoritmi.netopt.ospf.optimization.jecoli.SolutionParser;
 import pt.uminho.algoritmi.netopt.ospf.optimization.jecoli.algorithm.AlgorithmInterface;
 import pt.uminho.algoritmi.netopt.ospf.optimization.jecoli.algorithm.OSPFNSGAII;
-import pt.uminho.algoritmi.netopt.ospf.optimization.jecoli.evaluation.EvaluationType;
 import pt.uminho.algoritmi.netopt.ospf.simulation.*;
 import pt.uminho.algoritmi.netopt.ospf.simulation.exception.DimensionErrorException;
 import pt.uminho.algoritmi.netopt.ospf.simulation.solution.ASolution;
@@ -56,7 +52,6 @@ public class JecoliNFV
 {
     private NetworkTopology topology;
     private NFServicesMap servicesMap;
-    private NFNodesMap nodesMap;
     private NFRequestsMap requestsMap;
 
     private AlgorithmInterface<Integer> algorithm;
@@ -66,19 +61,18 @@ public class JecoliNFV
     private String info;
     protected IRandomNumberGenerator randomNumberGenerator;
     protected ArchiveManager<Integer, ILinearRepresentation<Integer>> archive;
-    private int NUMObjectives = 1;
+    private int NUMObjectives = 2;
     private int MAXServicesSolutions;
     private int MINServicesSolutions;
 
-    public JecoliNFV(NetworkTopology topology, NFNodesMap nodes, NFRequestsMap requestsMap, NFServicesMap services, int lowerBound, int upperBound) {
+    public JecoliNFV(NetworkTopology topology, NFRequestsMap requestsMap, NFServicesMap services, int lowerBound, int upperBound) {
         this.topology = topology.copy();
         this.requestsMap = requestsMap;
-        this.nodesMap = nodes;
         this.servicesMap = services;
         this.algorithm = null;
         this.results = null;
         this.statistics = null;
-        randomNumberGenerator = new DefaultRandomNumberGenerator();
+        this.randomNumberGenerator = new DefaultRandomNumberGenerator();
         this.MINServicesSolutions = lowerBound;
         this.MAXServicesSolutions = upperBound;
     }
@@ -184,11 +178,11 @@ public class JecoliNFV
         newSolutionSet = solutionFactory.generateSolutionSet(q, new DefaultRandomNumberGenerator());
 
         if (p > 0) {
-            PopulationNFV clonedPop = params.getInitialPopulation().copy(numberOfObjective);
+            Population clonedPop = params.getInitialPopulation().copy(numberOfObjective);
             List<IntegerSolution> l = clonedPop.getLowestValuedSolutions(p);
             Iterator<IntegerSolution> it = l.iterator();
             while (it.hasNext())
-                newSolutionSet.add(SolutionParser.convert(it.next(), NUMObjectives));
+                newSolutionSet.add(SolutionParser.convert(it.next(), this.NUMObjectives));
         }
 
         return newSolutionSet;
@@ -209,9 +203,9 @@ public class JecoliNFV
         configuration.setStatisticsConfiguration(new StatisticsConfiguration());
         configuration.setRandomNumberGenerator(randomNumberGenerator);
         IntegerRepresentationFactory solutionFactory = new IntegerRepresentationFactory(topology.getDimension(),
-                MAXServicesSolutions, MINServicesSolutions, NUMObjectives);
+                MAXServicesSolutions, MINServicesSolutions, this.NUMObjectives);
         configuration.setSolutionFactory(solutionFactory);
-        configuration.setNumberOfObjectives(NUMObjectives);
+        configuration.setNumberOfObjectives(this.NUMObjectives);
 
         configuration.setPopulationSize(params.getPopulationSize());
 
@@ -249,14 +243,13 @@ public class JecoliNFV
         NSGAIIConfiguration<ILinearRepresentation<Integer>, ILinearRepresentationFactory<Integer>> configuration = this
                 .preConfigureNSGAII(params);
 
-        NFVEvaluationMO nfvEvaluation = new NFVEvaluationMO(topology, requestsMap,nodesMap,servicesMap);
+        NFVEvaluationMO nfvEvaluation = new NFVEvaluationMO(topology,requestsMap,servicesMap);
 
         configuration.setEvaluationFunction(nfvEvaluation);
 
         algorithm = new OSPFNSGAII(configuration);
     }
 
-    //TODO CONFIGURE ALGORITHM
     /**
      *
      * @return the bestSolution
@@ -274,7 +267,7 @@ public class JecoliNFV
     }
 
     public ASolution<Integer> getBestSolution() {
-        ISolution<ILinearRepresentation<Integer>> s = results.getSolutionContainer().getBestSolutionCellContainer(true)
+        ISolution<ILinearRepresentation<Integer>> s = results.getSolutionContainer().getBestSolutionCellContainer(false)
                 .getSolution();
         return SolutionParser.convert(s);
     }

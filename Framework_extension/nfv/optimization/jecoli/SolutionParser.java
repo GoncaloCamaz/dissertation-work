@@ -28,19 +28,19 @@ public class SolutionParser
         this.serv = new HashMap<>();
         List<Integer> noServ = new ArrayList<>();
         serv.put(0, noServ);
-        List<Integer> serv1 = new ArrayList<>(); serv1.add(1);
+        List<Integer> serv1 = new ArrayList<>(); serv1.add(0);
         serv.put(1, serv1);
-        List<Integer> serv2 = new ArrayList<>(); serv2.add(2);
+        List<Integer> serv2 = new ArrayList<>(); serv2.add(1);
         serv.put(2, serv2);
-        List<Integer> serv3 = new ArrayList<>(); serv3.add(3);
+        List<Integer> serv3 = new ArrayList<>(); serv3.add(2);
         serv.put(3, serv3);
-        List<Integer> serv4 = new ArrayList<>(); serv4.add(0,1); serv4.add(1,2);
+        List<Integer> serv4 = new ArrayList<>(); serv4.add(0,0); serv4.add(1,1);
         serv.put(4, serv4);
-        List<Integer> serv5 = new ArrayList<>(); serv5.add(0,1); serv5.add(1,3);
+        List<Integer> serv5 = new ArrayList<>(); serv5.add(0,0); serv5.add(1,2);
         serv.put(5, serv5);
-        List<Integer> serv6 = new ArrayList<>(); serv6.add(0,2); serv6.add(1,3);
+        List<Integer> serv6 = new ArrayList<>(); serv6.add(0,1); serv6.add(1,2);
         serv.put(6, serv6);
-        List<Integer> serv7 = new ArrayList<>(); serv7.add(0,1); serv7.add(1,2); serv7.add(2,3);
+        List<Integer> serv7 = new ArrayList<>(); serv7.add(0,0); serv7.add(1,1); serv7.add(2,2);
         serv.put(7, serv7);
     }
 
@@ -48,11 +48,20 @@ public class SolutionParser
     {
         NFNodesMap nodesMap = new NFNodesMap();
         Map<Integer, NFNode> nodes = new HashMap<>();
-
+        int processCapacity = 0;
         for(int i = 0; i < results.length; i++)
         {
-            List<Integer> availableSerices = serv.get(results[i]);
-            NFNode node = new NFNode(i,1000, availableSerices);
+            List<Integer> availableSerices = new ArrayList<>();
+            availableSerices = serv.get(results[i]);
+            if(availableSerices.size() == 0)
+            {
+                processCapacity = 0;
+            }
+            else
+            {
+                processCapacity = 1000;
+            }
+            NFNode node = new NFNode(i,processCapacity, availableSerices);
             nodes.put(i, node);
         }
         nodesMap.setNodes(nodes);

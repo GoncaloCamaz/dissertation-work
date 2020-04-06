@@ -1,12 +1,12 @@
 package pt.uminho.algoritmi.netopt.nfv.optimization;
 
-import pt.uminho.algoritmi.netopt.nfv.NFNodesMap;
 import pt.uminho.algoritmi.netopt.nfv.NFRequestsMap;
 import pt.uminho.algoritmi.netopt.nfv.NFServicesMap;
 import pt.uminho.algoritmi.netopt.nfv.NFVState;
 import pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.JecoliNFV;
-import pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.PopulationNFV;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
+import pt.uminho.algoritmi.netopt.ospf.simulation.NondominatedPopulation;
+import pt.uminho.algoritmi.netopt.ospf.simulation.Population;
 import pt.uminho.algoritmi.netopt.ospf.simulation.solution.IntegerSolution;
 
 import java.io.BufferedWriter;
@@ -32,7 +32,6 @@ public class NFVServiceAllocationTest
         NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
         NFVState state = new NFVState(servicesFile, requests);
         NFServicesMap services = state.getServices();
-        NFNodesMap map = state.getNodes();
         NFRequestsMap req = state.getRequests();
 
         ParamsNFV params = new ParamsNFV();
@@ -40,16 +39,17 @@ public class NFVServiceAllocationTest
         params.setPopulationSize(100);
         params.setNumberGenerations(10);
 
-        JecoliNFV ea = new JecoliNFV(topology,map,req,services,0,7);
+        JecoliNFV ea = new JecoliNFV(topology,req,services,0,7);
         ea.configureNSGAII(params);
         ea.run();
 
-        PopulationNFV p = new NondominatedPopulationNFV(ea.getSolutionSet());
+        Population p = new NondominatedPopulation(ea.getSolutionSet());
         save(p);
     }
 
-    public static void save(PopulationNFV p) {
-        IntegerSolution sol = p.getLowestValuedSolutions(0, 1).get(0);
+    public static void save(Population p) {
+        //IntegerSolution sol = p.getLowestValuedSolutions(0, 1).get(0);
+        IntegerSolution sol = p.getLowestTradeOffSolutions(0.5).get(0);
 
         FileWriter f;
         try {

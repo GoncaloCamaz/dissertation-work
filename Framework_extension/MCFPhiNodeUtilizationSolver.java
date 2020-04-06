@@ -56,8 +56,6 @@ public class MCFPhiNodeUtilizationSolver {
         this.setSaveLoads(true);
     }
 
-
-
     public static void main(String[] args) {
         String nodesFile = args[0];
         String edgesFile = args[1];
@@ -74,9 +72,6 @@ public class MCFPhiNodeUtilizationSolver {
             MCFPhiNodeUtilizationSolver solver = new MCFPhiNodeUtilizationSolver(topology, services, req, map);
             solver.setSaveLoads(true);
             solver.optimize();
-            NetworkLoads loads= solver.getNetworkLoads();
-            System.out.println("Congestion = "+loads.getCongestion());
-            System.out.println("MLU = "+loads.getMLU());
         } catch (Exception e)
         {
             e.printStackTrace();
@@ -85,7 +80,7 @@ public class MCFPhiNodeUtilizationSolver {
     }
 
     public OptimizationResultObject optimize() throws IloException {
-        return this.optimize(this.topology, this.services, this.NFRequestsMap, this.nodesMap);
+        return optimize(this.topology, this.services, this.NFRequestsMap, this.nodesMap);
     }
 
     /**
@@ -97,9 +92,7 @@ public class MCFPhiNodeUtilizationSolver {
         Map<Integer, NFRequest> r = req.getRequestMap();
         Map<Integer, NFNode> n = nodes.getNodes();
         OptimizationResultObject res = optimize(cp, serv, r, n);
-        //Simul s = new Simul(topology);
-        //double uncap = s.phiUncap(demands);
-        //double normalized = res / uncap;
+
         return res;
     }
 
@@ -118,7 +111,7 @@ public class MCFPhiNodeUtilizationSolver {
         Arcs arcs = new Arcs();
         // variable for objective function
         double alpha = 0.5;
-        cplex.setParam(IloCplex.Param.TimeLimit, 86400);
+        cplex.setParam(IloCplex.Param.TimeLimit, 86400);// 24 hours
         // number of nodes
         int nodesNumber = topology.getDimension();
         // number of requests in map requests
@@ -228,7 +221,6 @@ public class MCFPhiNodeUtilizationSolver {
         }
 
         // OBJECTIVE FUNCTION: alpha* phi + (1-alpha) * gamma
-        // double alpha = 0.5 (defined at the top)
         // minimize the sum of all Phi(a)
         IloLinearNumExpr obj = cplex.linearNumExpr();
         double norm1 = alpha/arcsNumber;
@@ -413,7 +405,7 @@ public class MCFPhiNodeUtilizationSolver {
                 double maxNodeUtilization = getMaxNodeUtilization(nodes, cplex, gamma_n)/nodesNumber;
                 object.setGammaValue(maxNodeUtilization);
                 HashMap<Integer,Integer> servicesDeployed = new HashMap<>();
-                servicesDeployed = getServicesDeployed(this.nodesMap.getNodes(), this.services.getServices());
+                servicesDeployed = getServicesDeployed(this.nodesMap.getNodes());
                 object.setServicesDeployed(servicesDeployed);
                 boolean nodesInfo = allNodesWServices(this.nodesMap.getNodes());
                 object.setAllNodesWServices(nodesInfo);
@@ -439,12 +431,12 @@ public class MCFPhiNodeUtilizationSolver {
     }
 
 
-    private HashMap<Integer, Integer> getServicesDeployed(Map<Integer, NFNode> nodes, Map<Integer, NFService> servicesAvail)
+    private HashMap<Integer, Integer> getServicesDeployed(Map<Integer, NFNode> nodes)
     {
         HashMap<Integer, Integer> services = new HashMap<>();
-        for(NFService service : servicesAvail.values())
+        for(NFNode node : nodes.values())
         {
-            services.put(service.getId(), 0);
+            services.put(node.getId(), 0);
         }
 
         for(NFNode node : nodes.values())
@@ -453,7 +445,7 @@ public class MCFPhiNodeUtilizationSolver {
             for(Integer i : servicesAtNode)
             {
                 int oldVal = services.get(i);
-                services.replace(i, oldVal, oldVal+1);
+                services.replace(node.getId(), oldVal, oldVal+1);
             }
         }
 

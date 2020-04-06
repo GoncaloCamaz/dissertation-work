@@ -1,6 +1,7 @@
 package pt.uminho.algoritmi.netopt.nfv.optimization;
 
-import pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.PopulationNFV;
+import pt.uminho.algoritmi.netopt.ospf.simulation.Population;
+
 import java.util.Iterator;
 import java.util.List;
 
@@ -42,7 +43,7 @@ public class ParamsNFV
     /**
      * Previous population
      */
-    private PopulationNFV population;
+    private Population population;
 
     /**
      * Percentage of previous population used
@@ -106,11 +107,11 @@ public class ParamsNFV
         return (this.percentage>0 && this.population!=null && this.population.getNumberOfSolutions()>0);
     }
 
-        public void setInitialPopulation(PopulationNFV population) {
+        public void setInitialPopulation(Population population) {
         this.population=population;
     }
 
-    public PopulationNFV getInitialPopulation()
+    public Population getInitialPopulation()
     {
         return this.population;
     }

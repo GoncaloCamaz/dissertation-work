@@ -16,16 +16,14 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
 {
     private NetworkTopology topology;
     private NFRequestsMap requestsMap;
-    private NFNodesMap nodesMap;
     private NFServicesMap servicesMap;
 
 
-    public NFVEvaluationMO(NetworkTopology topology, NFRequestsMap requests, NFNodesMap nodes, NFServicesMap services)
+    public NFVEvaluationMO(NetworkTopology topology, NFRequestsMap requests, NFServicesMap services)
     {
         super(false);
         this.topology = topology;
         this.requestsMap = requests;
-        this.nodesMap = nodes;
         this.servicesMap = services;
     }
 
@@ -40,7 +38,7 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
 
     @Override
     public int getNumberOfObjectives() {
-        return 2;
+        return 1;
     }
 
     @Override
@@ -53,7 +51,7 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
 
         // penalization added if there are services not available
         // and if all nodes of the topology pocess implemented services
-        int penalizationVal = 0;
+        double penalizationVal = 0;
         if(object.hasSolution())
         {
             if(!object.allServicesAvailable())
@@ -70,9 +68,8 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
         }
         else
         {
-            penalizationVal = 1000000000;
+            penalizationVal = Double.MAX_VALUE;
         }
-
 
         resultList[0] = new Double(object.getPhiValue());
         resultList[1] = new Double(object.getGammaValue()) + penalizationVal;
