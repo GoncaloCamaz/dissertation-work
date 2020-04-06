@@ -33,18 +33,15 @@ import jecoli.algorithm.multiobjective.archive.plotting.IPlotter;
 import jecoli.algorithm.multiobjective.archive.trimming.ITrimmingFunction;
 import jecoli.algorithm.multiobjective.archive.trimming.ZitzlerTruncation;
 import jecoli.algorithm.multiobjective.nsgaII.NSGAIIConfiguration;
-import jecoli.algorithm.singleobjective.evolutionary.EvolutionaryConfiguration;
 import jecoli.algorithm.singleobjective.evolutionary.RecombinationParameters;
 import pt.uminho.algoritmi.netopt.SystemConf;
 import pt.uminho.algoritmi.netopt.nfv.*;
 import pt.uminho.algoritmi.netopt.nfv.optimization.ParamsNFV;
 import pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.evaluation.NFVEvaluationMO;
-import pt.uminho.algoritmi.netopt.ospf.optimization.Params;
 import pt.uminho.algoritmi.netopt.ospf.optimization.jecoli.SolutionParser;
 import pt.uminho.algoritmi.netopt.ospf.optimization.jecoli.algorithm.AlgorithmInterface;
 import pt.uminho.algoritmi.netopt.ospf.optimization.jecoli.algorithm.OSPFNSGAII;
 import pt.uminho.algoritmi.netopt.ospf.optimization.jecoli.evaluation.EvaluationType;
-import pt.uminho.algoritmi.netopt.ospf.optimization.jecoli.evaluation.ospf.OSPFIntegerEvaluationMO;
 import pt.uminho.algoritmi.netopt.ospf.simulation.*;
 import pt.uminho.algoritmi.netopt.ospf.simulation.exception.DimensionErrorException;
 import pt.uminho.algoritmi.netopt.ospf.simulation.solution.ASolution;
@@ -52,7 +49,6 @@ import pt.uminho.algoritmi.netopt.ospf.simulation.solution.ASolutionSet;
 import pt.uminho.algoritmi.netopt.ospf.simulation.solution.AbstractSolutionSet;
 import pt.uminho.algoritmi.netopt.ospf.simulation.solution.IntegerSolution;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -70,7 +66,7 @@ public class JecoliNFV
     private String info;
     protected IRandomNumberGenerator randomNumberGenerator;
     protected ArchiveManager<Integer, ILinearRepresentation<Integer>> archive;
-    private int NUMObjectives = 2;
+    private int NUMObjectives = 1;
     private int MAXServicesSolutions;
     private int MINServicesSolutions;
 
@@ -212,7 +208,7 @@ public class JecoliNFV
         NSGAIIConfiguration<ILinearRepresentation<Integer>, ILinearRepresentationFactory<Integer>> configuration = new NSGAIIConfiguration<ILinearRepresentation<Integer>, ILinearRepresentationFactory<Integer>>();
         configuration.setStatisticsConfiguration(new StatisticsConfiguration());
         configuration.setRandomNumberGenerator(randomNumberGenerator);
-        IntegerRepresentationFactory solutionFactory = new IntegerRepresentationFactory(topology.getNumberEdges(),
+        IntegerRepresentationFactory solutionFactory = new IntegerRepresentationFactory(topology.getDimension(),
                 MAXServicesSolutions, MINServicesSolutions, NUMObjectives);
         configuration.setSolutionFactory(solutionFactory);
         configuration.setNumberOfObjectives(NUMObjectives);
@@ -268,7 +264,7 @@ public class JecoliNFV
     public int[] getBestSolutionServices() {
         ISolutionContainer<ILinearRepresentation<Integer>> c = results.getSolutionContainer();
 
-        LinearRepresentation<Integer> rep = (LinearRepresentation<Integer>) c.getBestSolutionCellContainer(true)
+        LinearRepresentation<Integer> rep = (LinearRepresentation<Integer>) c.getBestSolutionCellContainer(false)
                 .getSolution().getRepresentation();
         int[] sol = new int[rep.getNumberOfElements()];
 

@@ -47,24 +47,32 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
     public Double[] evaluateMO(ILinearRepresentation<Integer> solutionRepresentation) throws Exception
     {
         Double[] resultList = new Double[2];
-        NFNodesMap nodes = decode(solutionRepresentation);
+        NFNodesMap nodes = decode(solutionRepresentation, topology.getDimension());
         MCFPhiNodeUtilizationSolver solver = new MCFPhiNodeUtilizationSolver(topology, servicesMap, requestsMap, nodes);
         OptimizationResultObject object = solver.optimize();
 
         // penalization added if there are services not available
         // and if all nodes of the topology pocess implemented services
         int penalizationVal = 0;
-        if(!object.allServicesAvailable())
+        if(object.hasSolution())
         {
-            penalizationVal = 10000;
+            if(!object.allServicesAvailable())
+            {
+                penalizationVal = 100000;
+            }
+            else
+            {
+                if(object.isAllNodesWServices())
+                {
+                    penalizationVal = 10000;
+                }
+            }
         }
         else
         {
-            if(object.isAllNodesWServices())
-            {
-                penalizationVal = 1000;
-            }
+            penalizationVal = 1000000000;
         }
+
 
         resultList[0] = new Double(object.getPhiValue());
         resultList[1] = new Double(object.getGammaValue()) + penalizationVal;
@@ -72,10 +80,9 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
         return resultList;
     }
 
-    public NFNodesMap decode(ILinearRepresentation<Integer> solution)
+    public NFNodesMap decode(ILinearRepresentation<Integer> solution, int numberOfNodes)
     {
         NFNodesMap nodes = new NFNodesMap();
-        int numberOfNodes = nodes.getNodes().size();
         int[] result = new int[numberOfNodes];
         SolutionParser parser = new SolutionParser();
 

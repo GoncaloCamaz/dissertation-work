@@ -51,7 +51,7 @@ public class SolutionParser
 
         for(int i = 0; i < results.length; i++)
         {
-            List<Integer> availableSerices = serv.get(i);
+            List<Integer> availableSerices = serv.get(results[i]);
             NFNode node = new NFNode(i,1000, availableSerices);
             nodes.put(i, node);
         }

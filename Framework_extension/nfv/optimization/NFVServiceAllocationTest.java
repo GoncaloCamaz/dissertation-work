@@ -1,6 +1,5 @@
 package pt.uminho.algoritmi.netopt.nfv.optimization;
 
-import pt.uminho.algoritmi.netopt.cplex.MCFPhiNodeUtilizationSolver;
 import pt.uminho.algoritmi.netopt.nfv.NFNodesMap;
 import pt.uminho.algoritmi.netopt.nfv.NFRequestsMap;
 import pt.uminho.algoritmi.netopt.nfv.NFServicesMap;
@@ -22,7 +21,7 @@ public class NFVServiceAllocationTest
     private static String servicesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/frameworkConfiguration.json";
 
     public static void main(String[] args) throws Exception {
-        //if(args.length!=4)
+       // if(args.length!=4)
           //  System.exit(1);
 
         //String nodesFile = args[0];
@@ -36,16 +35,12 @@ public class NFVServiceAllocationTest
         NFNodesMap map = state.getNodes();
         NFRequestsMap req = state.getRequests();
 
-        MCFPhiNodeUtilizationSolver solver = new MCFPhiNodeUtilizationSolver(topology, services, req, map);
-        solver.setSaveLoads(true);
-        solver.optimize();
-
         ParamsNFV params = new ParamsNFV();
         params.setArchiveSize(100);
         params.setPopulationSize(100);
-        params.setNumberGenerations(1);
+        params.setNumberGenerations(10);
 
-        JecoliNFV ea = new JecoliNFV(topology, map,req,services,0,7);
+        JecoliNFV ea = new JecoliNFV(topology,map,req,services,0,7);
         ea.configureNSGAII(params);
         ea.run();
 

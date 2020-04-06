@@ -127,4 +127,15 @@ public class OptimizationResultObject
     public void setAllNodesWServices(boolean allNodesWServices) {
         this.allNodesWServices = allNodesWServices;
     }
+
+    public boolean hasSolution()
+    {
+        boolean ret = true;
+
+        if(this.gammaValue == 0 && this.phiValue == 0)
+        {
+            ret = false;
+        }
+        return ret;
+    }
 }
