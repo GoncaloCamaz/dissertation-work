@@ -52,17 +52,24 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
         // penalization added if there are services not available
         // and if all nodes of the topology pocess implemented services
         double penalizationVal = 0;
+        for(int i = 0; i < solutionRepresentation.getNumberOfElements(); i ++)
+        {
+            if(solutionRepresentation.getElementAt(i) < 0)
+            {
+                penalizationVal = Double.MAX_VALUE;
+            }
+        }
         if(object.hasSolution())
         {
             if(!object.allServicesAvailable())
             {
-                penalizationVal = 100000;
+                penalizationVal += 100000;
             }
             else
             {
                 if(object.isAllNodesWServices())
                 {
-                    penalizationVal = 10000;
+                    penalizationVal += 10000;
                 }
             }
         }
