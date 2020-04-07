@@ -1,8 +1,15 @@
 package pt.uminho.algoritmi.netopt.nfv.optimization.jecoli;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import pt.uminho.algoritmi.netopt.nfv.NFNode;
 import pt.uminho.algoritmi.netopt.nfv.NFNodesMap;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,26 +29,41 @@ import java.util.Map;
 public class SolutionParser
 {
     private Map<Integer, List<Integer>> serv;
+    private String filename;
 
-    public SolutionParser()
+    public SolutionParser(String filename)
     {
         this.serv = new HashMap<>();
-        List<Integer> noServ = new ArrayList<>();
-        serv.put(0, noServ);
-        List<Integer> serv1 = new ArrayList<>(); serv1.add(0);
-        serv.put(1, serv1);
-        List<Integer> serv2 = new ArrayList<>(); serv2.add(1);
-        serv.put(2, serv2);
-        List<Integer> serv3 = new ArrayList<>(); serv3.add(2);
-        serv.put(3, serv3);
-        List<Integer> serv4 = new ArrayList<>(); serv4.add(0,0); serv4.add(1,1);
-        serv.put(4, serv4);
-        List<Integer> serv5 = new ArrayList<>(); serv5.add(0,0); serv5.add(1,2);
-        serv.put(5, serv5);
-        List<Integer> serv6 = new ArrayList<>(); serv6.add(0,1); serv6.add(1,2);
-        serv.put(6, serv6);
-        List<Integer> serv7 = new ArrayList<>(); serv7.add(0,0); serv7.add(1,1); serv7.add(2,2);
-        serv.put(7, serv7);
+        this.filename = filename;
+        loadJson();
+    }
+
+    private void loadJson() {
+        HashMap<Integer, List<Integer>> servicesNode = new HashMap<>();
+        JSONParser parser = new JSONParser();
+
+        try {
+            Object obj = parser.parse(new FileReader("serviceMap.json"));
+            JSONObject jsonObj = (JSONObject) obj;
+            JSONArray services = (JSONArray) jsonObj.get("services");
+            for(Object o : services)
+            {
+                JSONObject objAux = (JSONObject) o;
+                int idS = Integer.parseInt(objAux.get("id").toString());
+                JSONArray idList = (JSONArray) objAux.get("List");
+                List<Integer> servs = new ArrayList<>();
+                for(Object o1 : idList)
+                {
+                    servs.add(Integer.parseInt(o1.toString()));
+                }
+                servicesNode.put(idS, servs);
+            }
+            setServ(servicesNode);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
     }
 
     public NFNodesMap solutionParser(int[] results)
@@ -104,5 +126,21 @@ public class SolutionParser
             i++;
         }
         return ret;
+    }
+
+    public String getFilename() {
+        return filename;
+    }
+
+    public void setFilename(String filename) {
+        this.filename = filename;
+    }
+
+    public Map<Integer, List<Integer>> getServ() {
+        return serv;
+    }
+
+    public void setServ(Map<Integer, List<Integer>> serv) {
+        this.serv = serv;
     }
 }

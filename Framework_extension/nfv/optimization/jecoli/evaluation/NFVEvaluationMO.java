@@ -17,14 +17,16 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
     private NetworkTopology topology;
     private NFRequestsMap requestsMap;
     private NFServicesMap servicesMap;
+    private String filename;
 
 
-    public NFVEvaluationMO(NetworkTopology topology, NFRequestsMap requests, NFServicesMap services)
+    public NFVEvaluationMO(NetworkTopology topology, NFRequestsMap requests, NFServicesMap services, String filename)
     {
         super(false);
         this.topology = topology;
         this.requestsMap = requests;
         this.servicesMap = services;
+        this.filename = filename;
     }
 
     @Override
@@ -52,24 +54,18 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
         // penalization added if there are services not available
         // and if all nodes of the topology pocess implemented services
         double penalizationVal = 0;
-        for(int i = 0; i < solutionRepresentation.getNumberOfElements(); i ++)
-        {
-            if(solutionRepresentation.getElementAt(i) < 0)
-            {
-                penalizationVal = Double.MAX_VALUE;
-            }
-        }
+
         if(object.hasSolution())
         {
             if(!object.allServicesAvailable())
             {
-                penalizationVal += 100000;
+                penalizationVal += Double.MAX_VALUE;
             }
             else
             {
                 if(object.isAllNodesWServices())
                 {
-                    penalizationVal += 10000;
+                    penalizationVal += 100000;
                 }
             }
         }
@@ -88,7 +84,7 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
     {
         NFNodesMap nodes = new NFNodesMap();
         int[] result = new int[numberOfNodes];
-        SolutionParser parser = new SolutionParser();
+        SolutionParser parser = new SolutionParser(this.filename);
 
         for(int i = 0; i < numberOfNodes; i++)
         {
@@ -98,5 +94,37 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
         nodes = parser.solutionParser(result);
 
         return nodes;
+    }
+
+    public NetworkTopology getTopology() {
+        return topology;
+    }
+
+    public void setTopology(NetworkTopology topology) {
+        this.topology = topology;
+    }
+
+    public NFRequestsMap getRequestsMap() {
+        return requestsMap;
+    }
+
+    public void setRequestsMap(NFRequestsMap requestsMap) {
+        this.requestsMap = requestsMap;
+    }
+
+    public NFServicesMap getServicesMap() {
+        return servicesMap;
+    }
+
+    public void setServicesMap(NFServicesMap servicesMap) {
+        this.servicesMap = servicesMap;
+    }
+
+    public String getFilename() {
+        return filename;
+    }
+
+    public void setFilename(String filename) {
+        this.filename = filename;
     }
 }
