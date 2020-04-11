@@ -17,7 +17,7 @@ import java.io.IOException;
 public class NFVServiceAllocationTest
 {
     public static void main(String[] args) throws Exception {
-        if(args.length!=9)
+        if(args.length!=10)
             System.exit(1);
 
         String nodesFile = args[0];
@@ -29,6 +29,7 @@ public class NFVServiceAllocationTest
         int numberOfGenerations = Integer.parseInt(args[6]);
         int lowerBound = Integer.parseInt(args[7]);
         int upperBound = Integer.parseInt(args[8]);
+        int maxServices = Integer.parseInt(args[9]);
 
         NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
         NFVState state = new NFVState(servicesFile, requestsFile);
@@ -40,7 +41,7 @@ public class NFVServiceAllocationTest
         params.setPopulationSize(populationSize);
         params.setNumberGenerations(numberOfGenerations);
 
-        JecoliNFV ea = new JecoliNFV(topology,req,services,lowerBound,upperBound, serviceMapingFile);
+        JecoliNFV ea = new JecoliNFV(topology,req,services,lowerBound,upperBound, serviceMapingFile, maxServices);
         ea.configureNSGAII(params);
         ea.run();
 

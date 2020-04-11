@@ -65,8 +65,9 @@ public class JecoliNFV
     private int NUMObjectives = 2;
     private int MAXServicesSolutions;
     private int MINServicesSolutions;
+    private int maxServicesPenalization;
 
-    public JecoliNFV(NetworkTopology topology, NFRequestsMap requestsMap, NFServicesMap services, int lowerBound, int upperBound, String file) {
+    public JecoliNFV(NetworkTopology topology, NFRequestsMap requestsMap, NFServicesMap services, int lowerBound, int upperBound, String file, int maxServicesPenalization) {
         this.topology = topology.copy();
         this.requestsMap = requestsMap;
         this.servicesMap = services;
@@ -77,6 +78,8 @@ public class JecoliNFV
         this.MINServicesSolutions = lowerBound;
         this.MAXServicesSolutions = upperBound;
         this.servicesConfiguration = file;
+        this.maxServicesPenalization = maxServicesPenalization;
+
     }
 
     /**
@@ -245,7 +248,7 @@ public class JecoliNFV
         NSGAIIConfiguration<ILinearRepresentation<Integer>, ILinearRepresentationFactory<Integer>> configuration = this
                 .preConfigureNSGAII(params);
 
-        NFVEvaluationMO nfvEvaluation = new NFVEvaluationMO(topology,requestsMap,servicesMap, servicesConfiguration);
+        NFVEvaluationMO nfvEvaluation = new NFVEvaluationMO(topology,requestsMap,servicesMap, servicesConfiguration, this.maxServicesPenalization);
 
         configuration.setEvaluationFunction(nfvEvaluation);
 

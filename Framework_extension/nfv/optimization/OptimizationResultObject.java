@@ -25,8 +25,8 @@ public class OptimizationResultObject
         this.allNodesWServices = false;
     }
 
-    public OptimizationResultObject(double[][] linkLoads, double[] nodeUtilization, int numberOfNodes, double loadvalue, double phi, double gamma, HashMap<
-            Integer,Integer> map, boolean allNodesWServices) {
+    public OptimizationResultObject(double[][] linkLoads, double[] nodeUtilization, int numberOfNodes, double loadvalue, double phi, double gamma,
+                                    HashMap<Integer,Integer> map, boolean allNodesWServices) {
         this.linkLoads = linkLoads;
         this.nodeUtilization = nodeUtilization;
         this.numberOfNodes = numberOfNodes;
@@ -105,21 +105,6 @@ public class OptimizationResultObject
         return val;
     }
 
-    public boolean allServicesAvailable()
-    {
-        boolean ret = true;
-
-        for(Integer i : servicesDeployed.values())
-        {
-            if(servicesDeployed.get(i) == 0)
-            {
-                ret = false;
-            }
-        }
-
-        return ret;
-    }
-
     public boolean isAllNodesWServices() {
         return allNodesWServices;
     }
@@ -128,6 +113,7 @@ public class OptimizationResultObject
         this.allNodesWServices = allNodesWServices;
     }
 
+    // if no solution was reached, the values of gamma and phi will remain the same as the object constructor
     public boolean hasSolution()
     {
         boolean ret = true;

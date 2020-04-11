@@ -18,15 +18,17 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
     private NFRequestsMap requestsMap;
     private NFServicesMap servicesMap;
     private String filename;
+    private int maxServicesPenalization;
 
 
-    public NFVEvaluationMO(NetworkTopology topology, NFRequestsMap requests, NFServicesMap services, String filename)
+    public NFVEvaluationMO(NetworkTopology topology, NFRequestsMap requests, NFServicesMap services, String filename, int maxServicesPenalization)
     {
         super(false);
         this.topology = topology;
         this.requestsMap = requests;
         this.servicesMap = services;
         this.filename = filename;
+        this.maxServicesPenalization = maxServicesPenalization;
     }
 
     @Override
@@ -51,33 +53,32 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
         MCFPhiNodeUtilizationSolver solver = new MCFPhiNodeUtilizationSolver(topology, servicesMap, requestsMap, nodes);
         OptimizationResultObject object = solver.optimize();
 
-        // penalization added if there are services not available
-        // and if all nodes of the topology pocess implemented services
-        double penalizationVal = 0;
+        double penalizationVal = getPenalization(object,this.maxServicesPenalization);
 
-        if(object.hasSolution())
-        {
-            if(!object.allServicesAvailable())
-            {
-                penalizationVal += Double.MAX_VALUE;
-            }
-            else
-            {
-                if(object.isAllNodesWServices())
-                {
-                    penalizationVal += 100000;
-                }
-            }
-        }
-        else
-        {
-            penalizationVal = Double.MAX_VALUE;
-        }
-
-        resultList[0] = new Double(object.getPhiValue());
+        resultList[0] = new Double(object.getPhiValue()) + penalizationVal;
         resultList[1] = new Double(object.getGammaValue()) + penalizationVal;
 
         return resultList;
+    }
+
+    private double getPenalization(OptimizationResultObject object, int maxServices)
+    {
+        double ret = 0;
+
+        int servicesDeployed = object.getNumberOfServicesDeployed();
+        if(!object.hasSolution())
+        {
+            ret = Double.MAX_VALUE;
+        }
+        else
+        {
+            if(maxServices < servicesDeployed)
+            {
+                ret = (servicesDeployed-maxServices)*1000;
+            }
+        }
+
+        return ret;
     }
 
     public NFNodesMap decode(ILinearRepresentation<Integer> solution, int numberOfNodes)
@@ -126,5 +127,13 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
 
     public void setFilename(String filename) {
         this.filename = filename;
+    }
+
+    public int getMaxServicesPenalization() {
+        return maxServicesPenalization;
+    }
+
+    public void setMaxServicesPenalization(int maxServicesPenalization) {
+        this.maxServicesPenalization = maxServicesPenalization;
     }
 }

@@ -43,10 +43,6 @@ public class MCFPhiNodeUtilizationSolver {
     private NFRequestsMap NFRequestsMap;
     private NFNodesMap nodesMap;
     private boolean saveLoads;
-    //private static String nodesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/50_4/isno_50_4.nodes";
-    //private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/50_4/isno_50_4.edges";
-    //private static String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidos.csv";
-    //private static String servicesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/frameworkConfiguration.json";
 
     public MCFPhiNodeUtilizationSolver(NetworkTopology topology, NFServicesMap servicesMap, NFRequestsMap r , NFNodesMap n) {
         this.topology = topology;
@@ -430,7 +426,7 @@ public class MCFPhiNodeUtilizationSolver {
         return ret;
     }
 
-
+    // returns the number of services deployed per node
     private HashMap<Integer, Integer> getServicesDeployed(Map<Integer, NFNode> nodes)
     {
         HashMap<Integer, Integer> services = new HashMap<>();
