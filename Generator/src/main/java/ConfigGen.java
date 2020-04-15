@@ -24,7 +24,7 @@ public class ConfigGen
 
     public ConfigGen()
     {
-        this.filepath = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidos.csv";
+        this.filepath = "pedidos.csv";
         this.headers = new ArrayList<>();
         this.nodesWServices = new ArrayList<>();
         this.servicesID = new ArrayList<>();
@@ -154,12 +154,10 @@ public class ConfigGen
     {
         RequestConfig c = new RequestConfig();
         c.setId(row);
-        int originNode = random.getRandomFromRage(0, numberOfNodes);
-        int destinationNode = random.getRandomFromRage(0, numberOfNodes);
-        c.setOriginNodeID(originNode);
-        c.setDestinationNodeID(destinationNode);
-        c.setBandwidthConsumption(random.getRandomFromRage(50,500));
-        c.insertRandomServices(numberOfNodesWServices,random.getRandomFromRage(1, numberOfNodesWServices));
+        c.setOriginNodeID(random.getRandomFromRage(0, numberOfNodes));
+        c.setDestinationNodeID(random.getRandomFromRage(0, numberOfNodes));
+        c.setBandwidthConsumption(random.getRandomFromRage(1,100));
+        c.insertRandomServices(random.getRandomFromRage(1, this.getNumberOfServices()+1),servicesID);
 
         return helpers.convertListToString(c, this.headers.size());
     }

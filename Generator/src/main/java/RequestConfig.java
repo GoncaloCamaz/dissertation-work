@@ -8,7 +8,7 @@ public class RequestConfig
     private int originNodeID;
     private int destinationNodeID;
     private int bandwidthConsumption;
-    private List<Node> serviceNodes;
+    private List<Integer> servicesRequested;
 
     public RequestConfig(int id)
     {
@@ -16,7 +16,7 @@ public class RequestConfig
         this.originNodeID = 0;
         this.destinationNodeID = 0;
         this.bandwidthConsumption = 0;
-        this.serviceNodes = new ArrayList<>();
+        this.servicesRequested = new ArrayList<>();
     }
 
     public RequestConfig(int id, int originNodeID, int destinationNodeID , int bandwidthConsumption) {
@@ -24,7 +24,7 @@ public class RequestConfig
         this.originNodeID = originNodeID;
         this.destinationNodeID = destinationNodeID;
         this.bandwidthConsumption = bandwidthConsumption;
-        this.serviceNodes = new ArrayList<>();
+        this.servicesRequested = new ArrayList<>();
     }
 
     public RequestConfig()
@@ -33,7 +33,7 @@ public class RequestConfig
         this.originNodeID = 0;
         this.destinationNodeID = 0;
         this.bandwidthConsumption = 0;
-        this.serviceNodes = new ArrayList<>();
+        this.servicesRequested = new ArrayList<>();
     }
 
     public int getDestinationNodeID() {
@@ -44,8 +44,8 @@ public class RequestConfig
         this.destinationNodeID = destinationNodeID;
     }
 
-    public void setServiceNodes(List<Node> serviceNodes) {
-        this.serviceNodes = serviceNodes;
+    public void setServicesRequested(List<Integer> servicesRequested) {
+        this.servicesRequested = servicesRequested;
     }
 
     public int getId() {
@@ -72,39 +72,30 @@ public class RequestConfig
         this.bandwidthConsumption = bandwidthConsumption;
     }
 
-    public List<Node> getServiceNodes() {
-        return serviceNodes;
+    public List<Integer> getServicesRequested() {
+        return servicesRequested;
     }
 
-    public void insertRandomServices(int maxNodes, int random)
+    /**
+     *
+     * @param random
+     * @param services
+     */
+    public void insertRandomServices(int random,List<Integer> services)
     {
         int num = 0;
-        int service;
-        while(num < maxNodes)
+        int i = 0;
+
+        Collections.shuffle(services);
+        while(num < random)
         {
-            if(num < random)
-            {
-                service = 1;
-            }
-            else
-            {
-                service = 0;
-            }
-            Node n = new Node(num, service);
-            this.serviceNodes.add(n);
+            int toAdd = services.get(num);
+            servicesRequested.add(toAdd);
             num++;
         }
-        Collections.shuffle(this.serviceNodes);
-    }
-
-    public void setAllServicesAvailable(int maxNodes)
-    {
-        int num = 0;
-        while(num < maxNodes)
+        while(servicesRequested.size() < services.size())
         {
-            Node n = new Node(num, 1);
-            this.serviceNodes.add(n);
-            num++;
+            servicesRequested.add(-1);
         }
     }
 }

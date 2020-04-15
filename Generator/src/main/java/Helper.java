@@ -9,15 +9,13 @@ public class Helper
         str[1] = String.valueOf(config.getOriginNodeID());
         str[2] = String.valueOf(config.getDestinationNodeID());
         str[3] = String.valueOf(config.getBandwidthConsumption());
-        int length = config.getServiceNodes().size();
+        int length = config.getServicesRequested().size();
         int val;
-        for(int i = 4; i < headersLen; i++)
+
+        for(int i = 0; i < length; i++)
         {
-            if(i - 4 < length)
-            {
-                val = config.getServiceNodes().get(i-4).getWithservice();
-                str[i] = String.valueOf(val);
-            }
+            val = config.getServicesRequested().get(i);
+            str[i+4] = String.valueOf(val);
         }
 
         return str;

@@ -51,7 +51,7 @@ public class JSONSaver
 
     public void saveFrameworkConfigurations(ConfigGen configGen, RandomNumGen random)
     {
-        String fileName = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/frameworkConfiguration.json";
+        String fileName = "frameworkConfiguration.json";
         int nodesWServices = configGen.getNumberOfNodesWServices();
         int maxNodes = configGen.getNumberOfNodes();
 
