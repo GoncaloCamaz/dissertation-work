@@ -6,8 +6,7 @@ import jecoli.algorithm.components.evaluationfunction.InvalidEvaluationFunctionI
 import jecoli.algorithm.components.representation.linear.ILinearRepresentation;
 import pt.uminho.algoritmi.netopt.cplex.MCFPhiNodeUtilizationSolver;
 import pt.uminho.algoritmi.netopt.nfv.NFNodesMap;
-import pt.uminho.algoritmi.netopt.nfv.NFRequestsMap;
-import pt.uminho.algoritmi.netopt.nfv.NFServicesMap;
+import pt.uminho.algoritmi.netopt.nfv.NFVState;
 import pt.uminho.algoritmi.netopt.nfv.optimization.OptimizationResultObject;
 import pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.SolutionParser;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
@@ -15,18 +14,16 @@ import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
 public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<ILinearRepresentation<Integer>>
 {
     private NetworkTopology topology;
-    private NFRequestsMap requestsMap;
-    private NFServicesMap servicesMap;
+    private NFVState state;
     private String filename;
     private int maxServicesPenalization;
 
 
-    public NFVEvaluationMO(NetworkTopology topology, NFRequestsMap requests, NFServicesMap services, String filename, int maxServicesPenalization)
+    public NFVEvaluationMO(NetworkTopology topology, NFVState state, String filename, int maxServicesPenalization)
     {
         super(false);
         this.topology = topology;
-        this.requestsMap = requests;
-        this.servicesMap = services;
+        this.state = state;
         this.filename = filename;
         this.maxServicesPenalization = maxServicesPenalization;
     }
@@ -50,7 +47,8 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
     {
         Double[] resultList = new Double[2];
         NFNodesMap nodes = decode(solutionRepresentation, topology.getDimension());
-        MCFPhiNodeUtilizationSolver solver = new MCFPhiNodeUtilizationSolver(topology, servicesMap, requestsMap, nodes);
+        this.state.setNodes(nodes);
+        MCFPhiNodeUtilizationSolver solver = new MCFPhiNodeUtilizationSolver(topology, state);
         OptimizationResultObject object = solver.optimize();
 
         double penalizationVal = getPenalization(object,this.maxServicesPenalization);
@@ -105,20 +103,12 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
         this.topology = topology;
     }
 
-    public NFRequestsMap getRequestsMap() {
-        return requestsMap;
+    public NFVState getState() {
+        return state;
     }
 
-    public void setRequestsMap(NFRequestsMap requestsMap) {
-        this.requestsMap = requestsMap;
-    }
-
-    public NFServicesMap getServicesMap() {
-        return servicesMap;
-    }
-
-    public void setServicesMap(NFServicesMap servicesMap) {
-        this.servicesMap = servicesMap;
+    public void setState(NFVState state) {
+        this.state = state;
     }
 
     public String getFilename() {

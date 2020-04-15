@@ -90,9 +90,9 @@ public class NFVStateLoader
             while(i < size)
             {
                 int rq = Integer.parseInt(row[i]);
-                if(rq == 1)
+                if(rq != -1)
                 {
-                    req.add(Integer.parseInt(headers[i]));
+                    req.add(rq);
                 }
                 i++;
             }

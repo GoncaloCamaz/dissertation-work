@@ -51,8 +51,7 @@ import java.util.List;
 public class JecoliNFV
 {
     private NetworkTopology topology;
-    private NFServicesMap servicesMap;
-    private NFRequestsMap requestsMap;
+    private NFVState state;
     private String servicesConfiguration; // filename
 
     private AlgorithmInterface<Integer> algorithm;
@@ -67,10 +66,9 @@ public class JecoliNFV
     private int MINServicesSolutions;
     private int maxServicesPenalization;
 
-    public JecoliNFV(NetworkTopology topology, NFRequestsMap requestsMap, NFServicesMap services, int lowerBound, int upperBound, String file, int maxServicesPenalization) {
+    public JecoliNFV(NetworkTopology topology, NFVState state, int lowerBound, int upperBound, String file, int maxServicesPenalization) {
         this.topology = topology.copy();
-        this.requestsMap = requestsMap;
-        this.servicesMap = services;
+        this.state = state;
         this.algorithm = null;
         this.results = null;
         this.statistics = null;
@@ -248,7 +246,7 @@ public class JecoliNFV
         NSGAIIConfiguration<ILinearRepresentation<Integer>, ILinearRepresentationFactory<Integer>> configuration = this
                 .preConfigureNSGAII(params);
 
-        NFVEvaluationMO nfvEvaluation = new NFVEvaluationMO(topology,requestsMap,servicesMap, servicesConfiguration, this.maxServicesPenalization);
+        NFVEvaluationMO nfvEvaluation = new NFVEvaluationMO(topology,state, servicesConfiguration, this.maxServicesPenalization);
 
         configuration.setEvaluationFunction(nfvEvaluation);
 

@@ -1,7 +1,5 @@
 package pt.uminho.algoritmi.netopt.nfv.optimization;
 
-import pt.uminho.algoritmi.netopt.nfv.NFRequestsMap;
-import pt.uminho.algoritmi.netopt.nfv.NFServicesMap;
 import pt.uminho.algoritmi.netopt.nfv.NFVState;
 import pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.JecoliNFV;
 
@@ -33,15 +31,13 @@ public class NFVServiceAllocationTest
 
         NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
         NFVState state = new NFVState(servicesFile, requestsFile);
-        NFServicesMap services = state.getServices();
-        NFRequestsMap req = state.getRequests();
 
         ParamsNFV params = new ParamsNFV();
         params.setArchiveSize(100);
         params.setPopulationSize(populationSize);
         params.setNumberGenerations(numberOfGenerations);
 
-        JecoliNFV ea = new JecoliNFV(topology,req,services,lowerBound,upperBound, serviceMapingFile, maxServices);
+        JecoliNFV ea = new JecoliNFV(topology,state,lowerBound,upperBound, serviceMapingFile, maxServices);
         ea.configureNSGAII(params);
         ea.run();
 
