@@ -1,8 +1,8 @@
 package pt.uminho.algoritmi.netopt.nfv.optimization;
 
 import pt.uminho.algoritmi.netopt.nfv.NFVState;
-import pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.JecoliNFV;
 
+import pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.JecoliWeights;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NondominatedPopulation;
 import pt.uminho.algoritmi.netopt.ospf.simulation.Population;
@@ -12,29 +12,19 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 
-public class NFVServiceAllocationTest
+public class WeightsAllocationTest
 {
-   /* private static String nodesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.nodes";
-    private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.edges";
-    private static String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidos_30.csv";
-    private static String servicesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/frameworkConfiguration30N_3S.json";
-    private static String serviceMapingFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/serviceMap.json";
-*/
     public static void main(String[] args) throws Exception {
-        if(args.length!=11)
-           System.exit(1);
+        if(args.length!=7)
+            System.exit(1);
 
         String nodesFile = args[0];
         String edgesFile = args[1];
         String requestsFile = args[2];
         String servicesFile =args[3];
-        String serviceMapingFile = args[4];
-        int populationSize = Integer.parseInt(args[5]);
-        int numberOfGenerations = Integer.parseInt(args[6]);
-        int lowerBound = Integer.parseInt(args[7]);
-        int upperBound = Integer.parseInt(args[8]);
-        int maxServices = Integer.parseInt(args[9]);
-        int cplexTimeLimit = Integer.parseInt(args[10]);
+        int populationSize = Integer.parseInt(args[4]);
+        int numberOfGenerations = Integer.parseInt(args[5]);
+        int cplexTimeLimit = Integer.parseInt(args[6]);
 
         NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
         NFVState state = new NFVState(servicesFile, requestsFile);
@@ -44,20 +34,20 @@ public class NFVServiceAllocationTest
         params.setPopulationSize(populationSize);
         params.setNumberGenerations(numberOfGenerations);
 
-        JecoliNFV ea = new JecoliNFV(topology,state,lowerBound,upperBound, serviceMapingFile, maxServices,cplexTimeLimit);
+        JecoliWeights ea = new JecoliWeights(topology,state,cplexTimeLimit);
         ea.configureNSGAII(params);
         ea.run();
 
         Population p = new NondominatedPopulation(ea.getSolutionSet());
-        save(p,maxServices);
+        save(p);
     }
 
-    public static void save(Population p, int limit) {
+    public static void save(Population p) {
         IntegerSolution sol = p.getLowestValuedSolutions(0, 1).get(0);
 
         FileWriter f;
         try {
-            f = new FileWriter("ServLimit_"+limit +"_"+ System.currentTimeMillis() + ".csv", true);
+            f = new FileWriter(System.currentTimeMillis() + ".csv", true);
             BufferedWriter W = new BufferedWriter(f);
             W.write(sol.toString());
             W.write("\n");

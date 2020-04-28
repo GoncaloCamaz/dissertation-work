@@ -7,7 +7,6 @@ import org.json.simple.parser.ParseException;
 import pt.uminho.algoritmi.netopt.nfv.NFNode;
 import pt.uminho.algoritmi.netopt.nfv.NFNodesMap;
 
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;

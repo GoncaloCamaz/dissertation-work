@@ -32,9 +32,9 @@ import jecoli.algorithm.multiobjective.archive.trimming.ZitzlerTruncation;
 import jecoli.algorithm.multiobjective.nsgaII.NSGAIIConfiguration;
 import jecoli.algorithm.singleobjective.evolutionary.RecombinationParameters;
 import pt.uminho.algoritmi.netopt.SystemConf;
-import pt.uminho.algoritmi.netopt.nfv.*;
+import pt.uminho.algoritmi.netopt.nfv.NFVState;
 import pt.uminho.algoritmi.netopt.nfv.optimization.ParamsNFV;
-import pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.evaluation.NFVEvaluationMO;
+import pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.evaluation.NFVWeightsEvaluation;
 import pt.uminho.algoritmi.netopt.ospf.optimization.jecoli.SolutionParser;
 import pt.uminho.algoritmi.netopt.ospf.optimization.jecoli.algorithm.AlgorithmInterface;
 import pt.uminho.algoritmi.netopt.ospf.optimization.jecoli.algorithm.OSPFNSGAII;
@@ -48,11 +48,10 @@ import pt.uminho.algoritmi.netopt.ospf.simulation.solution.IntegerSolution;
 import java.util.Iterator;
 import java.util.List;
 
-public class JecoliNFV
+public class JecoliWeights
 {
     private NetworkTopology topology;
     private NFVState state;
-    private String servicesConfiguration; // filename
 
     private AlgorithmInterface<Integer> algorithm;
     private IAlgorithmResult<ILinearRepresentation<Integer>> results;
@@ -61,25 +60,23 @@ public class JecoliNFV
     private String info;
     protected IRandomNumberGenerator randomNumberGenerator;
     protected ArchiveManager<Integer, ILinearRepresentation<Integer>> archive;
+    private int MINWeight;
+    private int MAXWeight;
     private int NUMObjectives = 2;
-    private int MAXServicesSolutions;
-    private int MINServicesSolutions;
-    private int maxServicesPenalization;
-    private int cplexTimeLimit;
+    private int cplexLimit;
 
-    public JecoliNFV(NetworkTopology topology, NFVState state, int lowerBound, int upperBound, String file, int maxServicesPenalization, int cplexTimeLimit) {
+    public JecoliWeights(NetworkTopology topology, NFVState state, int cplexLimit) {
         this.topology = topology.copy();
         this.state = state;
         this.algorithm = null;
         this.results = null;
         this.statistics = null;
-        this.randomNumberGenerator = new DefaultRandomNumberGenerator();
-        this.MINServicesSolutions = lowerBound;
-        this.MAXServicesSolutions = upperBound;
-        this.servicesConfiguration = file;
-        this.maxServicesPenalization = maxServicesPenalization;
-        this.cplexTimeLimit = cplexTimeLimit;
+        this.cplexLimit = cplexLimit;
+        randomNumberGenerator = new DefaultRandomNumberGenerator();
+        MAXWeight = SystemConf.getPropertyInt("ospf.maxweight", 20);
+        MINWeight = SystemConf.getPropertyInt("ospf.minweight", 1);
     }
+
 
     /**
      * Runs the optimization
@@ -181,16 +178,30 @@ public class JecoliNFV
 
         newSolutionSet = solutionFactory.generateSolutionSet(q, new DefaultRandomNumberGenerator());
 
+        // Selection could be random or consider some kind of sorting
+        // for now just select the p first individuals
+
+        // TODO: select distinct individuals
         if (p > 0) {
             Population clonedPop = params.getInitialPopulation().copy(numberOfObjective);
             List<IntegerSolution> l = clonedPop.getLowestValuedSolutions(p);
             Iterator<IntegerSolution> it = l.iterator();
             while (it.hasNext())
-                newSolutionSet.add(SolutionParser.convert(it.next(), this.NUMObjectives));
+                newSolutionSet.add(pt.uminho.algoritmi.netopt.ospf.optimization.jecoli.SolutionParser.convert(it.next(), 2));
         }
+
+        // Add solutions from standard weight configurations schemes
+        // invcap
+
+        OSPFWeights w = new OSPFWeights(this.topology.getDimension());
+        w.setInvCapWeights(MINWeight, MAXWeight, this.topology);
+        ISolution<ILinearRepresentation<Integer>> s = pt.uminho.algoritmi.netopt.ospf.optimization.jecoli.SolutionParser
+                    .convert(w.toSolution(topology, numberOfObjective), numberOfObjective);
+        newSolutionSet.add(s);
 
         return newSolutionSet;
     }
+
 
     /**
      * Pre-configuration for NSGAII
@@ -206,10 +217,10 @@ public class JecoliNFV
         NSGAIIConfiguration<ILinearRepresentation<Integer>, ILinearRepresentationFactory<Integer>> configuration = new NSGAIIConfiguration<ILinearRepresentation<Integer>, ILinearRepresentationFactory<Integer>>();
         configuration.setStatisticsConfiguration(new StatisticsConfiguration());
         configuration.setRandomNumberGenerator(randomNumberGenerator);
-        IntegerRepresentationFactory solutionFactory = new IntegerRepresentationFactory(topology.getDimension(),
-                MAXServicesSolutions, MINServicesSolutions, this.NUMObjectives);
+        IntegerRepresentationFactory solutionFactory = new IntegerRepresentationFactory(topology.getNumberEdges(),
+                MAXWeight, MINWeight, NUMObjectives);
         configuration.setSolutionFactory(solutionFactory);
-        configuration.setNumberOfObjectives(this.NUMObjectives);
+        configuration.setNumberOfObjectives(NUMObjectives);
 
         configuration.setPopulationSize(params.getPopulationSize());
 
@@ -230,8 +241,8 @@ public class JecoliNFV
                 new TournamentSelection2<ILinearRepresentation<Integer>>(1, 2, randomNumberGenerator));
         configuration.setReproductionOperatorContainer(this.getContainer());
         this.info = params.toString();
-
         return configuration;
+
     }
 
     /**
@@ -247,12 +258,13 @@ public class JecoliNFV
         NSGAIIConfiguration<ILinearRepresentation<Integer>, ILinearRepresentationFactory<Integer>> configuration = this
                 .preConfigureNSGAII(params);
 
-        NFVEvaluationMO nfvEvaluation = new NFVEvaluationMO(topology,state, servicesConfiguration, this.maxServicesPenalization, this.cplexTimeLimit);
+        NFVWeightsEvaluation evaluation = new NFVWeightsEvaluation(topology,state,this.cplexLimit);
 
-        configuration.setEvaluationFunction(nfvEvaluation);
+        configuration.setEvaluationFunction(evaluation);
 
         algorithm = new OSPFNSGAII(configuration);
     }
+
 
     /**
      *
@@ -273,7 +285,7 @@ public class JecoliNFV
     public ASolution<Integer> getBestSolution() {
         ISolution<ILinearRepresentation<Integer>> s = results.getSolutionContainer().getBestSolutionCellContainer(false)
                 .getSolution();
-        return SolutionParser.convert(s);
+        return pt.uminho.algoritmi.netopt.ospf.optimization.jecoli.SolutionParser.convert(s);
     }
 
     public AbstractSolutionSet<Integer> getSolutionSet() {

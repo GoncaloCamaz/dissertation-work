@@ -17,15 +17,17 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
     private NFVState state;
     private String filename;
     private int maxServicesPenalization;
+    private int cplexTimeLimit;
 
 
-    public NFVEvaluationMO(NetworkTopology topology, NFVState state, String filename, int maxServicesPenalization)
+    public NFVEvaluationMO(NetworkTopology topology, NFVState state, String filename, int maxServicesPenalization, int cplexTimeLimit)
     {
         super(false);
         this.topology = topology;
         this.state = state;
         this.filename = filename;
         this.maxServicesPenalization = maxServicesPenalization;
+        this.cplexTimeLimit = cplexTimeLimit;
     }
 
     @Override
@@ -48,7 +50,7 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
         Double[] resultList = new Double[2];
         NFNodesMap nodes = decode(solutionRepresentation, topology.getDimension());
         this.state.setNodes(nodes);
-        MCFPhiNodeUtilizationSolver solver = new MCFPhiNodeUtilizationSolver(topology, state);
+        MCFPhiNodeUtilizationSolver solver = new MCFPhiNodeUtilizationSolver(topology, state,this.cplexTimeLimit);
         OptimizationResultObject object = solver.optimize();
 
         double penalizationVal = getPenalization(object,this.maxServicesPenalization);
@@ -68,12 +70,10 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
         {
             ret = Double.MAX_VALUE;
         }
-        else
+
+        if(maxServices < servicesDeployed)
         {
-            if(maxServices < servicesDeployed)
-            {
-                ret = (servicesDeployed-maxServices)*1000;
-            }
+            ret += (servicesDeployed-maxServices)*1000;
         }
 
         return ret;
