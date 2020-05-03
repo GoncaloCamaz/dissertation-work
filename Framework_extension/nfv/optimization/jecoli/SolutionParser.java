@@ -73,14 +73,7 @@ public class SolutionParser
         for(int i = 0; i < results.length; i++)
         {
             List<Integer> availableSerices = new ArrayList<>();
-            if(results[i] < 0)
-            {
-                availableSerices = serv.get(0);
-            }
-            else
-            {
-                availableSerices = serv.get(results[i]);
-            }
+            availableSerices = serv.get(results[i]);
 
             if(availableSerices.size() == 0)
             {
@@ -88,7 +81,7 @@ public class SolutionParser
             }
             else
             {
-                processCapacity = 1000;
+                processCapacity = 10000;
             }
             NFNode node = new NFNode(i,processCapacity, availableSerices);
             nodes.put(i, node);

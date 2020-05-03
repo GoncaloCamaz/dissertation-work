@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 
 import ilog.concert.*;
-import pt.uminho.algoritmi.netopt.ospf.simulation.Simul;
 
 public class MCFPhiNodeUtilizationSolver {
 
@@ -44,6 +43,7 @@ public class MCFPhiNodeUtilizationSolver {
     private NFNodesMap nodesMap;
     private int cplexTimeLimit;
     private boolean saveLoads;
+
 
     public MCFPhiNodeUtilizationSolver(NetworkTopology topology, NFServicesMap servicesMap, NFRequestsMap r , NFNodesMap n) {
         this.topology = topology;
@@ -65,10 +65,10 @@ public class MCFPhiNodeUtilizationSolver {
     }
 
     public static void main(String[] args) {
-        String nodesFile = args[0];
-        String edgesFile = args[1];
-        String servicesFile = args[2];
-        String requests = args[3];
+        String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";// args[0];
+        String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.edges";//args[1];
+        String servicesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/frameworkConfiguration.json";
+        String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidos.csv";//args[3];
 
         try {
             NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
@@ -79,12 +79,22 @@ public class MCFPhiNodeUtilizationSolver {
 
             MCFPhiNodeUtilizationSolver solver = new MCFPhiNodeUtilizationSolver(topology, services, req, map);
             solver.setSaveLoads(true);
-            solver.optimize();
+            solver.setCplexTimeLimit(60);
+            OptimizationResultObject obj = solver.optimize();
+            System.out.println(obj.toString());
         } catch (Exception e)
         {
             e.printStackTrace();
         }
 
+    }
+
+    public int getCplexTimeLimit() {
+        return cplexTimeLimit;
+    }
+
+    public void setCplexTimeLimit(int cplexTimeLimit) {
+        this.cplexTimeLimit = cplexTimeLimit;
     }
 
     public OptimizationResultObject optimize() throws IloException {
@@ -167,7 +177,6 @@ public class MCFPhiNodeUtilizationSolver {
             int source = arc.getFromNode();
             int dest = arc.getToNode();
             phi_a.put(arc,cplex.numVar(0, Double.MAX_VALUE, "Phi_" + source + "_" + dest));
-
         }
 
         // the gamma(n) variables
@@ -381,6 +390,7 @@ public class MCFPhiNodeUtilizationSolver {
         // Solve
         cplex.solve();
 
+        // SAVE RESULTS
         double res = cplex.getObjValue();
         if (this.saveLoads)
         {
@@ -393,25 +403,28 @@ public class MCFPhiNodeUtilizationSolver {
                 u[arc.getFromNode()][arc.getToNode()] = utilization;
             }
             object.setLinkLoads(u);
+            object.setPhiValue(congestion/arcsNumber);
 
             double[] uNodes = new double[nodesNumber];
+            double val = 0;
             for(NFNode node : nodes.values())
             {
-                double ut = cplex.getValue(r_n.get(node.getId()));
+                double ut = cplex.getValue(gamma_n.get(node.getId()));
+                val += ut;
                 uNodes[node.getId()] = ut;
             }
+            object.setGammaValue(val/nodesNumber);
             object.setNodeUtilization(uNodes);
             object.setLoadValue(res);
 
             this.loads = new NetworkLoads(u,topology);
             this.loads.printLoads();
 
-            object.setPhiValue(congestion/arcsNumber);
-            double maxNodeUtilization = getMaxNodeUtilization(nodes, cplex, gamma_n)/nodesNumber;
-            object.setGammaValue(maxNodeUtilization);
+
             HashMap<Integer,Integer> servicesDeployed = new HashMap<>();
             servicesDeployed = getServicesDeployed(this.nodesMap.getNodes());
             object.setServicesDeployed(servicesDeployed);
+
             boolean nodesInfo = allNodesWServices(this.nodesMap.getNodes());
             object.setAllNodesWServices(nodesInfo);
         }
@@ -440,17 +453,7 @@ public class MCFPhiNodeUtilizationSolver {
         HashMap<Integer, Integer> services = new HashMap<>();
         for(NFNode node : nodes.values())
         {
-            services.put(node.getId(), 0);
-        }
-
-        for(NFNode node : nodes.values())
-        {
-            List<Integer> servicesAtNode = node.getAvailableServices();
-            for(Integer i : servicesAtNode)
-            {
-                int oldVal = services.get(i);
-                services.replace(node.getId(), oldVal, oldVal+1);
-            }
+            services.put(node.getId(), node.getAvailableServices().size());
         }
 
         return services;
@@ -463,19 +466,6 @@ public class MCFPhiNodeUtilizationSolver {
             maxNodeUtilization += cplex.getValue(gamma_n.get(node.getId()));
         }
         return maxNodeUtilization;
-    }
-
-    private double getCongestion(Map<Integer, NFRequest> requests, int nodesNumber, NetworkLoads l, Simul s) {
-        double[][] demands = new double[nodesNumber][nodesNumber];
-        for(int i = 0; i < nodesNumber; i++)
-            for(int j = 0; j < nodesNumber; i++)
-                for(NFRequest req : requests.values())
-                {
-                    if(req.getSource() == i && req.getDestination() == j)
-                        demands[i][j] += req.getBandwidth();
-                }
-
-        return s.congestionMeasure(l, demands);
     }
 
     public boolean isSaveLoads() {

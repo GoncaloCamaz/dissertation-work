@@ -14,19 +14,25 @@ import java.io.IOException;
 
 public class NFVServiceAllocationTest
 {
-   /* private static String nodesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.nodes";
-    private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.edges";
-    private static String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidos_30.csv";
-    private static String servicesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/frameworkConfiguration30N_3S.json";
-    private static String serviceMapingFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/serviceMap.json";
-*/
+    private static String nodesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";
+    private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.edges";
+    private static String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidos.csv";
+    private static String servicesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/frameworkConfiguration.json";
+    private static String serviceMapingFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/serviceMap.json";
+    private static int populationSize = 100;
+    private static int numberOfGenerations = 100;
+    private static int lowerBound = 0;
+    private static int upperBound = 7;
+    private static int maxServices = 5;
+    private static int cplexTimeLimit =60;
+
     public static void main(String[] args) throws Exception {
-        if(args.length!=11)
+    /*    if(args.length!=11)
            System.exit(1);
 
         String nodesFile = args[0];
         String edgesFile = args[1];
-        String requestsFile = args[2];
+        String requests = args[2];
         String servicesFile =args[3];
         String serviceMapingFile = args[4];
         int populationSize = Integer.parseInt(args[5]);
@@ -35,9 +41,10 @@ public class NFVServiceAllocationTest
         int upperBound = Integer.parseInt(args[8]);
         int maxServices = Integer.parseInt(args[9]);
         int cplexTimeLimit = Integer.parseInt(args[10]);
+        */
 
         NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
-        NFVState state = new NFVState(servicesFile, requestsFile);
+        NFVState state = new NFVState(servicesFile, requests);
 
         ParamsNFV params = new ParamsNFV();
         params.setArchiveSize(100);
@@ -57,7 +64,7 @@ public class NFVServiceAllocationTest
 
         FileWriter f;
         try {
-            f = new FileWriter("ServLimit_"+limit +"_"+ System.currentTimeMillis() + ".csv", true);
+            f = new FileWriter("SERVICES_ServLimit_"+limit +"_"+ System.currentTimeMillis() + ".csv", true);
             BufferedWriter W = new BufferedWriter(f);
             W.write(sol.toString());
             W.write("\n");

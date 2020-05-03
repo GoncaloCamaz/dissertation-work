@@ -11,7 +11,7 @@ import pt.uminho.algoritmi.netopt.nfv.optimization.OptimizationResultObject;
 import pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.SolutionParser;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
 
-public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<ILinearRepresentation<Integer>>
+public class NFVEvaluationServIGP extends AbstractMultiobjectiveEvaluationFunction<ILinearRepresentation<Integer>>
 {
     private NetworkTopology topology;
     private NFVState state;
@@ -20,7 +20,7 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
     private int cplexTimeLimit;
 
 
-    public NFVEvaluationMO(NetworkTopology topology, NFVState state, String filename, int maxServicesPenalization, int cplexTimeLimit)
+    public NFVEvaluationServIGP(NetworkTopology topology, NFVState state, String filename, int maxServicesPenalization, int cplexTimeLimit)
     {
         super(false);
         this.topology = topology;
@@ -48,13 +48,16 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
     public Double[] evaluateMO(ILinearRepresentation<Integer> solutionRepresentation) throws Exception
     {
         Double[] resultList = new Double[2];
-        NFNodesMap nodes = decode(solutionRepresentation, topology.getDimension());
+        NFNodesMap nodes = decodeServices(solutionRepresentation, topology.getDimension());
         this.state.setNodes(nodes);
+        int edges = topology.getNumberEdges();
+        int weights[] = decodeWeights(solutionRepresentation, edges);
+        topology.applyWeights(weights);
         MCFPhiNodeUtilizationSolver solver = new MCFPhiNodeUtilizationSolver(topology, state,this.cplexTimeLimit);
         OptimizationResultObject object = solver.optimize();
 
         double penalizationVal = 0;
-        penalizationVal = getPenalization(object,this.maxServicesPenalization);
+        penalizationVal += getPenalization(object,this.maxServicesPenalization);
 
         resultList[0] = object.getPhiValue();
         resultList[1] = object.getGammaValue() + penalizationVal;
@@ -80,7 +83,7 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
         return ret;
     }
 
-    public NFNodesMap decode(ILinearRepresentation<Integer> solution, int numberOfNodes)
+    public NFNodesMap decodeServices(ILinearRepresentation<Integer> solution, int numberOfNodes)
     {
         NFNodesMap nodes = new NFNodesMap();
         int[] result = new int[numberOfNodes];
@@ -94,6 +97,19 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
         nodes = parser.solutionParser(result);
 
         return nodes;
+    }
+
+    public int[] decodeWeights(ILinearRepresentation<Integer> solution, int edges)
+    {
+        int[] result = new int[edges];
+
+        for(int i = 0; i < edges; i++)
+        {
+            result[i] = solution.getElementAt(i);
+        }
+
+        return result;
+
     }
 
     public NetworkTopology getTopology() {

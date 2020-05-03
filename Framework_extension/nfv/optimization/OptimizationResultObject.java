@@ -1,5 +1,6 @@
 package pt.uminho.algoritmi.netopt.nfv.optimization;
 
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class OptimizationResultObject
@@ -123,5 +124,19 @@ public class OptimizationResultObject
             ret = false;
         }
         return ret;
+    }
+
+    @Override
+    public String toString() {
+        return "OptimizationResultObject{" +
+                "linkLoads=" + Arrays.toString(linkLoads) +
+                ", nodeUtilization=" + Arrays.toString(nodeUtilization) +
+                ", numberOfNodes=" + numberOfNodes +
+                ", loadValue=" + loadValue +
+                ", gammaValue=" + gammaValue +
+                ", phiValue=" + phiValue +
+                ", servicesDeployed=" + servicesDeployed +
+                ", allNodesWServices=" + allNodesWServices +
+                '}';
     }
 }
