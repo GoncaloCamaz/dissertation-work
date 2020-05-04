@@ -54,7 +54,7 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
         OptimizationResultObject object = solver.optimize();
 
         double penalizationVal = 0;
-        penalizationVal = getPenalization(object,this.maxServicesPenalization);
+        penalizationVal += getPenalization(object,this.maxServicesPenalization);
 
         resultList[0] = object.getPhiValue();
         resultList[1] = object.getGammaValue() + penalizationVal;
@@ -74,7 +74,7 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
 
         if(maxServices < servicesDeployed)
         {
-            ret += (servicesDeployed-maxServices)*1000;
+            ret += (servicesDeployed-maxServices)*10000;
         }
 
         return ret;

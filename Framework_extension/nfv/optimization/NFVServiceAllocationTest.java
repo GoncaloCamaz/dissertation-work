@@ -14,20 +14,22 @@ import java.io.IOException;
 
 public class NFVServiceAllocationTest
 {
+    /*
     private static String nodesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";
     private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.edges";
     private static String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidos.csv";
     private static String servicesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/frameworkConfiguration.json";
     private static String serviceMapingFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/serviceMap.json";
     private static int populationSize = 100;
-    private static int numberOfGenerations = 100;
+    private static int numberOfGenerations = 10;
     private static int lowerBound = 0;
     private static int upperBound = 7;
-    private static int maxServices = 5;
+    private static int maxServices = 12;
     private static int cplexTimeLimit =60;
-
+    */
     public static void main(String[] args) throws Exception {
-    /*    if(args.length!=11)
+
+        if(args.length!=11)
            System.exit(1);
 
         String nodesFile = args[0];
@@ -41,7 +43,6 @@ public class NFVServiceAllocationTest
         int upperBound = Integer.parseInt(args[8]);
         int maxServices = Integer.parseInt(args[9]);
         int cplexTimeLimit = Integer.parseInt(args[10]);
-        */
 
         NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
         NFVState state = new NFVState(servicesFile, requests);

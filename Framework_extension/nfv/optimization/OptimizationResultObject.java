@@ -98,7 +98,7 @@ public class OptimizationResultObject
     {
         int val = 0;
 
-        for(Integer i : servicesDeployed.values())
+        for(int i = 0; i < numberOfNodes; i++)
         {
             val += servicesDeployed.get(i);
         }

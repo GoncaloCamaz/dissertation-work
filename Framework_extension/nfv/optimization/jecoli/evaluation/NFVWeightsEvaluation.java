@@ -37,7 +37,7 @@ public class NFVWeightsEvaluation extends AbstractMultiobjectiveEvaluationFuncti
 
     @Override
     public int getNumberOfObjectives() {
-        return 1;
+        return 2;
     }
 
     @Override
