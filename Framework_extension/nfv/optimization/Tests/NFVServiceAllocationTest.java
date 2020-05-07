@@ -1,6 +1,9 @@
-package pt.uminho.algoritmi.netopt.nfv.optimization;
+package pt.uminho.algoritmi.netopt.nfv.optimization.Tests;
 
+import pt.uminho.algoritmi.netopt.nfv.NFNodesMap;
 import pt.uminho.algoritmi.netopt.nfv.NFVState;
+import pt.uminho.algoritmi.netopt.nfv.optimization.ParamsNFV;
+import pt.uminho.algoritmi.netopt.nfv.optimization.SolutionSaver.SolutionSaver;
 import pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.JecoliNFV;
 
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
@@ -14,21 +17,21 @@ import java.io.IOException;
 
 public class NFVServiceAllocationTest
 {
-    /*
+
     private static String nodesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";
     private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.edges";
     private static String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidos.csv";
     private static String servicesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/frameworkConfiguration.json";
     private static String serviceMapingFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/serviceMap.json";
-    private static int populationSize = 100;
-    private static int numberOfGenerations = 10;
+    private static int populationSize = 10;
+    private static int numberOfGenerations = 2;
     private static int lowerBound = 0;
     private static int upperBound = 7;
     private static int maxServices = 12;
     private static int cplexTimeLimit =60;
-    */
-    public static void main(String[] args) throws Exception {
 
+    public static void main(String[] args) throws Exception {
+/*
         if(args.length!=11)
            System.exit(1);
 
@@ -43,7 +46,7 @@ public class NFVServiceAllocationTest
         int upperBound = Integer.parseInt(args[8]);
         int maxServices = Integer.parseInt(args[9]);
         int cplexTimeLimit = Integer.parseInt(args[10]);
-
+*/
         NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
         NFVState state = new NFVState(servicesFile, requests);
 
@@ -58,11 +61,13 @@ public class NFVServiceAllocationTest
 
         Population p = new NondominatedPopulation(ea.getSolutionSet());
         save(p,maxServices);
+
+        int[] solution = p.getLowestValuedSolutions(0, 1).get(0).getVariablesArray();
+        SolutionSaver.saveServicesLocationConfiguration(solution,serviceMapingFile,topology,state);
     }
 
     public static void save(Population p, int limit) {
         IntegerSolution sol = p.getLowestValuedSolutions(0, 1).get(0);
-
         FileWriter f;
         try {
             f = new FileWriter("SERVICES_ServLimit_"+limit +"_"+ System.currentTimeMillis() + ".csv", true);

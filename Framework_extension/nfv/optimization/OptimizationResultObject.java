@@ -13,6 +13,7 @@ public class OptimizationResultObject
     private double phiValue;
     private HashMap<Integer, Integer> servicesDeployed;
     private boolean allNodesWServices;
+    private NFVRequestsConfigurationMap nfvRequestsConfigurationMap;
 
     public OptimizationResultObject(int numberOfNodes)
     {
@@ -24,10 +25,11 @@ public class OptimizationResultObject
         this.phiValue = 0;
         this.servicesDeployed = new HashMap<>();
         this.allNodesWServices = false;
+        this.nfvRequestsConfigurationMap = new NFVRequestsConfigurationMap();
     }
 
     public OptimizationResultObject(double[][] linkLoads, double[] nodeUtilization, int numberOfNodes, double loadvalue, double phi, double gamma,
-                                    HashMap<Integer,Integer> map, boolean allNodesWServices) {
+                                    HashMap<Integer,Integer> map, boolean allNodesWServices, NFVRequestsConfigurationMap configurationMapmap) {
         this.linkLoads = linkLoads;
         this.nodeUtilization = nodeUtilization;
         this.numberOfNodes = numberOfNodes;
@@ -36,6 +38,7 @@ public class OptimizationResultObject
         this.gammaValue = gamma;
         this.servicesDeployed = map;
         this.allNodesWServices = allNodesWServices;
+        this.nfvRequestsConfigurationMap = configurationMapmap;
     }
 
     public double[][] getLinkLoads() {
@@ -92,6 +95,14 @@ public class OptimizationResultObject
 
     public void setServicesDeployed(HashMap<Integer, Integer> servicesDeployed) {
         this.servicesDeployed = servicesDeployed;
+    }
+
+    public NFVRequestsConfigurationMap getNfvRequestsConfigurationMap() {
+        return nfvRequestsConfigurationMap;
+    }
+
+    public void setNfvRequestsConfigurationMap(NFVRequestsConfigurationMap nfvRequestsConfigurationMap) {
+        this.nfvRequestsConfigurationMap = nfvRequestsConfigurationMap;
     }
 
     public int getNumberOfServicesDeployed()

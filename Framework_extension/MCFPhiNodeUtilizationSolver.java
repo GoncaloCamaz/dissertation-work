@@ -23,11 +23,15 @@ package pt.uminho.algoritmi.netopt.cplex;
 import ilog.cplex.*;
 import pt.uminho.algoritmi.netopt.cplex.utils.Arc;
 import pt.uminho.algoritmi.netopt.cplex.utils.Arcs;
+import pt.uminho.algoritmi.netopt.cplex.utils.SourceDestinationPair;
 import pt.uminho.algoritmi.netopt.nfv.*;
+import pt.uminho.algoritmi.netopt.nfv.optimization.NFVRequestConfiguration;
+import pt.uminho.algoritmi.netopt.nfv.optimization.NFVRequestsConfigurationMap;
 import pt.uminho.algoritmi.netopt.nfv.optimization.OptimizationResultObject;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkLoads;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +47,7 @@ public class MCFPhiNodeUtilizationSolver {
     private NFNodesMap nodesMap;
     private int cplexTimeLimit;
     private boolean saveLoads;
+    private boolean saveConfigurations;
 
 
     public MCFPhiNodeUtilizationSolver(NetworkTopology topology, NFServicesMap servicesMap, NFRequestsMap r , NFNodesMap n) {
@@ -52,6 +57,7 @@ public class MCFPhiNodeUtilizationSolver {
         this.nodesMap = n;
         this.cplexTimeLimit = 86400;
         this.setSaveLoads(true);
+        this.saveConfigurations = false;
     }
 
     public MCFPhiNodeUtilizationSolver(NetworkTopology topology, NFVState state, int timelimit)
@@ -62,6 +68,7 @@ public class MCFPhiNodeUtilizationSolver {
         this.nodesMap = state.getNodes();
         this.cplexTimeLimit = timelimit;
         this.setSaveLoads(true);
+        this.saveConfigurations = false;
     }
 
     public static void main(String[] args) {
@@ -251,7 +258,7 @@ public class MCFPhiNodeUtilizationSolver {
         {
             obj.addTerm(norm2, gm);
         }
-        cplex.addMinimize(obj);
+        cplex.addMinimize(obj, "Objective_Function");
 
         // constraints
         // flow conservation
@@ -309,16 +316,19 @@ public class MCFPhiNodeUtilizationSolver {
         // a[i][n][s] i -> request id; n -> node; s -> service
         for(NFRequest request : requests.values())
         {
-            IloLinearNumExpr exp = cplex.linearNumExpr();
             int rID = request.getId();
-            for(NFNode node : nodes.values())
+            for(Integer serviceID : request.getServiceList())
             {
-                for(NFService service : services.values())
+                IloLinearNumExpr exp = cplex.linearNumExpr();
+                for (NFNode node : nodes.values())
                 {
-                    exp.addTerm(1, a[request.getId()][node.getId()][service.getId()]);
+                    if(node.getAvailableServices().contains(serviceID))
+                        exp.addTerm(1, a[request.getId()][node.getId()][serviceID]);
+                    else
+                        exp.addTerm(0, a[request.getId()][node.getId()][serviceID]);
                 }
+                cplex.addEq(exp, 1,"EQ4_Request_"+rID);
             }
-            cplex.addEq(exp, 1,"EQ4_Request_"+rID);
         }
 
         // EQUATION 5 - 10
@@ -328,7 +338,7 @@ public class MCFPhiNodeUtilizationSolver {
                 exp.addTerm(1, phi_a.get(arc));
                 exp.addTerm(-1 * slopes[j], l_a.get(arc));
                 double bi = -1 * points[j] * arc.getCapacity();
-                cplex.addGe(exp, bi);
+                cplex.addGe(exp, bi, "EQ5_10");
             }
         }
 
@@ -361,26 +371,24 @@ public class MCFPhiNodeUtilizationSolver {
                     {
                         int toNode = arc.getToNode();
                         int fromNode = arc.getFromNode();
-                        exp.addTerm(1,b[request.getId()][fromNode][toNode]);
-                        if (request.getSource() == request.getDestination() && request.getSource() == toNode)
-                        {
-                            exp.addTerm(1, cplex.intVar(1,1,"Request_source_" + request.getSource() + "_tonode_" + toNode));
-                        }
+                        if(toNode != request.getSource())
+                            exp.addTerm(1,b[request.getId()][fromNode][toNode]);
+                        if(request.getSource() == toNode)
+                            exp.addTerm(1,cplex.numVar(1,1));
                     }
                     cplex.addGe(exp, a[request.getId()][node.getId()][serviceID], "EQ13");
                 }
-
             }
         }
 
-        // EQUATION 14-19
+        // EQUATION 15-20
         for (NFNode node : nodes.values()) {
             for (int j = 0; j < points.length; j++) {
                 IloLinearNumExpr exp = cplex.linearNumExpr();
                 exp.addTerm(1, gamma_n.get(node.getId()));
                 exp.addTerm(-1 * slopes[j], r_n.get(node.getId()));
                 double bi = -1 * points[j] * node.getProcessCapacity();
-                cplex.addGe(exp, bi);
+                cplex.addGe(exp, bi, "EQ15_20");
             }
         }
 
@@ -429,6 +437,58 @@ public class MCFPhiNodeUtilizationSolver {
             object.setAllNodesWServices(nodesInfo);
         }
 
+        NFVRequestsConfigurationMap configurationMap = new NFVRequestsConfigurationMap();
+        if(saveConfigurations)
+        {
+            for(NFRequest request : requests.values())
+            {
+                NFVRequestConfiguration configuration = new NFVRequestConfiguration();
+                int reqID = request.getId();
+                configuration.setRequestID(reqID);
+                configuration.setServiceOrder(request.getServiceList());
+                ArrayList<SourceDestinationPair> list = new ArrayList<>();
+                for(Arc arc : arcs)
+                {
+                    int origin = arc.getFromNode();
+                    int dest = arc.getToNode();
+                    if(cplex.getValue(b[reqID][origin][dest]) > 0)
+                    {
+                        SourceDestinationPair pair = new SourceDestinationPair(origin,dest);
+                        list.add(pair);
+                    }
+                }
+                configuration.setSrpath(list);
+
+                HashMap<Integer, Integer> nodesUsed = new HashMap<>();
+                for(NFNode node : nodes.values())
+                {
+                    List<Integer> servicesAvailable = new ArrayList<>();
+                    servicesAvailable = node.getAvailableServices();
+                    int nodeID = node.getId();
+                    for(Integer i : servicesAvailable)
+                    {
+                        if(cplex.getValue(a[reqID][nodeID][i]) > 0)
+                        {
+                            nodesUsed.put(i, nodeID);
+                        }
+                    }
+
+                }
+                configuration.setServiceProcessment(nodesUsed);
+                configurationMap.addConfiguration(reqID, configuration);
+            }
+            HashMap<Integer, List<Integer>> servicesDeployment = new HashMap<>();
+            for(NFNode node : nodes.values())
+            {
+                List<Integer> availableServices = new ArrayList<>();
+                availableServices = node.getAvailableServices();
+                int nodeID = node.getId();
+                servicesDeployment.put(nodeID,availableServices);
+            }
+            configurationMap.setServiceDeployment(servicesDeployment);
+        }
+        object.setNfvRequestsConfigurationMap(configurationMap);
+
         cplex.end();
         return object;
     }
@@ -459,13 +519,52 @@ public class MCFPhiNodeUtilizationSolver {
         return services;
     }
 
-    private double getMaxNodeUtilization(Map<Integer, NFNode> nodes, IloCplex cplex, HashMap<Integer, IloNumVar> gamma_n) throws IloException {
-        double maxNodeUtilization = 0;
-        for(NFNode node : nodes.values())
-        {
-            maxNodeUtilization += cplex.getValue(gamma_n.get(node.getId()));
-        }
-        return maxNodeUtilization;
+    public NetworkTopology getTopology() {
+        return topology;
+    }
+
+    public void setTopology(NetworkTopology topology) {
+        this.topology = topology;
+    }
+
+    public NFServicesMap getServices() {
+        return services;
+    }
+
+    public void setServices(NFServicesMap services) {
+        this.services = services;
+    }
+
+    public NetworkLoads getLoads() {
+        return loads;
+    }
+
+    public void setLoads(NetworkLoads loads) {
+        this.loads = loads;
+    }
+
+    public pt.uminho.algoritmi.netopt.nfv.NFRequestsMap getNFRequestsMap() {
+        return NFRequestsMap;
+    }
+
+    public void setNFRequestsMap(pt.uminho.algoritmi.netopt.nfv.NFRequestsMap NFRequestsMap) {
+        this.NFRequestsMap = NFRequestsMap;
+    }
+
+    public NFNodesMap getNodesMap() {
+        return nodesMap;
+    }
+
+    public void setNodesMap(NFNodesMap nodesMap) {
+        this.nodesMap = nodesMap;
+    }
+
+    public boolean isSaveConfigurations() {
+        return saveConfigurations;
+    }
+
+    public void setSaveConfigurations(boolean saveConfigurations) {
+        this.saveConfigurations = saveConfigurations;
     }
 
     public boolean isSaveLoads() {
@@ -483,5 +582,4 @@ public class MCFPhiNodeUtilizationSolver {
     public NetworkLoads getNetworkLoads() {
         return this.loads;
     }
-
 }

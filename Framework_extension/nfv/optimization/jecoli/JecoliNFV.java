@@ -317,4 +317,100 @@ public class JecoliNFV
     public void setPlotter(IPlotter<ILinearRepresentation<Integer>> plotter) {
         this.archive.setPlotter(plotter);
     }
+
+    public NetworkTopology getTopology() {
+        return topology;
+    }
+
+    public void setTopology(NetworkTopology topology) {
+        this.topology = topology;
+    }
+
+    public NFVState getState() {
+        return state;
+    }
+
+    public void setState(NFVState state) {
+        this.state = state;
+    }
+
+    public String getServicesConfiguration() {
+        return servicesConfiguration;
+    }
+
+    public void setServicesConfiguration(String servicesConfiguration) {
+        this.servicesConfiguration = servicesConfiguration;
+    }
+
+    public IAlgorithmResult<ILinearRepresentation<Integer>> getResults() {
+        return results;
+    }
+
+    public void setResults(IAlgorithmResult<ILinearRepresentation<Integer>> results) {
+        this.results = results;
+    }
+
+    public IAlgorithmStatistics<ILinearRepresentation<Integer>> getStatistics() {
+        return statistics;
+    }
+
+    public void setStatistics(IAlgorithmStatistics<ILinearRepresentation<Integer>> statistics) {
+        this.statistics = statistics;
+    }
+
+    public void setInfo(String info) {
+        this.info = info;
+    }
+
+    public IRandomNumberGenerator getRandomNumberGenerator() {
+        return randomNumberGenerator;
+    }
+
+    public void setRandomNumberGenerator(IRandomNumberGenerator randomNumberGenerator) {
+        this.randomNumberGenerator = randomNumberGenerator;
+    }
+
+    public void setArchive(ArchiveManager<Integer, ILinearRepresentation<Integer>> archive) {
+        this.archive = archive;
+    }
+
+    public int getNUMObjectives() {
+        return NUMObjectives;
+    }
+
+    public void setNUMObjectives(int NUMObjectives) {
+        this.NUMObjectives = NUMObjectives;
+    }
+
+    public int getMAXServicesSolutions() {
+        return MAXServicesSolutions;
+    }
+
+    public void setMAXServicesSolutions(int MAXServicesSolutions) {
+        this.MAXServicesSolutions = MAXServicesSolutions;
+    }
+
+    public int getMINServicesSolutions() {
+        return MINServicesSolutions;
+    }
+
+    public void setMINServicesSolutions(int MINServicesSolutions) {
+        this.MINServicesSolutions = MINServicesSolutions;
+    }
+
+    public int getMaxServicesPenalization() {
+        return maxServicesPenalization;
+    }
+
+    public void setMaxServicesPenalization(int maxServicesPenalization) {
+        this.maxServicesPenalization = maxServicesPenalization;
+    }
+
+    public int getCplexTimeLimit() {
+        return cplexTimeLimit;
+    }
+
+    public void setCplexTimeLimit(int cplexTimeLimit) {
+        this.cplexTimeLimit = cplexTimeLimit;
+    }
 }
