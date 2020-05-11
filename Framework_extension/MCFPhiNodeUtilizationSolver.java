@@ -86,6 +86,7 @@ public class MCFPhiNodeUtilizationSolver {
 
             MCFPhiNodeUtilizationSolver solver = new MCFPhiNodeUtilizationSolver(topology, services, req, map);
             solver.setSaveLoads(true);
+            solver.setSaveConfigurations(true);
             solver.setCplexTimeLimit(60);
             OptimizationResultObject obj = solver.optimize();
             System.out.println(obj.toString());
@@ -159,11 +160,15 @@ public class MCFPhiNodeUtilizationSolver {
         int arcID = 0;
         for (int i = 0; i < nodesNumber; i++)
             for (int j = 0; j < nodesNumber; j++)
-                if (capacity[i][j] > 0) {
+            {
+                if (capacity[i][j] > 0)
+                {
                     Arc a = new Arc(arcID, i, j, capacity[i][j]);
                     arcID++;
                     arcs.add(a);
                 }
+            }
+
 
         // number of arcs; Arc a => int fromNode; int toNode; double capacity; int index;
         int arcsNumber = arcs.getNumberOfArcs();
@@ -227,7 +232,6 @@ public class MCFPhiNodeUtilizationSolver {
                         a[reqID][nodeID][sID] = cplex.intVar(0,0,"alpha_" + reqID + "_" + nodeID + "_" + sID);
                     }
                 }
-
             }
         }
 
@@ -286,7 +290,6 @@ public class MCFPhiNodeUtilizationSolver {
             List<Arc> fromV = arcs.getAllArcsFrom(nd.getId());
             for(NFRequest req : requests.values())
             {
-                double dst = req.getBandwidth();
                 IloLinearNumExpr ev = cplex.linearNumExpr();
                 // xi
                 for (Arc arc : toV) {
@@ -322,12 +325,9 @@ public class MCFPhiNodeUtilizationSolver {
                 IloLinearNumExpr exp = cplex.linearNumExpr();
                 for (NFNode node : nodes.values())
                 {
-                    if(node.getAvailableServices().contains(serviceID))
                         exp.addTerm(1, a[request.getId()][node.getId()][serviceID]);
-                    else
-                        exp.addTerm(0, a[request.getId()][node.getId()][serviceID]);
                 }
-                cplex.addEq(exp, 1,"EQ4_Request_"+rID);
+                cplex.addEq(exp, 1,"EQ4_Request_"+rID+"_"+serviceID);
             }
         }
 
@@ -351,8 +351,7 @@ public class MCFPhiNodeUtilizationSolver {
             {
                 for(Integer servID : servicesAvailable)
                 {
-                    NFService service = services.get(servID);
-                    exp.addTerm(request.getBandwidth()*2, a[request.getId()][node.getId()][service.getId()]);
+                    exp.addTerm(request.getBandwidth()*2, a[request.getId()][node.getId()][servID]);
                 }
             }
             cplex.addEq(r_n.get(node.getId()), exp, "EQ12_Node_"+node.getId());
@@ -367,16 +366,22 @@ public class MCFPhiNodeUtilizationSolver {
                 for(Integer serviceID : servicesAvailable)
                 {
                     IloLinearNumExpr exp = cplex.linearNumExpr();
-                    for(Arc arc : arcs.getAllArcsTo(node.getId()))
+                    List<Arc> arcsToNode = arcs.getAllArcsTo(node.getId());
+                    boolean add = false;
+                    for(Arc arc : arcsToNode)
                     {
                         int toNode = arc.getToNode();
                         int fromNode = arc.getFromNode();
                         if(toNode != request.getSource())
                             exp.addTerm(1,b[request.getId()][fromNode][toNode]);
-                        if(request.getSource() == toNode)
-                            exp.addTerm(1,cplex.numVar(1,1));
+                        else
+                            add = true;
                     }
-                    cplex.addGe(exp, a[request.getId()][node.getId()][serviceID], "EQ13");
+                    if(add)
+                    {
+                        exp.addTerm(1,cplex.intVar(1,1,"EQ14_N"+node.getId()+"S"+serviceID));
+                    }
+                    cplex.addGe(exp, a[request.getId()][node.getId()][serviceID], "EQ13_R"+request.getId()+"N"+node.getId());
                 }
             }
         }
@@ -472,7 +477,6 @@ public class MCFPhiNodeUtilizationSolver {
                             nodesUsed.put(i, nodeID);
                         }
                     }
-
                 }
                 configuration.setServiceProcessment(nodesUsed);
                 configurationMap.addConfiguration(reqID, configuration);
