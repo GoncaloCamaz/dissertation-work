@@ -156,7 +156,7 @@ public class ConfigGen
         c.setId(row);
         c.setOriginNodeID(random.getRandomFromRage(0, numberOfNodes));
         c.setDestinationNodeID(random.getRandomFromRage(0, numberOfNodes));
-        c.setBandwidthConsumption(random.getRandomFromRage(1,100));
+        c.setBandwidthConsumption(random.getRandomFromRage(1,10));
         c.insertRandomServices(random.getRandomFromRage(1, this.getNumberOfServices()+1),servicesID);
 
         return helpers.convertListToString(c, this.headers.size());

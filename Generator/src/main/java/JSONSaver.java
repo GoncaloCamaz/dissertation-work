@@ -66,7 +66,7 @@ public class JSONSaver
             JSONObject service = new JSONObject();
             service.put("id",id.toString());
             service.put("name", "service " + id);
-            service.put("cost",""+ random.getRandomFromRage(30,50));
+            service.put("cost",""+ random.getRandomFromRage(10,30));
             servicesID.add(id);
             servicesArray.add(service);
         }
@@ -122,7 +122,7 @@ public class JSONSaver
             nodesObj.put("availableServices", serv);
             if(serv.size() > 0)
             {
-                nodesObj.put("capacity", "" + 1000);
+                nodesObj.put("capacity", "" + 10000);
             }
             else
             {
