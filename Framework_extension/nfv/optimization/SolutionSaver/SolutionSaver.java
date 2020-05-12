@@ -5,10 +5,10 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import pt.uminho.algoritmi.netopt.cplex.MCFPhiNodeUtilizationSolver;
 import pt.uminho.algoritmi.netopt.cplex.utils.SourceDestinationPair;
+import pt.uminho.algoritmi.netopt.nfv.NFNode;
 import pt.uminho.algoritmi.netopt.nfv.NFNodesMap;
 import pt.uminho.algoritmi.netopt.nfv.NFVState;
 import pt.uminho.algoritmi.netopt.nfv.optimization.NFVRequestConfiguration;
-import pt.uminho.algoritmi.netopt.nfv.optimization.NFVRequestsConfigurationMap;
 import pt.uminho.algoritmi.netopt.nfv.optimization.OptimizationResultObject;
 import pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.SolutionParser;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
@@ -28,19 +28,19 @@ public class SolutionSaver
         try
         {
             OptimizationResultObject obj = solver.optimize();
-            NFVRequestsConfigurationMap configurationMap = obj.getNfvRequestsConfigurationMap();
-            saveToJSON(configurationMap, solution.length);
+            saveToJSON(obj, solution.length, nodesMap);
 
         } catch (IloException e) {
             e.printStackTrace();
         }
     }
 
-    private static void saveToJSON(NFVRequestsConfigurationMap configurationMap, int length)
+    private static void saveToJSON(OptimizationResultObject o, int length, NFNodesMap map)
     {
         String filename = "Configuration_"+ length + ".json";
+        Map<Integer, NFNode> nodesMap= map.getNodes();
         JSONObject obj = new JSONObject();
-        Map<Integer, NFVRequestConfiguration> configurations = configurationMap.getConfigurations();
+        Map<Integer, NFVRequestConfiguration> configurations = o.getNfvRequestsConfigurationMap().getConfigurations();
         JSONArray configurationsArray = new JSONArray();
         for(NFVRequestConfiguration configuration : configurations.values())
         {
@@ -52,11 +52,18 @@ public class SolutionSaver
             for(Integer i : services.keySet())
             {
                 JSONObject objA = new JSONObject();
-                objA.put(i, services.get(i));
+                objA.put("Service ID", i);
+                objA.put("Node ID",services.get(i));
                 serviceProcessmentLocation.add(objA);
             }
             configurationObject.put("ServiceProcessmentLocation",serviceProcessmentLocation);
-
+            List<Integer> path = configuration.genSRPath();
+            JSONArray finalPath = new JSONArray();
+            for(Integer i : path)
+            {
+                finalPath.add(i);
+            }
+            configurationObject.put("NodeIDPath", finalPath);
             List<SourceDestinationPair> list = configuration.getSrpath();
             JSONArray srpath = new JSONArray();
             for(SourceDestinationPair pair : list)
@@ -66,10 +73,31 @@ public class SolutionSaver
                 objB.put("Destination", pair.getDestination());
                 srpath.add(objB);
             }
-            configurationObject.put("SRPath", srpath);
+            configurationObject.put("SegmentPath", srpath);
             configurationsArray.add(configurationObject);
         }
         obj.put("Configurations",configurationsArray);
+        obj.put("phi", o.getPhiValue());
+        obj.put("gamma",o.getGammaValue());
+        obj.put("objectiveFunction", o.getLoadValue());
+
+        JSONArray array = new JSONArray();
+        for(NFNode node : nodesMap.values())
+        {
+            List<Integer> servicesAvailable = node.getAvailableServices();
+            JSONArray arrayServices = new JSONArray();
+            JSONObject objAux = new JSONObject();
+            for(Integer i : servicesAvailable)
+            {
+                arrayServices.add(i);
+            }
+            objAux.put("nodeID",node.getId());
+            objAux.put("AvailableServices",arrayServices);
+            array.add(objAux);
+        }
+
+        obj.put("servicesLocationSolution", array);
+
         try {
             save(obj,filename);
         } catch (IOException e) {

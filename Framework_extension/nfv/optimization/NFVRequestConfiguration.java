@@ -7,27 +7,61 @@ import java.util.*;
 public class NFVRequestConfiguration
 {
     private Integer requestID;
+    private int requestOrigin;
+    private int requestDestination;
     private List<SourceDestinationPair> srpath;
     private Map<Integer, Integer> serviceProcessment; //Key -> Service ID; Value -> Node ID
-    private List<Integer> serviceOrder;
-    private List<Integer> finalSRPath;
+
+    public static void main(String[] args)
+    {
+        List<SourceDestinationPair> pairs = new ArrayList<>();
+        pairs.add(new SourceDestinationPair(0,1));
+        pairs.add(new SourceDestinationPair(1,5));
+        pairs.add(new SourceDestinationPair(7,2));
+        pairs.add(new SourceDestinationPair(5,7));
+
+        NFVRequestConfiguration conf = new NFVRequestConfiguration();
+        conf.setSrpath(pairs);
+        conf.setRequestOrigin(0);
+        conf.setRequestDestination(2);
+        boolean ret = conf.completePathExists();
+        List<Integer> finalList = conf.getFinalSRPath();
+        finalList.size();
+        System.out.println(ret);
+    }
 
     public NFVRequestConfiguration()
     {
         this.requestID = -1;
+        this.requestOrigin = -1;
+        this.requestDestination = -1;
         this.srpath = new ArrayList<>();
         this.serviceProcessment = new HashMap<>();
-        this.serviceOrder = new ArrayList<>();
-        this.finalSRPath = new ArrayList<>();
-        this.finalSRPath = genSRPath();
     }
 
-    public NFVRequestConfiguration(Integer requestID, List<SourceDestinationPair> srpath, Map<Integer, Integer> serviceProcessment, List<Integer> order)
+    public NFVRequestConfiguration(Integer requestID, List<SourceDestinationPair> srpath, Map<Integer, Integer> serviceProcessment, int requestOrigin, int requestDestination)
     {
         this.requestID = requestID;
+        this.requestOrigin = requestOrigin;
+        this.requestDestination = requestDestination;
         this.srpath = srpath;
         this.serviceProcessment = serviceProcessment;
-        this.serviceOrder = order;
+    }
+
+    public int getRequestOrigin() {
+        return requestOrigin;
+    }
+
+    public void setRequestOrigin(int requestOrigin) {
+        this.requestOrigin = requestOrigin;
+    }
+
+    public int getRequestDestination() {
+        return requestDestination;
+    }
+
+    public void setRequestDestination(int requestDestination) {
+        this.requestDestination = requestDestination;
     }
 
     public Integer getRequestID() {
@@ -54,38 +88,68 @@ public class NFVRequestConfiguration
         this.serviceProcessment = serviceProcessment;
     }
 
-    public List<Integer> getServiceOrder() {
-        return serviceOrder;
-    }
-
-    public void setServiceOrder(List<Integer> serviceOrder) {
-        this.serviceOrder = serviceOrder;
-    }
-
     public List<Integer> genSRPath()
     {
-        ArrayList<Integer> path = new ArrayList<>();
-        for(Integer i : serviceOrder)
+        List<Integer> path = new ArrayList<>();
+        if(completePathExists())
         {
-            int nodeID = serviceProcessment.get(i);
-            path.add(nodeID);
+            path = getFinalSRPath();
         }
 
         return path;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof NFVRequestConfiguration)) return false;
-        NFVRequestConfiguration that = (NFVRequestConfiguration) o;
-        return Objects.equals(getRequestID(), that.getRequestID()) &&
-                Objects.equals(getSrpath(), that.getSrpath()) &&
-                Objects.equals(getServiceProcessment(), that.getServiceProcessment());
+    private List<Integer> getFinalSRPath()
+    {
+        int pathSize = srpath.size();
+        int i = 0;
+        int node = this.requestOrigin;
+        List<Integer> path = new ArrayList<>();
+        List<SourceDestinationPair> orderedSRPath = new ArrayList<>();
+        path.add(node);
+
+        while(i < pathSize)
+        {
+            for(SourceDestinationPair pair : this.srpath)
+            {
+                if(pair.getSource() == node)
+                {
+                    node = pair.getDestination();
+                    orderedSRPath.add(pair);
+                    path.add(node);
+                    break;
+                }
+            }
+            i++;
+        }
+        this.srpath = orderedSRPath;
+        return path;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(getRequestID(), getSrpath(), getServiceProcessment());
+    private boolean completePathExists()
+    {
+        int pathSize = srpath.size();
+        List<SourceDestinationPair> pairList = new ArrayList<>();
+        pairList= this.srpath;
+        int i = 0;
+        int node = this.requestOrigin;
+        boolean ret = false;
+
+        while(i < pathSize)
+        {
+            for(SourceDestinationPair pair : pairList)
+            {
+                if(pair.getSource() == node)
+                {
+                    node = pair.getDestination();
+                    break;
+                }
+            }
+            i++;
+        }
+        if(node == this.requestDestination && i == pathSize)
+            ret = true;
+
+        return ret;
     }
 }
