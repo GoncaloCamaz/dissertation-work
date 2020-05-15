@@ -1,29 +1,28 @@
-package pt.uminho.algoritmi.netopt.nfv.optimization.SolutionSaver;
+package pt.uminho.algoritmi.netopt.nfv.optimization.Utils;
 
 import ilog.concert.IloException;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import pt.uminho.algoritmi.netopt.cplex.MCFPhiNodeUtilizationSolver;
+import pt.uminho.algoritmi.netopt.cplex.MCFPhiNodeUtilizationSolver2;
 import pt.uminho.algoritmi.netopt.cplex.utils.SourceDestinationPair;
 import pt.uminho.algoritmi.netopt.nfv.NFNode;
 import pt.uminho.algoritmi.netopt.nfv.NFNodesMap;
 import pt.uminho.algoritmi.netopt.nfv.NFVState;
 import pt.uminho.algoritmi.netopt.nfv.optimization.NFVRequestConfiguration;
 import pt.uminho.algoritmi.netopt.nfv.optimization.OptimizationResultObject;
-import pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.SolutionParser;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
-public class SolutionSaver
+public class ConfigurationSolutionSaver
 {
     public static void saveServicesLocationConfiguration(int[] solution, String filename, NetworkTopology topology, NFVState state)
     {
-        SolutionParser parser = new SolutionParser(filename);
+        EASolutionParser parser = new EASolutionParser(filename);
         NFNodesMap nodesMap = parser.solutionParser(solution);
-        MCFPhiNodeUtilizationSolver solver = new MCFPhiNodeUtilizationSolver(topology,state.getServices(),state.getRequests(),nodesMap);
+        MCFPhiNodeUtilizationSolver2 solver = new MCFPhiNodeUtilizationSolver2(topology,state.getServices(),state.getRequests(),nodesMap);
         solver.setSaveConfigurations(true);
         try
         {
@@ -47,6 +46,9 @@ public class SolutionSaver
             int requestID = configuration.getRequestID();
             JSONObject configurationObject = new JSONObject();
             configurationObject.put("RequestID", requestID);
+            configurationObject.put("Request Origin", configuration.getRequestOrigin());
+            configurationObject.put("Request Destination", configuration.getRequestDestination());
+            configurationObject.put("Request Bandwidth", configuration.getBandwidth());
             JSONArray serviceProcessmentLocation = new JSONArray();
             Map<Integer, Integer> services = configuration.getServiceProcessment();
             for(Integer i : services.keySet())

@@ -10,6 +10,8 @@ public class NFRequest
     private int destination;
     private int bandwidth;
     private List<Integer> serviceList;
+    private List<NFRequestSegment> segments;
+    
 
     public NFRequest()
     {
@@ -18,6 +20,8 @@ public class NFRequest
         this.destination = 0;
         this.bandwidth = 0;
         this.serviceList = new ArrayList<>();
+        this.segments = new ArrayList<>();
+        
     }
 
     public NFRequest(int id, int source, int destination, int bandwidth, List<Integer> serviceList) {
@@ -26,6 +30,18 @@ public class NFRequest
         this.destination = destination;
         this.bandwidth = bandwidth;
         this.serviceList = serviceList;
+        this.segments = new ArrayList<>();
+        if(serviceList.size()>0){
+        	this.segments.add(new NFRequestSegment(id,source,serviceList.get(0),true,false));
+        	for(int i=0;i<serviceList.size()-1;i++){
+        		this.segments.add(new NFRequestSegment(id,serviceList.get(i),serviceList.get(i+1)));
+        	}
+        	this.segments.add(new NFRequestSegment(id,serviceList.get(serviceList.size()-1),destination,false,true));
+        }
+        else
+        	this.segments.add(new NFRequestSegment(id,source,destination,true,true));
+        for(NFRequestSegment s:this.segments)
+        	System.out.println(s);
     }
 
     public NFRequest(NFRequest request)
@@ -75,5 +91,13 @@ public class NFRequest
 
     public void setServiceList(List<Integer> serviceList) {
         this.serviceList = serviceList;
+    }
+    
+    public List<NFRequestSegment> getRequestSegments() {
+        return this.segments;
+    }
+
+    public void setRequestSegments(List<NFRequestSegment> segments) {
+        this.segments = segments;
     }
 }

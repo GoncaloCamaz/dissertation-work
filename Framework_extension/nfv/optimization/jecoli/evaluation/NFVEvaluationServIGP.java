@@ -8,7 +8,7 @@ import pt.uminho.algoritmi.netopt.cplex.MCFPhiNodeUtilizationSolver;
 import pt.uminho.algoritmi.netopt.nfv.NFNodesMap;
 import pt.uminho.algoritmi.netopt.nfv.NFVState;
 import pt.uminho.algoritmi.netopt.nfv.optimization.OptimizationResultObject;
-import pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.SolutionParser;
+import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.EASolutionParser;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
 
 public class NFVEvaluationServIGP extends AbstractMultiobjectiveEvaluationFunction<ILinearRepresentation<Integer>>
@@ -87,7 +87,7 @@ public class NFVEvaluationServIGP extends AbstractMultiobjectiveEvaluationFuncti
     {
         NFNodesMap nodes = new NFNodesMap();
         int[] result = new int[numberOfNodes];
-        SolutionParser parser = new SolutionParser(this.filename);
+        EASolutionParser parser = new EASolutionParser(this.filename);
 
         for(int i = 0; i < numberOfNodes; i++)
         {

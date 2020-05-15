@@ -1,4 +1,4 @@
-package pt.uminho.algoritmi.netopt.nfv.optimization.jecoli;
+package pt.uminho.algoritmi.netopt.nfv.optimization.Utils;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -25,12 +25,12 @@ import java.util.Map;
 7 -> Service ID 1,2,3
  **/
 
-public class SolutionParser
+public class EASolutionParser
 {
     private Map<Integer, List<Integer>> serv;
     private String filename;
 
-    public SolutionParser(String filename)
+    public EASolutionParser(String filename)
     {
         this.serv = new HashMap<>();
         this.filename = filename;

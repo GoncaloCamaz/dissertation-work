@@ -4,11 +4,11 @@ import jecoli.algorithm.components.evaluationfunction.AbstractMultiobjectiveEval
 import jecoli.algorithm.components.evaluationfunction.IEvaluationFunction;
 import jecoli.algorithm.components.evaluationfunction.InvalidEvaluationFunctionInputDataException;
 import jecoli.algorithm.components.representation.linear.ILinearRepresentation;
-import pt.uminho.algoritmi.netopt.cplex.MCFPhiNodeUtilizationSolver;
+import pt.uminho.algoritmi.netopt.cplex.MCFPhiNodeUtilizationSolver2;
 import pt.uminho.algoritmi.netopt.nfv.NFNodesMap;
 import pt.uminho.algoritmi.netopt.nfv.NFVState;
 import pt.uminho.algoritmi.netopt.nfv.optimization.OptimizationResultObject;
-import pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.SolutionParser;
+import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.EASolutionParser;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
 
 public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<ILinearRepresentation<Integer>>
@@ -50,7 +50,7 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
         Double[] resultList = new Double[2];
         NFNodesMap nodes = decode(solutionRepresentation, topology.getDimension());
         this.state.setNodes(nodes);
-        MCFPhiNodeUtilizationSolver solver = new MCFPhiNodeUtilizationSolver(topology, state,this.cplexTimeLimit);
+        MCFPhiNodeUtilizationSolver2 solver = new MCFPhiNodeUtilizationSolver2(topology, state,this.cplexTimeLimit);
         OptimizationResultObject object = solver.optimize();
 
         double penalizationVal = 0;
@@ -84,7 +84,7 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
     {
         NFNodesMap nodes = new NFNodesMap();
         int[] result = new int[numberOfNodes];
-        SolutionParser parser = new SolutionParser(this.filename);
+        EASolutionParser parser = new EASolutionParser(this.filename);
 
         for(int i = 0; i < numberOfNodes; i++)
         {

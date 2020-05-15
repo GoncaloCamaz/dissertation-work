@@ -1,9 +1,8 @@
 package pt.uminho.algoritmi.netopt.nfv.optimization.Tests;
 
-import pt.uminho.algoritmi.netopt.nfv.NFNodesMap;
 import pt.uminho.algoritmi.netopt.nfv.NFVState;
 import pt.uminho.algoritmi.netopt.nfv.optimization.ParamsNFV;
-import pt.uminho.algoritmi.netopt.nfv.optimization.SolutionSaver.SolutionSaver;
+import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.ConfigurationSolutionSaver;
 import pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.JecoliNFV;
 
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
@@ -64,7 +63,7 @@ public class NFVServiceAllocationTest
         save(p,maxServices);
 
         int[] solution = p.getLowestValuedSolutions(0, 1).get(0).getVariablesArray();
-        SolutionSaver.saveServicesLocationConfiguration(solution,serviceMapingFile,topology,state);
+        ConfigurationSolutionSaver.saveServicesLocationConfiguration(solution,serviceMapingFile,topology,state);
     }
 
     public static void save(Population p, int limit) {
