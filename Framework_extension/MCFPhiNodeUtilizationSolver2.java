@@ -89,11 +89,10 @@ public class MCFPhiNodeUtilizationSolver2 {
 			solver.setSaveConfigurations(true);
 			solver.setCplexTimeLimit(60);
 			OptimizationResultObject obj = solver.optimize();
-			// System.out.println(obj.toString());
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
 	}
 
 	public int getCplexTimeLimit() {
@@ -240,8 +239,6 @@ public class MCFPhiNodeUtilizationSolver2 {
 					a[reqID][nodeID][sID] = cplex.intVar(0, 1, "alpha_" + reqID + "_" + nodeID + "_" + sID);
 					if (!nd.getAvailableServices().contains(sID))
 						cplex.addEq(a[reqID][nodeID][sID],0);
-
-					System.out.println("a r"+reqID+" "+nodeID+" "+sID);
 				}
 			}
 		}
@@ -386,6 +383,10 @@ public class MCFPhiNodeUtilizationSolver2 {
 		if (this.saveLoads) {
 			double[][] u = new double[topology.getDimension()][topology.getDimension()];
 
+			for(int i = 0; i < topology.getDimension(); i++)
+				for(int j = 0; j < topology.getDimension(); j++)
+					u[i][j] = 0;
+
 			for (Arc arc : arcs) {
 				double utilization = cplex.getValue(l_a.get(arc));
 				u[arc.getFromNode()][arc.getToNode()] = utilization;
@@ -393,7 +394,7 @@ public class MCFPhiNodeUtilizationSolver2 {
 
 			NetworkLoads loads = new NetworkLoads(u, topology);
 			Simul simul = new Simul(topology);
-			object.setPhiValue(simul.congestionMeasure(loads, convertToDemands(requests)));
+			object.setPhiValue(simul.congestionMeasure(loads,u));
 			object.setLinkLoads(u);
 
 
@@ -440,7 +441,6 @@ public class MCFPhiNodeUtilizationSolver2 {
 				ArrayList<SourceDestinationPair> list = new ArrayList<>();
 				for (NFRequestSegment s : request.getRequestSegments()) {
 					HashMap<Arc, IloNumVar> l = s_loads.get(s);
-					System.out.println(s);
 					for (Arc arc : arcs) {
 						if(cplex.getValue(l.get(arc))>0)
 						{
@@ -484,23 +484,6 @@ public class MCFPhiNodeUtilizationSolver2 {
 
 		cplex.end();
 		return object;
-	}
-
-	private double[][] convertToDemands(Map<Integer, NFRequest> requests)
-	{
-		int size = nodesMap.getNodes().size();
-		double[][] ret = new double[size][size];
-
-		for(int i =0; i < size ; i++)
-			for(int j =0; j < size ; j++)
-				ret[i][j] = 0;
-
-		for(NFRequest request : requests.values())
-		{
-			ret[request.getSource()][request.getDestination()] += request.getBandwidth();
-		}
-
-		return ret;
 	}
 
 	private boolean allNodesWServices(Map<Integer, NFNode> nodes) {

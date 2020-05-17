@@ -23,8 +23,8 @@ public class NFVServiceAllocationTest
     private static String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidos_30.csv";//args[3];
 
     private static String serviceMapingFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/serviceMap.json";
-    private static int populationSize = 10;
-    private static int numberOfGenerations = 2;
+    private static int populationSize = 100;
+    private static int numberOfGenerations = 10;
     private static int lowerBound = 0;
     private static int upperBound = 7;
     private static int maxServices = 12;
@@ -70,7 +70,7 @@ public class NFVServiceAllocationTest
         IntegerSolution sol = p.getLowestValuedSolutions(0, 1).get(0);
         FileWriter f;
         try {
-            f = new FileWriter("SERVICES_ServLimit_"+limit +"_"+ System.currentTimeMillis() + ".csv", true);
+            f = new FileWriter("SERVICES_"+limit +"_"+ System.currentTimeMillis() + ".csv", true);
             BufferedWriter W = new BufferedWriter(f);
             W.write(sol.toString());
             W.write("\n");

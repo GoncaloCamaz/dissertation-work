@@ -4,6 +4,8 @@ import ilog.concert.IloException;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import pt.uminho.algoritmi.netopt.cplex.MCFPhiNodeUtilizationSolver2;
+import pt.uminho.algoritmi.netopt.cplex.utils.Arc;
+import pt.uminho.algoritmi.netopt.cplex.utils.Arcs;
 import pt.uminho.algoritmi.netopt.cplex.utils.SourceDestinationPair;
 import pt.uminho.algoritmi.netopt.nfv.NFNode;
 import pt.uminho.algoritmi.netopt.nfv.NFNodesMap;
@@ -24,17 +26,28 @@ public class ConfigurationSolutionSaver
         NFNodesMap nodesMap = parser.solutionParser(solution);
         MCFPhiNodeUtilizationSolver2 solver = new MCFPhiNodeUtilizationSolver2(topology,state.getServices(),state.getRequests(),nodesMap);
         solver.setSaveConfigurations(true);
+        Arcs arcs = new Arcs();
+        int nodesNumber = state.getNodes().getNodes().size();
+        double[][] capacity = topology.getNetGraph().createGraph().getCapacitie();
+
+        for (int i = 0; i < nodesNumber; i++)
+            for (int j = 0; j < nodesNumber; j++) {
+                if (capacity[i][j] > 0) {
+                    Arc a = new Arc(i, j, capacity[i][j]);
+                    arcs.add(a);
+                }
+            }
         try
         {
             OptimizationResultObject obj = solver.optimize();
-            saveToJSON(obj, solution.length, nodesMap);
+            saveToJSON(obj,arcs,solution.length, nodesMap);
 
         } catch (IloException e) {
             e.printStackTrace();
         }
     }
 
-    private static void saveToJSON(OptimizationResultObject o, int length, NFNodesMap map)
+    private static void saveToJSON(OptimizationResultObject o, Arcs arcs, int length, NFNodesMap map)
     {
         String filename = "Configuration_"+ length + ".json";
         Map<Integer, NFNode> nodesMap= map.getNodes();
@@ -78,6 +91,23 @@ public class ConfigurationSolutionSaver
             configurationObject.put("SegmentPath", srpath);
             configurationsArray.add(configurationObject);
         }
+
+        JSONArray loads = new JSONArray();
+        for(Arc arc : arcs)
+        {
+            int i = arc.getFromNode();
+            int j = arc.getToNode();
+            JSONObject objLoad = new JSONObject();
+            objLoad.put("Origin", i);
+            objLoad.put("Destination",j);
+            objLoad.put("Load", o.getLoad(i,j));
+            loads.add(objLoad);
+        }
+
+
+        obj.put("Arc Loads", loads);
+
+
         obj.put("Configurations",configurationsArray);
         obj.put("phi", o.getPhiValue());
         obj.put("gamma",o.getGammaValue());

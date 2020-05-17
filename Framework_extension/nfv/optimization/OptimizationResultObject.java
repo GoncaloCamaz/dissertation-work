@@ -137,6 +137,11 @@ public class OptimizationResultObject
         return ret;
     }
 
+    public double getLoad(int i, int j)
+    {
+        return this.linkLoads[i][j];
+    }
+
     @Override
     public String toString() {
         return "OptimizationResultObject{" +
