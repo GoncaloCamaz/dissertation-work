@@ -11,7 +11,7 @@ public class NFRequest
     private int bandwidth;
     private List<Integer> serviceList;
     private List<NFRequestSegment> segments;
-    
+
 
     public NFRequest()
     {
@@ -21,7 +21,7 @@ public class NFRequest
         this.bandwidth = 0;
         this.serviceList = new ArrayList<>();
         this.segments = new ArrayList<>();
-        
+
     }
 
     public NFRequest(int id, int source, int destination, int bandwidth, List<Integer> serviceList) {
@@ -31,17 +31,27 @@ public class NFRequest
         this.bandwidth = bandwidth;
         this.serviceList = serviceList;
         this.segments = new ArrayList<>();
+        // Converts a request to segment
+        // A different bw may be assign to each segment reflecting that packets' load
+        // may be altered after being processed.
         if(serviceList.size()>0){
-        	this.segments.add(new NFRequestSegment(id,source,serviceList.get(0),true,false));
-        	for(int i=0;i<serviceList.size()-1;i++){
-        		this.segments.add(new NFRequestSegment(id,serviceList.get(i),serviceList.get(i+1)));
-        	}
-        	this.segments.add(new NFRequestSegment(id,serviceList.get(serviceList.size()-1),destination,false,true));
+            NFRequestSegment s = new NFRequestSegment(id,source,serviceList.get(0),true,false);
+            s.setBandwidth(bandwidth);
+            this.segments.add(s);
+            for(int i=0;i<serviceList.size()-1;i++){
+                s= new NFRequestSegment(id,serviceList.get(i),serviceList.get(i+1));
+                s.setBandwidth(bandwidth);
+                this.segments.add(s);
+            }
+            s = new NFRequestSegment(id,serviceList.get(serviceList.size()-1),destination,false,true);
+            s.setBandwidth(bandwidth);
+            this.segments.add(s);
         }
-        else
-        	this.segments.add(new NFRequestSegment(id,source,destination,true,true));
-        for(NFRequestSegment s:this.segments)
-        	System.out.println(s);
+        else {
+            NFRequestSegment s = new NFRequestSegment(id,source,destination,true,true);
+            s.setBandwidth(bandwidth);
+            this.segments.add(s);
+        }
     }
 
     public NFRequest(NFRequest request)
@@ -92,7 +102,7 @@ public class NFRequest
     public void setServiceList(List<Integer> serviceList) {
         this.serviceList = serviceList;
     }
-    
+
     public List<NFRequestSegment> getRequestSegments() {
         return this.segments;
     }

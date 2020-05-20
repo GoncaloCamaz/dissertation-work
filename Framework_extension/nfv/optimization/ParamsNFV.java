@@ -8,7 +8,7 @@ import java.util.List;
 public class ParamsNFV
 {
     public enum  AlgorithmSelectionOption{
-        NSGAII("NSGAII");
+        SOEA("Single Objective"),NSGAII("NSGAII");
         private final String name;
         AlgorithmSelectionOption(String name){
             this.name=name;

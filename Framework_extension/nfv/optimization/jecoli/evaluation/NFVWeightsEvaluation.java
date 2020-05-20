@@ -1,5 +1,6 @@
 package pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.evaluation;
 
+import jecoli.algorithm.components.evaluationfunction.AbstractEvaluationFunction;
 import jecoli.algorithm.components.evaluationfunction.AbstractMultiobjectiveEvaluationFunction;
 import jecoli.algorithm.components.evaluationfunction.IEvaluationFunction;
 import jecoli.algorithm.components.evaluationfunction.InvalidEvaluationFunctionInputDataException;
@@ -9,21 +10,26 @@ import pt.uminho.algoritmi.netopt.cplex.MCFPhiNodeUtilizationSolver;
 import pt.uminho.algoritmi.netopt.nfv.NFVState;
 import pt.uminho.algoritmi.netopt.nfv.optimization.OptimizationResultObject;
 
+import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.Request;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
+import pt.uminho.algoritmi.netopt.ospf.simulation.OSPFWeights;
+import pt.uminho.algoritmi.netopt.ospf.simulation.sr.LabelPath;
+import pt.uminho.algoritmi.netopt.ospf.simulation.sr.SRSimulator;
 
-public class NFVWeightsEvaluation extends AbstractMultiobjectiveEvaluationFunction<ILinearRepresentation<Integer>>
+import java.awt.*;
+import java.util.List;
+
+public class NFVWeightsEvaluation extends AbstractEvaluationFunction<ILinearRepresentation<Integer>>
 {
     private NetworkTopology topology;
-    private NFVState state;
-    private int cplexTimeLimit;
+    private List<Request> requests;
 
 
-    public NFVWeightsEvaluation(NetworkTopology topology, NFVState state, int cplexTimeLimit)
+    public NFVWeightsEvaluation(NetworkTopology topology, List<Request> requests)
     {
         super(false);
         this.topology = topology;
-        this.state = state;
-        this.cplexTimeLimit = cplexTimeLimit;
+        this.requests = requests;
     }
 
     @Override
@@ -37,24 +43,29 @@ public class NFVWeightsEvaluation extends AbstractMultiobjectiveEvaluationFuncti
 
     @Override
     public int getNumberOfObjectives() {
-        return 2;
+        return 1;
     }
 
     @Override
-    public Double[] evaluateMO(ILinearRepresentation<Integer> solutionRepresentation) throws Exception
+    public double evaluate(ILinearRepresentation<Integer> solutionRepresentation) throws Exception
     {
-        Double[] resultList = new Double[2];
+        double result = 0;
+        int nodes = topology.getDimension();
         int edges = topology.getNumberEdges();
         int weights[] = decode(solutionRepresentation, edges);
-        topology.applyWeights(weights);
+        OSPFWeights weightsOSPF = new OSPFWeights(nodes);
+        weightsOSPF.setWeights(weights,this.topology);
 
-        MCFPhiNodeUtilizationSolver solver = new MCFPhiNodeUtilizationSolver(topology, state,this.cplexTimeLimit);
-        OptimizationResultObject object = solver.optimize();
+        SRSimulator simulator = new SRSimulator(topology,weightsOSPF);
 
-        resultList[0] = new Double(object.getPhiValue());
-        resultList[1] = new Double(object.getGammaValue());
+        for(Request r : this.requests)
+        {
+            simulator.addFlow(r.getFlow(), r.getPath());
+        }
 
-        return resultList;
+        result = simulator.getCongestionValue();// new Double(object.getPhiValue());
+
+        return result;
     }
 
     public int[] decode(ILinearRepresentation<Integer> solution, int edges)
@@ -77,13 +88,4 @@ public class NFVWeightsEvaluation extends AbstractMultiobjectiveEvaluationFuncti
     public void setTopology(NetworkTopology topology) {
         this.topology = topology;
     }
-
-    public NFVState getState() {
-        return state;
-    }
-
-    public void setState(NFVState state) {
-        this.state = state;
-    }
-
 }

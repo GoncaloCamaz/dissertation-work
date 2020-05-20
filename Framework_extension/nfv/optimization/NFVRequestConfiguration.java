@@ -2,6 +2,7 @@ package pt.uminho.algoritmi.netopt.nfv.optimization;
 
 import pt.uminho.algoritmi.netopt.cplex.utils.SourceDestinationPair;
 
+import java.lang.reflect.Array;
 import java.util.*;
 
 public class NFVRequestConfiguration
@@ -96,124 +97,85 @@ public class NFVRequestConfiguration
         this.serviceProcessment = serviceProcessment;
     }
 
+
+
     public List<Integer> genSRPath()
     {
         List<Integer> path = new ArrayList<>();
-        if(!returnArcs())
-        {
-            path = getFinalSRPath();
-        }
-        else
-        {
-            path = this.serviceOrder;
-            if(!path.contains(requestDestination))
-            {
-                path.add(requestDestination);
-                if(path.get(0) != requestOrigin) {
-                    List<Integer> pathAux = new ArrayList<>();
-                    pathAux.add(requestOrigin);
-                    for(Integer i : path)
-                    {
-                        pathAux.add(i);
-                    }
-                    path = pathAux;
-                }
-            }
-        }
+        getFinalSRPath();
+        path = getSegmentPathByServiceOrder();
 
         return path;
     }
 
-    private List<Integer> getFinalSRPath()
+    private List<Integer> getSegmentPathByServiceOrder()
+    {
+        ArrayList<Integer> ret = new ArrayList<>();
+        for(Integer i : this.serviceOrder)
+        {
+            int node = getNodeLocationProcessment(i);
+            ret.add(node);
+        }
+
+        return ret;
+    }
+
+    private void getFinalSRPath()
     {
         int pathSize = srpath.size();
         int i = 0;
         int node = this.requestOrigin;
-        List<Integer> path = new ArrayList<>();
         List<SourceDestinationPair> orderedSRPath = new ArrayList<>();
-        path.add(node);
+        List<SourceDestinationPair> auxList = new ArrayList<>();
+        auxList = this.srpath;
 
         while(i < pathSize)
         {
-            for(SourceDestinationPair pair : this.srpath)
+            for(SourceDestinationPair pair : auxList)
             {
                 if(pair.getSource() == node)
                 {
                     node = pair.getDestination();
                     orderedSRPath.add(pair);
-                    path.add(node);
                     break;
                 }
             }
             i++;
         }
 
-        if(path.get(0) != requestOrigin)
-
         this.srpath = orderedSRPath;
-        return path;
     }
 
+    private List<SourceDestinationPair> pathUntilDestination(int origin, int destination)
+    {
+        List<SourceDestinationPair> pairs = new ArrayList<>();
+
+
+
+        return pairs;
+    }
+
+    private boolean reachable(SourceDestinationPair pair, int destination)
+    {
+        boolean ret = false;
+        int origin = pair.getSource();
+        int dest = pair.getDestination();
+        if(origin == destination || dest == destination)
+            ret = true;
+        else
+        {
+            int actual = pair.getDestination();
+            while (actual != destination)
+            {
+
+            }
+        }
+
+        return ret;
+    }
 
     private int getNodeLocationProcessment(int actualService)
     {
         return this.serviceProcessment.get(actualService);
     }
-
-    private boolean returnArcs()
-    {
-        List<SourceDestinationPair> aux = new ArrayList<>();
-        for(SourceDestinationPair pair : this.srpath)
-        {
-            SourceDestinationPair pairInverted = new SourceDestinationPair(pair.getDestination(), pair.getSource());
-            if(this.srpath.contains(pairInverted))
-                aux.add(pairInverted);
-        }
-
-        return (aux.size() != 0 ? true : false);
-    }
-/*
-    private boolean completePathExists()
-    {
-        int pathSize = srpath.size();
-        List<SourceDestinationPair> pairList = new ArrayList<>();
-        pairList= this.srpath;
-        int i = 0;
-        int node = this.requestOrigin;
-        boolean ret = false;
-
-        while(i < pathSize)
-        {
-            for(SourceDestinationPair pair : pairList)
-            {
-                if(pair.getSource() == node)
-                {
-                    node = pair.getDestination();
-                    break;
-                }
-            }
-            i++;
-        }
-        if(node == this.requestDestination && i == pathSize)
-            ret = true;
-
-        return ret;
-    }
-
-      private List<Integer> genServiceProcessmentLocationPathBased()
-    {
-        List<Integer> path = new ArrayList<>();
-        path.add(requestOrigin);
-        for(Integer i : this.serviceProcessment.values())
-        {
-            if(!path.contains(i))
-                path.add(i);
-        }
-        if(!path.contains(requestDestination))
-            path.add(requestDestination);
-
-        return path;
-    }
-
- */
 }
