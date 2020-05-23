@@ -26,6 +26,7 @@ import jecoli.algorithm.components.statistics.StatisticsConfiguration;
 import jecoli.algorithm.components.terminationcriteria.FitnessTargetTerminationCriteria;
 import jecoli.algorithm.components.terminationcriteria.ITerminationCriteria;
 import jecoli.algorithm.components.terminationcriteria.IterationTerminationCriteria;
+import jecoli.algorithm.components.terminationcriteria.NumberOfFunctionEvaluationsTerminationCriteria;
 import jecoli.algorithm.multiobjective.archive.components.ArchiveManager;
 import jecoli.algorithm.multiobjective.archive.components.InsertionStrategy;
 import jecoli.algorithm.multiobjective.archive.components.ProcessingStrategy;
@@ -188,23 +189,13 @@ public class JecoliWeights
         // Selection could be random or consider some kind of sorting
         // for now just select the p first individuals
 
-        // TODO: select distinct individuals
         if (p > 0) {
             Population clonedPop = params.getInitialPopulation().copy(numberOfObjective);
             List<IntegerSolution> l = clonedPop.getLowestValuedSolutions(p);
             Iterator<IntegerSolution> it = l.iterator();
             while (it.hasNext())
-                newSolutionSet.add(pt.uminho.algoritmi.netopt.ospf.optimization.jecoli.SolutionParser.convert(it.next(), 2));
+                newSolutionSet.add(pt.uminho.algoritmi.netopt.ospf.optimization.jecoli.SolutionParser.convert(it.next(), NUMObjectives));
         }
-
-        // Add solutions from standard weight configurations schemes
-        // invcap
-
-        OSPFWeights w = new OSPFWeights(this.topology.getDimension());
-        w.setInvCapWeights(MINWeight, MAXWeight, this.topology);
-        ISolution<ILinearRepresentation<Integer>> s = pt.uminho.algoritmi.netopt.ospf.optimization.jecoli.SolutionParser
-                    .convert(w.toSolution(topology, numberOfObjective), numberOfObjective);
-        newSolutionSet.add(s);
 
         return newSolutionSet;
     }
@@ -225,8 +216,9 @@ public class JecoliWeights
                 topology.getNumberEdges(), MAXWeight, MINWeight);
 
         ITerminationCriteria terminationCriteria;
-        if (params.getCriteria().equals(Params.TerminationCriteria.ITERATION))
-            terminationCriteria = new IterationTerminationCriteria(params.getNumberGenerations());
+        if (params.getCriteria().equals(ParamsNFV.TerminationCriteria.ITERATION))
+           // terminationCriteria = new IterationTerminationCriteria(params.getNumberGenerations());
+            terminationCriteria = new NumberOfFunctionEvaluationsTerminationCriteria(params.getPopulationSize());
         else
             terminationCriteria = new FitnessTargetTerminationCriteria(params.getCriteriaValue());
 
@@ -261,7 +253,7 @@ public class JecoliWeights
     }
 
     /**
-     * Demands & delay optimization
+     * Weights Evaluation
      *
      * @param params
      * @throws Exception
@@ -310,7 +302,7 @@ public class JecoliWeights
     public AbstractSolutionSet<Integer> getAchiveSolutionSet() {
         return algorithm.getAchiveSolutionSet();
     }
-    
+
     public AlgorithmInterface<Integer> getAlgorithm() {
         return algorithm;
     }

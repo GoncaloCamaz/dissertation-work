@@ -42,6 +42,7 @@ public class WeightsAllocationTest
         params.setArchiveSize(100);
         params.setPopulationSize(populationSize);
         params.setNumberGenerations(numberOfGenerations);
+        params.setCriteria(ParamsNFV.TerminationCriteria.ITERATION);
 
         JecoliWeights ea = new JecoliWeights(topology,req);
         ea.configureEvolutionaryAlgorithm(params);

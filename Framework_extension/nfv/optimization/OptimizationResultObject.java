@@ -11,6 +11,8 @@ public class OptimizationResultObject
     private double loadValue;
     private double gammaValue;
     private double phiValue;
+    private double mnu;
+    private double mlu;
     private HashMap<Integer, Integer> servicesDeployed;
     private boolean allNodesWServices;
     private NFVRequestsConfigurationMap nfvRequestsConfigurationMap;
@@ -21,6 +23,8 @@ public class OptimizationResultObject
         this.nodeUtilization = new double[numberOfNodes];
         this.numberOfNodes = numberOfNodes;
         this.loadValue = 0;
+        this.mlu = 0;
+        this.mnu = 0;
         this.gammaValue = 0;
         this.phiValue = 0;
         this.servicesDeployed = new HashMap<>();
@@ -29,12 +33,14 @@ public class OptimizationResultObject
     }
 
     public OptimizationResultObject(double[][] linkLoads, double[] nodeUtilization, int numberOfNodes, double loadvalue, double phi, double gamma,
-                                    HashMap<Integer,Integer> map, boolean allNodesWServices, NFVRequestsConfigurationMap configurationMapmap) {
+                                    HashMap<Integer,Integer> map, boolean allNodesWServices, NFVRequestsConfigurationMap configurationMapmap, double mlu, double mnu) {
         this.linkLoads = linkLoads;
         this.nodeUtilization = nodeUtilization;
         this.numberOfNodes = numberOfNodes;
         this.loadValue = loadvalue;
         this.phiValue = phi;
+        this.mlu = mlu;
+        this.mnu = mnu;
         this.gammaValue = gamma;
         this.servicesDeployed = map;
         this.allNodesWServices = allNodesWServices;
@@ -95,6 +101,22 @@ public class OptimizationResultObject
 
     public void setServicesDeployed(HashMap<Integer, Integer> servicesDeployed) {
         this.servicesDeployed = servicesDeployed;
+    }
+
+    public double getMnu() {
+        return mnu;
+    }
+
+    public void setMnu(double mnu) {
+        this.mnu = mnu;
+    }
+
+    public double getMlu() {
+        return mlu;
+    }
+
+    public void setMlu(double mlu) {
+        this.mlu = mlu;
     }
 
     public NFVRequestsConfigurationMap getNfvRequestsConfigurationMap() {

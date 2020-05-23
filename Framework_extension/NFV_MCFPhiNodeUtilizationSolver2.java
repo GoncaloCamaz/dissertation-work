@@ -39,7 +39,7 @@ import java.util.Map;
 import ilog.concert.*;
 import pt.uminho.algoritmi.netopt.ospf.simulation.Simul;
 
-public class MCFPhiNodeUtilizationSolver2 {
+public class NFV_MCFPhiNodeUtilizationSolver2 {
 
 	private NetworkTopology topology;
 	private NFServicesMap services;
@@ -50,8 +50,8 @@ public class MCFPhiNodeUtilizationSolver2 {
 	private boolean saveLoads;
 	private boolean saveConfigurations;
 
-	public MCFPhiNodeUtilizationSolver2(NetworkTopology topology, NFServicesMap servicesMap, NFRequestsMap r,
-			NFNodesMap n) {
+	public NFV_MCFPhiNodeUtilizationSolver2(NetworkTopology topology, NFServicesMap servicesMap, NFRequestsMap r,
+											NFNodesMap n) {
 		this.topology = topology;
 		this.services = servicesMap;
 		this.NFRequestsMap = r;
@@ -61,7 +61,7 @@ public class MCFPhiNodeUtilizationSolver2 {
 		this.saveConfigurations = false;
 	}
 
-	public MCFPhiNodeUtilizationSolver2(NetworkTopology topology, NFVState state, int timelimit) {
+	public NFV_MCFPhiNodeUtilizationSolver2(NetworkTopology topology, NFVState state, int timelimit) {
 		this.topology = topology;
 		this.services = state.getServices();
 		this.NFRequestsMap = state.getRequests();
@@ -84,7 +84,7 @@ public class MCFPhiNodeUtilizationSolver2 {
 			NFNodesMap map = state.getNodes();
 			NFRequestsMap req = state.getRequests();
 
-			MCFPhiNodeUtilizationSolver2 solver = new MCFPhiNodeUtilizationSolver2(topology, services, req, map);
+			NFV_MCFPhiNodeUtilizationSolver2 solver = new NFV_MCFPhiNodeUtilizationSolver2(topology, services, req, map);
 			solver.setSaveLoads(true);
 			solver.setSaveConfigurations(true);
 			solver.setCplexTimeLimit(60);
@@ -111,7 +111,7 @@ public class MCFPhiNodeUtilizationSolver2 {
 	 * @throws IloException
 	 */
 	public OptimizationResultObject optimize(NetworkTopology topology, NFServicesMap servicesMap, NFRequestsMap req,
-			NFNodesMap nodes) throws IloException {
+											 NFNodesMap nodes) throws IloException {
 		double[][] cp = topology.getNetGraph().createGraph().getCapacitie();
 		Map<Integer, NFService> serv = servicesMap.getServices();
 		Map<Integer, NFRequest> r = req.getRequestMap();
@@ -133,7 +133,7 @@ public class MCFPhiNodeUtilizationSolver2 {
 	 * @throws IloException
 	 */
 	public OptimizationResultObject optimize(double[][] capacity, Map<Integer, NFService> services,
-			Map<Integer, NFRequest> requests, Map<Integer, NFNode> nodes) throws IloException {
+											 Map<Integer, NFRequest> requests, Map<Integer, NFNode> nodes) throws IloException {
 
 		IloCplex cplex = new IloCplex();
 		cplex.setName("Multi commodity flow Phi and Node optimization");
@@ -239,6 +239,8 @@ public class MCFPhiNodeUtilizationSolver2 {
 					a[reqID][nodeID][sID] = cplex.intVar(0, 1, "alpha_" + reqID + "_" + nodeID + "_" + sID);
 					if (!nd.getAvailableServices().contains(sID))
 						cplex.addEq(a[reqID][nodeID][sID],0);
+
+					System.out.println("a r"+reqID+" "+nodeID+" "+sID);
 				}
 			}
 		}
@@ -263,7 +265,6 @@ public class MCFPhiNodeUtilizationSolver2 {
 
 		// CONSTRAINTS
 		// ===================================================================================
-		// flow conservation
 
 		// EQUATION 1
 		// link loads are the sum of flows traveling over it, l(a) =
@@ -339,7 +340,6 @@ public class MCFPhiNodeUtilizationSolver2 {
 					List<Arc> toV = arcs.getAllArcsTo(nd.getId());
 					List<Arc> fromV = arcs.getAllArcsFrom(nd.getId());
 					IloLinearNumExpr ev = cplex.linearNumExpr();
-
 					for (Arc arc : toV) {
 						ev.addTerm(-1, s_loads.get(s).get(arc));
 					}
@@ -347,31 +347,37 @@ public class MCFPhiNodeUtilizationSolver2 {
 						ev.addTerm(1, s_loads.get(s).get(arc));
 					}
 
+
 					if(s.isRequestSource() && nd.getId()==s.getFrom() && s.isRequestDestination() && nd.getId()==s.getTo()){
-						cplex.addEq(ev, 0,"same_");
-					}else if(s.isRequestSource() && nd.getId()==s.getFrom()){
-						cplex.addEq(ev, request.getBandwidth(),"source");
+						cplex.addEq(ev, 0);
+					}else if(s.isRequestSource() && nd.getId()!=s.getFrom() && s.isRequestDestination() && nd.getId()!=s.getTo()){
+						cplex.addEq(ev, 0);
+					}
+					else if(s.isRequestSource() && nd.getId()==s.getFrom()){
+						if(!s.isRequestDestination())
+							ev.addTerm(1*s.getBandwidth(),a[s.getRequestID()][nd.getId()][s.getTo()]);
+						cplex.addEq(ev, s.getBandwidth());
 					}
 					else if(s.isRequestDestination() && nd.getId()==s.getTo()){
-						cplex.addEq(ev, -1* request.getBandwidth(),"destination");
-					}
-					else if(s.isRequestSource() && s.isRequestDestination()){
-						cplex.addEq(ev, 0,"transient_s-t");
+						if(!s.isRequestSource())
+							ev.addTerm(-1*s.getBandwidth(),a[s.getRequestID()][nd.getId()][s.getFrom()]);
+						cplex.addEq(ev, -1* s.getBandwidth());
 					}
 					else{
 						if(!s.isRequestSource())
-							ev.addTerm(-1*request.getBandwidth(),a[s.getRequestID()][nd.getId()][s.getFrom()]);
+							ev.addTerm(-1*s.getBandwidth(),a[s.getRequestID()][nd.getId()][s.getFrom()]);
 						if(!s.isRequestDestination())
-							ev.addTerm(1*request.getBandwidth(),a[s.getRequestID()][nd.getId()][s.getTo()]);
-
+							ev.addTerm(1*s.getBandwidth(),a[s.getRequestID()][nd.getId()][s.getTo()]);
 						cplex.addEq(ev, 0);
 					}
 				}
 			}
 		}
 
+
+
 		// Saves the model
-		cplex.exportModel("lpex1.lp");
+		cplex.exportModel("phigammaSolver.lp");
 		OptimizationResultObject object = new OptimizationResultObject(nodesNumber);
 		// Solve
 		cplex.solve();

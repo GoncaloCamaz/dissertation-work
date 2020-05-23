@@ -3,7 +3,7 @@ package pt.uminho.algoritmi.netopt.nfv.optimization.Utils;
 import ilog.concert.IloException;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import pt.uminho.algoritmi.netopt.cplex.MCFPhiNodeUtilizationSolver2;
+import pt.uminho.algoritmi.netopt.cplex.NFV_MCFPhiNodeUtilizationSolver2;
 import pt.uminho.algoritmi.netopt.cplex.utils.Arc;
 import pt.uminho.algoritmi.netopt.cplex.utils.Arcs;
 import pt.uminho.algoritmi.netopt.cplex.utils.SourceDestinationPair;
@@ -24,7 +24,7 @@ public class ConfigurationSolutionSaver
     {
         EASolutionParser parser = new EASolutionParser(filename);
         NFNodesMap nodesMap = parser.solutionParser(solution);
-        MCFPhiNodeUtilizationSolver2 solver = new MCFPhiNodeUtilizationSolver2(topology,state.getServices(),state.getRequests(),nodesMap);
+        NFV_MCFPhiNodeUtilizationSolver2 solver = new NFV_MCFPhiNodeUtilizationSolver2(topology,state.getServices(),state.getRequests(),nodesMap);
         solver.setSaveConfigurations(true);
         Arcs arcs = new Arcs();
         int nodesNumber = state.getNodes().getNodes().size();
