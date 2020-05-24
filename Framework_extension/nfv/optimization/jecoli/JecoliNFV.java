@@ -247,7 +247,7 @@ public class JecoliNFV
         NSGAIIConfiguration<ILinearRepresentation<Integer>, ILinearRepresentationFactory<Integer>> configuration = this
                 .preConfigureNSGAII(params);
 
-        NFVEvaluationMO nfvEvaluation = new NFVEvaluationMO(topology,state, servicesConfiguration, this.maxServicesPenalization, this.cplexTimeLimit);
+        NFVEvaluationMO nfvEvaluation = new NFVEvaluationMO(topology,state, servicesConfiguration, this.maxServicesPenalization, this.cplexTimeLimit, params.getAlgorithm());
 
         configuration.setEvaluationFunction(nfvEvaluation);
 

@@ -4,10 +4,12 @@ import jecoli.algorithm.components.evaluationfunction.AbstractMultiobjectiveEval
 import jecoli.algorithm.components.evaluationfunction.IEvaluationFunction;
 import jecoli.algorithm.components.evaluationfunction.InvalidEvaluationFunctionInputDataException;
 import jecoli.algorithm.components.representation.linear.ILinearRepresentation;
+import pt.uminho.algoritmi.netopt.cplex.NFV_MCFPMLUSolver;
 import pt.uminho.algoritmi.netopt.cplex.NFV_MCFPhiNodeUtilizationSolver2;
 import pt.uminho.algoritmi.netopt.nfv.NFNodesMap;
 import pt.uminho.algoritmi.netopt.nfv.NFVState;
 import pt.uminho.algoritmi.netopt.nfv.optimization.OptimizationResultObject;
+import pt.uminho.algoritmi.netopt.nfv.optimization.ParamsNFV;
 import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.EASolutionParser;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
 
@@ -18,9 +20,10 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
     private String filename;
     private int maxServicesPenalization;
     private int cplexTimeLimit;
+    private ParamsNFV.EvaluationAlgorithm algorithm;
 
 
-    public NFVEvaluationMO(NetworkTopology topology, NFVState state, String filename, int maxServicesPenalization, int cplexTimeLimit)
+    public NFVEvaluationMO(NetworkTopology topology, NFVState state, String filename, int maxServicesPenalization, int cplexTimeLimit, ParamsNFV.EvaluationAlgorithm alg)
     {
         super(false);
         this.topology = topology;
@@ -28,6 +31,7 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
         this.filename = filename;
         this.maxServicesPenalization = maxServicesPenalization;
         this.cplexTimeLimit = cplexTimeLimit;
+        this.algorithm = alg;
     }
 
     @Override
@@ -50,14 +54,26 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
         Double[] resultList = new Double[2];
         NFNodesMap nodes = decode(solutionRepresentation, topology.getDimension());
         this.state.setNodes(nodes);
-        NFV_MCFPhiNodeUtilizationSolver2 solver = new NFV_MCFPhiNodeUtilizationSolver2(topology, state,this.cplexTimeLimit);
-        OptimizationResultObject object = solver.optimize();
-
+        OptimizationResultObject object = new OptimizationResultObject(nodes.getNodes().size());
         double penalizationVal = 0;
+
+        if(this.algorithm.equals(ParamsNFV.EvaluationAlgorithm.PHI))
+        {
+            NFV_MCFPhiNodeUtilizationSolver2 solver = new NFV_MCFPhiNodeUtilizationSolver2(topology, state,this.cplexTimeLimit);
+            object = solver.optimize();
+        }
+        else
+        {
+            NFV_MCFPMLUSolver solver = new NFV_MCFPMLUSolver(topology, state,this.cplexTimeLimit);
+            object = solver.optimize();
+        }
+
         penalizationVal += getPenalization(object,this.maxServicesPenalization);
 
-        resultList[0] = object.getPhiValue();
-        resultList[1] = object.getGammaValue() + penalizationVal;
+        // Mnu, Mlu, Phi, Gamma are initialized at 0. Each algorithm will set the responsible variable to a new value
+        // regarding its optimization objective (mlu/phi).
+        resultList[0] = object.getPhiValue() + object.getMlu();
+        resultList[1] = object.getGammaValue() + object.getMnu() + penalizationVal;
 
         return resultList;
     }

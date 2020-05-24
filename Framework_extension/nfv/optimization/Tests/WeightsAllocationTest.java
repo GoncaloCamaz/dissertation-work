@@ -19,14 +19,16 @@ import java.util.List;
 public class WeightsAllocationTest
 {
 
-    private static String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.nodes";// args[0];
-    private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.edges";//args[1];
+    /** Debug Mode **
+    private static String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.nodes";
+    private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.edges";
     private static String requestsFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/Configuration_30.json";
     private static int populationSize = 5;
     private static int numberOfGenerations = 1;
 
+     */
     public static void main(String[] args) throws Exception {
-/*
+
         if(args.length!=5)
             System.exit(1);
 
@@ -35,7 +37,8 @@ public class WeightsAllocationTest
         String requestsFile = args[2];
         int populationSize = Integer.parseInt(args[4]);
         int numberOfGenerations = Integer.parseInt(args[5]);
-*/
+
+
         NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
         List<Request> req = SRSolutionLoader.loadResultsFromJson(requestsFile);
         ParamsNFV params = new ParamsNFV();

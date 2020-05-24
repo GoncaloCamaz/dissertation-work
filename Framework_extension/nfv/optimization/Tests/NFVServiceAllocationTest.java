@@ -21,18 +21,19 @@ public class NFVServiceAllocationTest
     private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.edges";//args[1];
     private static String servicesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/frameworkConfiguration30N_3S.json";
     private static String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidos_30.csv";//args[3];
-
+    private static String evaluation = "mlu";
     private static String serviceMapingFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/serviceMap.json";
-    private static int populationSize = 100;
+    private static int populationSize = 10;
     private static int numberOfGenerations = 10;
     private static int lowerBound = 0;
     private static int upperBound = 7;
     private static int maxServices = 12;
     private static int cplexTimeLimit =60;
 
+
     public static void main(String[] args) throws Exception {
 /*
-        if(args.length!=11)
+        if(args.length!=12)
            System.exit(1);
 
         String nodesFile = args[0];
@@ -46,6 +47,7 @@ public class NFVServiceAllocationTest
         int upperBound = Integer.parseInt(args[8]);
         int maxServices = Integer.parseInt(args[9]);
         int cplexTimeLimit = Integer.parseInt(args[10]);
+        String evaluation = args[11].toLowerCase();
 */
         NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
         NFVState state = new NFVState(servicesFile, requests);
@@ -55,6 +57,16 @@ public class NFVServiceAllocationTest
         params.setPopulationSize(populationSize);
         params.setNumberGenerations(numberOfGenerations);
 
+        if (evaluation.equals("phi"))
+        {
+            params.setAlgorithm(ParamsNFV.EvaluationAlgorithm.PHI);
+        }
+        else
+        {
+            params.setAlgorithm(ParamsNFV.EvaluationAlgorithm.MLU);
+        }
+
+
         JecoliNFV ea = new JecoliNFV(topology,state,lowerBound,upperBound, serviceMapingFile, maxServices,cplexTimeLimit);
         ea.configureNSGAII(params);
         ea.run();
@@ -63,7 +75,7 @@ public class NFVServiceAllocationTest
         save(p,maxServices);
 
         int[] solution = p.getLowestValuedSolutions(0, 1).get(0).getVariablesArray();
-        ConfigurationSolutionSaver.saveServicesLocationConfiguration(solution,serviceMapingFile,topology,state);
+        ConfigurationSolutionSaver.saveServicesLocationConfiguration(solution,serviceMapingFile,topology,state, params.getAlgorithm());
     }
 
     public static void save(Population p, int limit) {

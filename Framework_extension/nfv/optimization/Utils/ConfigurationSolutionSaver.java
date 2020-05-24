@@ -3,15 +3,15 @@ package pt.uminho.algoritmi.netopt.nfv.optimization.Utils;
 import ilog.concert.IloException;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import pt.uminho.algoritmi.netopt.cplex.NFV_MCFPMLUSolver;
 import pt.uminho.algoritmi.netopt.cplex.NFV_MCFPhiNodeUtilizationSolver2;
 import pt.uminho.algoritmi.netopt.cplex.utils.Arc;
 import pt.uminho.algoritmi.netopt.cplex.utils.Arcs;
 import pt.uminho.algoritmi.netopt.cplex.utils.SourceDestinationPair;
-import pt.uminho.algoritmi.netopt.nfv.NFNode;
-import pt.uminho.algoritmi.netopt.nfv.NFNodesMap;
-import pt.uminho.algoritmi.netopt.nfv.NFVState;
+import pt.uminho.algoritmi.netopt.nfv.*;
 import pt.uminho.algoritmi.netopt.nfv.optimization.NFVRequestConfiguration;
 import pt.uminho.algoritmi.netopt.nfv.optimization.OptimizationResultObject;
+import pt.uminho.algoritmi.netopt.nfv.optimization.ParamsNFV;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
 
 import java.io.FileWriter;
@@ -20,31 +20,55 @@ import java.util.*;
 
 public class ConfigurationSolutionSaver
 {
-    public static void saveServicesLocationConfiguration(int[] solution, String filename, NetworkTopology topology, NFVState state)
+    public static void saveServicesLocationConfiguration(int[] solution, String filename, NetworkTopology topology, NFVState state, ParamsNFV.EvaluationAlgorithm algorithm)
     {
         EASolutionParser parser = new EASolutionParser(filename);
         NFNodesMap nodesMap = parser.solutionParser(solution);
-        NFV_MCFPhiNodeUtilizationSolver2 solver = new NFV_MCFPhiNodeUtilizationSolver2(topology,state.getServices(),state.getRequests(),nodesMap);
-        solver.setSaveConfigurations(true);
+        OptimizationResultObject obj = solve(topology, state.getServices(),state.getRequests(), nodesMap, algorithm);
+
         Arcs arcs = new Arcs();
         int nodesNumber = state.getNodes().getNodes().size();
         double[][] capacity = topology.getNetGraph().createGraph().getCapacitie();
 
         for (int i = 0; i < nodesNumber; i++)
-            for (int j = 0; j < nodesNumber; j++) {
-                if (capacity[i][j] > 0) {
+        {
+            for (int j = 0; j < nodesNumber; j++)
+            {
+                if (capacity[i][j] > 0)
+                {
                     Arc a = new Arc(i, j, capacity[i][j]);
                     arcs.add(a);
                 }
             }
-        try
-        {
-            OptimizationResultObject obj = solver.optimize();
-            saveToJSON(obj,arcs,solution.length, nodesMap);
-
-        } catch (IloException e) {
-            e.printStackTrace();
         }
+
+        saveToJSON(obj,arcs,solution.length, nodesMap);
+    }
+
+    private static OptimizationResultObject solve(NetworkTopology topology, NFServicesMap services, NFRequestsMap requests, NFNodesMap nodesMap, ParamsNFV.EvaluationAlgorithm algorithm){
+        OptimizationResultObject ret = new OptimizationResultObject(nodesMap.getNodes().size());
+        if(algorithm.equals(ParamsNFV.EvaluationAlgorithm.PHI))
+        {
+            NFV_MCFPhiNodeUtilizationSolver2 solver = new NFV_MCFPhiNodeUtilizationSolver2(topology,services,requests,nodesMap);
+            solver.setSaveConfigurations(true);
+            try {
+                ret = solver.optimize();
+            } catch (IloException e) {
+                e.printStackTrace();
+            }
+        }
+        else
+        {
+            NFV_MCFPMLUSolver solver = new NFV_MCFPMLUSolver(topology,services,requests,nodesMap);
+            solver.setSaveConfigurations(true);
+            try {
+                ret = solver.optimize();
+            } catch (IloException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return ret;
     }
 
     private static void saveToJSON(OptimizationResultObject o, Arcs arcs, int length, NFNodesMap map)
@@ -109,8 +133,16 @@ public class ConfigurationSolutionSaver
 
 
         obj.put("Configurations",configurationsArray);
-        obj.put("phi", o.getPhiValue());
-        obj.put("gamma",o.getGammaValue());
+        if(o.getPhiValue() != 0)
+        {
+            obj.put("phi", o.getPhiValue());
+            obj.put("gamma",o.getGammaValue());
+        }
+        else
+        {
+            obj.put("mlu", o.getMlu());
+            obj.put("mnu",o.getMnu());
+        }
         obj.put("objectiveFunction", o.getLoadValue());
 
         JSONArray array = new JSONArray();

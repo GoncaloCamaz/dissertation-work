@@ -16,12 +16,21 @@ import java.util.List;
 
 public class SRSolutionLoader
 {
+    /** Debug mode **
     public static void main(String[] args) throws IOException, ParseException {
         List<Request> res = loadResultsFromJson("Configuration_30.json");
-        System.out.println(res.toString());
+        System.out.println("loaded");
     }
+    */
 
-    public static JSONObject loadObject(String filename) throws IOException, ParseException {
+    /**
+     * Loads the json file into an object
+     * @param filename
+     * @return
+     * @throws IOException
+     * @throws ParseException
+     */
+    private static JSONObject loadObject(String filename) throws IOException, ParseException {
         JSONParser parser = new JSONParser();
         Object obj = parser.parse(new FileReader(filename));
         JSONObject jsonObj = (JSONObject) obj;
@@ -29,6 +38,13 @@ public class SRSolutionLoader
         return jsonObj;
     }
 
+    /**
+     * Loads content from jsonfile to a list of Request
+     * @param filename
+     * @return
+     * @throws IOException
+     * @throws ParseException
+     */
     public static ArrayList<Request> loadResultsFromJson(String filename) throws IOException, ParseException {
         JSONObject obj = loadObject(filename);
         JSONArray array = (JSONArray) obj.get("Configurations");

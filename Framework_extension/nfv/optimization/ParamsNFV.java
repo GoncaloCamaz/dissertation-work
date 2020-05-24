@@ -32,6 +32,14 @@ public class ParamsNFV
         }
     }
 
+    public enum EvaluationAlgorithm {
+        PHI("Phi"), MLU("MLU");
+        private final String evaluation;
+
+        EvaluationAlgorithm(String eval) {this.evaluation = eval;}
+        public String toString() {return evaluation;}
+    }
+
     // variables
 
     private double alfa;
@@ -54,6 +62,7 @@ public class ParamsNFV
      */
     private double criteriaValue;
     private TerminationCriteria criteria;
+    private EvaluationAlgorithm algorithm;
 
     public ParamsNFV()
     {
@@ -64,7 +73,32 @@ public class ParamsNFV
         this.numberGenerations = 200;
         this.percentage=0.0;
         this.setCriteriaValue(0.0);
+        this.setAlgorithm(EvaluationAlgorithm.PHI);
         this.setCriteria(TerminationCriteria.ITERATION);
+    }
+
+    public Population getPopulation() {
+        return population;
+    }
+
+    public void setPopulation(Population population) {
+        this.population = population;
+    }
+
+    public double getPercentage() {
+        return percentage;
+    }
+
+    public void setPercentage(double percentage) {
+        this.percentage = percentage;
+    }
+
+    public EvaluationAlgorithm getAlgorithm() {
+        return algorithm;
+    }
+
+    public void setAlgorithm(EvaluationAlgorithm algorithm) {
+        this.algorithm = algorithm;
     }
 
     public void setCriteria(TerminationCriteria criteria) {

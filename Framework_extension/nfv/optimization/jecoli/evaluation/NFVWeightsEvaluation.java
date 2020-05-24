@@ -10,6 +10,7 @@ import pt.uminho.algoritmi.netopt.cplex.MCFPhiNodeUtilizationSolver;
 import pt.uminho.algoritmi.netopt.nfv.NFVState;
 import pt.uminho.algoritmi.netopt.nfv.optimization.OptimizationResultObject;
 
+import pt.uminho.algoritmi.netopt.nfv.optimization.ParamsNFV;
 import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.Request;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
 import pt.uminho.algoritmi.netopt.ospf.simulation.OSPFWeights;
@@ -23,7 +24,6 @@ public class NFVWeightsEvaluation extends AbstractEvaluationFunction<ILinearRepr
 {
     private NetworkTopology topology;
     private List<Request> requests;
-
 
     public NFVWeightsEvaluation(NetworkTopology topology, List<Request> requests)
     {
