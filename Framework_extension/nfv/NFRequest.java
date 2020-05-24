@@ -8,7 +8,7 @@ public class NFRequest
     private int id;
     private int source;
     private int destination;
-    private int bandwidth;
+    private double bandwidth;
     private List<Integer> serviceList;
     private List<NFRequestSegment> segments;
 
@@ -24,7 +24,7 @@ public class NFRequest
 
     }
 
-    public NFRequest(int id, int source, int destination, int bandwidth, List<Integer> serviceList) {
+    public NFRequest(int id, int source, int destination, double bandwidth, List<Integer> serviceList) {
         this.id = id;
         this.source = source;
         this.destination = destination;
@@ -87,11 +87,11 @@ public class NFRequest
         this.destination = destination;
     }
 
-    public int getBandwidth() {
+    public double getBandwidth() {
         return bandwidth;
     }
 
-    public void setBandwidth(int bandwidth) {
+    public void setBandwidth(double bandwidth) {
         this.bandwidth = bandwidth;
     }
 

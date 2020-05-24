@@ -52,6 +52,7 @@ public class NFV_MCFPMLUSolver
         this.saveConfigurations = false;
     }
 
+    /** Debug mode
     public static void main(String[] args) {
         String nodesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";
         String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.edges";
@@ -75,6 +76,7 @@ public class NFV_MCFPMLUSolver
             e.printStackTrace();
         }
     }
+    */
 
     public int getCplexTimeLimit() {
         return cplexTimeLimit;
@@ -140,13 +142,13 @@ public class NFV_MCFPMLUSolver
                 }
             }
 
-        // number of arcs; Arc a => int fromNode; int toNode; double capacity;
-        // int index;
         int arcsNumber = arcs.getNumberOfArcs();
 
         // VARIABLES=============================================================================================
 
-        // the l(a) variables, load of arc a, being a = (u,v)
+        /**
+         * the l(a) variables, load of arc a, being a = (u,v)
+         */
         HashMap<Arc, IloNumVar> l_a = new HashMap<>();
         for (Arc arc : arcs) {
             int source = arc.getFromNode();
@@ -169,20 +171,12 @@ public class NFV_MCFPMLUSolver
             }
         }
 
-        // the mlu variables
-        HashMap<Arc, IloNumVar> mlu_a = new HashMap<>();
-        for (Arc arc : arcs) {
-            int source = arc.getFromNode();
-            int dest = arc.getToNode();
-            mlu_a.put(arc, cplex.numVar(0, Double.MAX_VALUE, "MLU_" + source + "_" + dest));
-        }
-
-        // the gamma(n) variables
-        HashMap<Integer, IloNumVar> mnu_n = new HashMap<>();
-        for (NFNode node : nodes.values()) {
-            int nodeID = node.getId();
-            mnu_n.put(nodeID, cplex.numVar(0, Double.MAX_VALUE, "MNU_" + nodeID));
-        }
+        /**
+         * Objective function variables
+         * MLU & MNU
+         */
+        IloNumVar mlu = cplex.numVar(0, Double.MAX_VALUE, "mlu");
+        IloNumVar mnu = cplex.numVar(0, Double.MAX_VALUE, "mnu");
 
         // the r(n) variables
         HashMap<Integer, IloNumVar> r_n = new HashMap<>();
@@ -191,13 +185,14 @@ public class NFV_MCFPMLUSolver
             r_n.put(nodeID, cplex.numVar(0, Double.MAX_VALUE, "r_" + nodeID));
         }
 
-        // Binary Variables
+        // Binary Variable
         // =====================================================================
 
-        // alpha: a;
-        // a[i][n][s] i -> request id; n -> node; s -> service
-        // a either 1 or 0 if n is the node that will execute the s service for
-        // the i request
+        /**
+         * alpha: a
+         * a[i][n][s] i -> request id; n -> node; s -> service
+         * a either 1 or 0 if n is the node that will execute the s service for the i request
+         */
         IloIntVar[][][] a = new IloIntVar[requestNumber][nodesNumber][servicesNumber];
         for (NFRequest req : requests.values()) {
             int reqID = req.getId();
@@ -214,46 +209,41 @@ public class NFV_MCFPMLUSolver
             }
         }
 
-        // MLU & MNU functions defenition
+        /**
+         * MLU & MNU functions defenition
+         */
         for(Arc arc : arcs)
         {
             IloLinearNumExpr exp = cplex.linearNumExpr();
-            exp.addTerm(1/arc.getCapacity(), l_a.get(arc));
-            cplex.addLe(exp, mlu_a.get(arc));
+            exp.addTerm(1, l_a.get(arc));
+            exp.addTerm(-1*arc.getCapacity(), mlu);
+            cplex.addLe(exp,0);
         }
 
         for(NFNode node : nodes.values())
         {
-            if(node.getProcessCapacity() > 0)
-            {
-                IloLinearNumExpr exp = cplex.linearNumExpr();
-                exp.addTerm(1/node.getProcessCapacity(), r_n.get(node.getId()));
-                cplex.addLe(exp, mnu_n.get(node.getId()));
-            }
+            IloLinearNumExpr exp = cplex.linearNumExpr();
+            exp.addTerm(1, r_n.get(node.getId()));
+            exp.addTerm(-1*node.getProcessCapacity(), mnu);
+            cplex.addLe(exp, 0);
         }
 
 
-        // OBJECTIVE FUNCTION: alpha* phi + (1-alpha) * gamma
+        // OBJECTIVE FUNCTION: alpha* MLU + (1-alpha) * MNU
         // ============================================
 
-        // minimize the sum of all Phi(a)
         IloLinearNumExpr obj = cplex.linearNumExpr();
-        double norm1 = alpha / arcsNumber;
-        for (IloNumVar ph : mlu_a.values()) {
-            obj.addTerm(norm1, ph);
-        }
-        // minimize the sum of node utilization gamma(n)
-        double norm2 = (1 - alpha) / nodesNumber;
-        for (IloNumVar gm : mnu_n.values()) {
-            obj.addTerm(norm2, gm);
-        }
+        obj.addTerm(alpha, mlu);
+        obj.addTerm((1-alpha), mnu);
+
         cplex.addMinimize(obj, "Objective_Function");
 
         // CONSTRAINTS
         // ===================================================================================
 
-        // EQUATION 1
-        // link loads are the sum of flows traveling over it, l(a) =
+        /** EQUATION 1
+         * link loads are the sum of flows traveling over it, l(a) =
+         */
         for (Arc arc : arcs) {
             IloLinearNumExpr la = cplex.linearNumExpr();
             IloNumVar li = l_a.get(arc);
@@ -266,11 +256,12 @@ public class NFV_MCFPMLUSolver
         }
 
 
-        // EQUATION 4
-        // The traffic associated to the request may only be executed once at
-        // the node that implements
-        // the service required
-        // a[i][n][s] i -> request id; n -> node; s -> service
+        /** EQUATION 4
+         * The traffic associated to the request may only be executed once at
+         * the node that implements
+         * the service required
+         * a[i][n][s] i -> request id; n -> node; s -> service
+         */
         for (NFRequest request : requests.values()) {
             int rID = request.getId();
             for (int serviceID : request.getServiceList()) {
@@ -282,7 +273,9 @@ public class NFV_MCFPMLUSolver
             }
         }
 
-        // EQUATION 12
+        /**
+         * EQUATION 5
+         */
         for (NFNode node : nodes.values()) {
             List<Integer> servicesAvailable = node.getAvailableServices();
             IloLinearNumExpr exp = cplex.linearNumExpr();
@@ -291,10 +284,12 @@ public class NFV_MCFPMLUSolver
                     exp.addTerm(request.getBandwidth(), a[request.getId()][node.getId()][servID]);
                 }
             }
-            cplex.addEq(r_n.get(node.getId()), exp, "EQ12_Node_" + node.getId());
+            cplex.addEq(r_n.get(node.getId()), exp, "EQ5_Node_" + node.getId());
         }
 
-        // traffic conservation
+        /**
+         * EQUATION 8
+         */
 
         for (NFRequest request : requests.values()) {
             for (NFRequestSegment s : request.getRequestSegments()) {
@@ -356,27 +351,19 @@ public class NFV_MCFPMLUSolver
                 for(int j = 0; j < topology.getDimension(); j++)
                     u[i][j] = 0;
 
-            double mlu = 0;
+            double mluVal = cplex.getValue(mlu);
+
             for (Arc arc : arcs) {
                 double utilization = cplex.getValue(l_a.get(arc));
                 u[arc.getFromNode()][arc.getToNode()] = utilization;
-                mlu += cplex.getValue(mlu_a.get(arc));
             }
 
-            object.setMlu(mlu/topology.getNumberEdges());
+            object.setMlu(mluVal/topology.getNumberEdges());
             object.setLinkLoads(u);
 
+            double mnuVal = cplex.getValue(mnu);
+            object.setMnu(mnuVal / nodesNumber);
 
-            double[] uNodes = new double[nodesNumber];
-            double val = 0;
-            for (NFNode node : nodes.values()) {
-                double ut = cplex.getValue(mnu_n.get(node.getId()));
-                val += ut;
-                uNodes[node.getId()] = ut;
-            }
-            object.setMnu(val / nodesNumber);
-
-            object.setNodeUtilization(uNodes);
             object.setLoadValue(res);
 
             this.loads = new NetworkLoads(u, topology);

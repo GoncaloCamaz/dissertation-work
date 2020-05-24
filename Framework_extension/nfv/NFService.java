@@ -4,7 +4,7 @@ public class NFService
 {
     private int id;
     private String name;
-    private int cost;
+    private double cost;
 
     public NFService()
     {
@@ -13,7 +13,7 @@ public class NFService
         this.cost = 0;
     }
 
-    public NFService(int id, String name, int cost) {
+    public NFService(int id, String name, double cost) {
         this.id = id;
         this.name = name;
         this.cost = cost;
@@ -42,11 +42,11 @@ public class NFService
         this.name = name;
     }
 
-    public int getCost() {
+    public double getCost() {
         return cost;
     }
 
-    public void setCost(int cost) {
+    public void setCost(double cost) {
         this.cost = cost;
     }
 }

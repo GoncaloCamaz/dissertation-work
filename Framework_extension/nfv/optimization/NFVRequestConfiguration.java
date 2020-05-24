@@ -10,7 +10,7 @@ public class NFVRequestConfiguration
     private int requestID;
     private int requestOrigin;
     private int requestDestination;
-    private int bandwidth;
+    private double bandwidth;
     private List<SourceDestinationPair> srpath;
     private Map<Integer, Integer> serviceProcessment; //Key -> Service ID; Value -> Node ID
     private List<Integer> serviceOrder;
@@ -49,11 +49,11 @@ public class NFVRequestConfiguration
         this.requestID = requestID;
     }
 
-    public int getBandwidth() {
+    public double getBandwidth() {
         return bandwidth;
     }
 
-    public void setBandwidth(int bandwidth) {
+    public void setBandwidth(double bandwidth) {
         this.bandwidth = bandwidth;
     }
 

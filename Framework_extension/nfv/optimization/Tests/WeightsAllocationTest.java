@@ -1,7 +1,5 @@
 package pt.uminho.algoritmi.netopt.nfv.optimization.Tests;
 
-import pt.uminho.algoritmi.netopt.nfv.NFVState;
-
 import pt.uminho.algoritmi.netopt.nfv.optimization.ParamsNFV;
 import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.Request;
 import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.SRSolutionLoader;

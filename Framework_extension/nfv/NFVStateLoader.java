@@ -31,7 +31,7 @@ public class NFVStateLoader
         {
             JSONObject ob = (JSONObject) o;
             int nID = Integer.parseInt((String) ob.get("id"));
-            int capacity = Integer.parseInt((String) ob.get("capacity"));
+            double capacity = Double.parseDouble((String) ob.get("capacity"));
             JSONArray array = (JSONArray) ob.get("availableServices");
             List<Integer> aux = new ArrayList<>();
             for(Object elm : array)
@@ -60,7 +60,7 @@ public class NFVStateLoader
             JSONObject ob = (JSONObject) o;
             int sID = Integer.parseInt((String) ob.get("id"));
             String name = (String) ob.get("name");
-            int cost = Integer.parseInt((String) ob.get("cost"));
+            double cost = Double.parseDouble((String) ob.get("cost"));
             NFService sv = new NFService(sID,name,cost);
             services.put(sID, sv);
         }
@@ -84,7 +84,7 @@ public class NFVStateLoader
             int requestID = Integer.parseInt(row[0]);
             int from = Integer.parseInt(row[1]);
             int to = Integer.parseInt(row[2]);
-            int bandwidth = Integer.parseInt(row[3]);
+            double bandwidth = Double.valueOf(row[3]);
             int size = row.length;
             int i = 4;
             while(i < size)

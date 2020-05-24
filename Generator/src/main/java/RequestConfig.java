@@ -7,7 +7,7 @@ public class RequestConfig
     private int id;
     private int originNodeID;
     private int destinationNodeID;
-    private int bandwidthConsumption;
+    private double bandwidthConsumption;
     private List<Integer> servicesRequested;
 
     public RequestConfig(int id)
@@ -19,7 +19,7 @@ public class RequestConfig
         this.servicesRequested = new ArrayList<>();
     }
 
-    public RequestConfig(int id, int originNodeID, int destinationNodeID , int bandwidthConsumption) {
+    public RequestConfig(int id, int originNodeID, int destinationNodeID , double bandwidthConsumption) {
         this.id = id;
         this.originNodeID = originNodeID;
         this.destinationNodeID = destinationNodeID;
@@ -64,11 +64,11 @@ public class RequestConfig
         this.originNodeID = originNodeID;
     }
 
-    public int getBandwidthConsumption() {
+    public double getBandwidthConsumption() {
         return bandwidthConsumption;
     }
 
-    public void setBandwidthConsumption(int bandwidthConsumption) {
+    public void setBandwidthConsumption(double bandwidthConsumption) {
         this.bandwidthConsumption = bandwidthConsumption;
     }
 

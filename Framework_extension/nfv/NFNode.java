@@ -6,7 +6,7 @@ import java.util.List;
 public class NFNode
 {
     private int id;
-    private int processCapacity;
+    private double processCapacity;
     private List<Integer> availableServices;
 
     public NFNode()
@@ -16,7 +16,7 @@ public class NFNode
         this.availableServices = new ArrayList<>();
     }
 
-    public NFNode(int id, int processCapacity, List<Integer> availableServices) {
+    public NFNode(int id, double processCapacity, List<Integer> availableServices) {
         this.id = id;
         this.processCapacity = processCapacity;
         this.availableServices = availableServices;
@@ -37,11 +37,11 @@ public class NFNode
         this.id = id;
     }
 
-    public int getProcessCapacity() {
+    public double getProcessCapacity() {
         return processCapacity;
     }
 
-    public void setProcessCapacity(int processCapacity) {
+    public void setProcessCapacity(double processCapacity) {
         this.processCapacity = processCapacity;
     }
 
