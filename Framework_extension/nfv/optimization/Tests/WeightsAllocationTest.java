@@ -1,17 +1,22 @@
 package pt.uminho.algoritmi.netopt.nfv.optimization.Tests;
 
+import pt.uminho.algoritmi.netopt.cplex.utils.SourceDestinationPair;
 import pt.uminho.algoritmi.netopt.nfv.optimization.ParamsNFV;
 import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.Request;
 import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.SRSolutionLoader;
+import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.WeightsSolutionSaver;
 import pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.JecoliWeights;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NondominatedPopulation;
+import pt.uminho.algoritmi.netopt.ospf.simulation.OSPFWeights;
 import pt.uminho.algoritmi.netopt.ospf.simulation.Population;
+import pt.uminho.algoritmi.netopt.ospf.simulation.exception.DimensionErrorException;
 import pt.uminho.algoritmi.netopt.ospf.simulation.solution.IntegerSolution;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 
 public class WeightsAllocationTest
@@ -33,9 +38,8 @@ public class WeightsAllocationTest
         String nodesFile = args[0];
         String edgesFile = args[1];
         String requestsFile = args[2];
-        int populationSize = Integer.parseInt(args[4]);
-        int numberOfGenerations = Integer.parseInt(args[5]);
-
+        int populationSize = Integer.parseInt(args[3]);
+        int numberOfGenerations = Integer.parseInt(args[4]);
 
         NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
         List<Request> req = SRSolutionLoader.loadResultsFromJson(requestsFile);
@@ -50,14 +54,14 @@ public class WeightsAllocationTest
         ea.run();
 
         Population p = new NondominatedPopulation(ea.getSolutionSet());
-        save(p);
+        save(p, topology);
     }
 
-    public static void save(Population p) {
+    public static void save(Population p, NetworkTopology topology){
         IntegerSolution sol = p.getLowestValuedSolutions(0, 1).get(0);
-
         FileWriter f;
         try {
+            WeightsSolutionSaver.save(p, topology);
             f = new FileWriter("IGP_"+ System.currentTimeMillis() + ".csv", true);
             BufferedWriter W = new BufferedWriter(f);
             W.write(sol.toString());
@@ -67,6 +71,8 @@ public class WeightsAllocationTest
             f.close();
 
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (DimensionErrorException e) {
             e.printStackTrace();
         }
     }

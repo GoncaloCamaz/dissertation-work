@@ -14,7 +14,7 @@ public class OptimizationResultObject
     private double mnu;
     private double mlu;
     private HashMap<Integer, Integer> servicesDeployed;
-    private boolean allNodesWServices;
+    private boolean allservicesDeployed;
     private NFVRequestsConfigurationMap nfvRequestsConfigurationMap;
 
     public OptimizationResultObject(int numberOfNodes)
@@ -28,7 +28,7 @@ public class OptimizationResultObject
         this.gammaValue = 0;
         this.phiValue = 0;
         this.servicesDeployed = new HashMap<>();
-        this.allNodesWServices = false;
+        this.allservicesDeployed = false;
         this.nfvRequestsConfigurationMap = new NFVRequestsConfigurationMap();
     }
 
@@ -43,7 +43,7 @@ public class OptimizationResultObject
         this.mnu = mnu;
         this.gammaValue = gamma;
         this.servicesDeployed = map;
-        this.allNodesWServices = allNodesWServices;
+        this.allservicesDeployed = allNodesWServices;
         this.nfvRequestsConfigurationMap = configurationMapmap;
     }
 
@@ -139,12 +139,12 @@ public class OptimizationResultObject
         return val;
     }
 
-    public boolean isAllNodesWServices() {
-        return allNodesWServices;
+    public boolean isAllservicesDeployed() {
+        return allservicesDeployed;
     }
 
-    public void setAllNodesWServices(boolean allNodesWServices) {
-        this.allNodesWServices = allNodesWServices;
+    public void setAllservicesDeployed(boolean allservicesDeployed) {
+        this.allservicesDeployed = allservicesDeployed;
     }
 
     // if no solution was reached, the values of gamma and phi will remain the same as the object constructor
@@ -152,7 +152,7 @@ public class OptimizationResultObject
     {
         boolean ret = true;
 
-        if(this.gammaValue == 0 && this.phiValue == 0)
+        if(this.gammaValue == 0 && this.phiValue == 0 && this.mnu == 0 && this.mlu == 0)
         {
             ret = false;
         }
@@ -174,7 +174,7 @@ public class OptimizationResultObject
                 ", gammaValue=" + gammaValue +
                 ", phiValue=" + phiValue +
                 ", servicesDeployed=" + servicesDeployed +
-                ", allNodesWServices=" + allNodesWServices +
+                ", allServicesDeployed=" + allservicesDeployed +
                 '}';
     }
 }

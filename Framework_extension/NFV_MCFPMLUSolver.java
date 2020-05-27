@@ -86,7 +86,7 @@ public class NFV_MCFPMLUSolver
         this.cplexTimeLimit = cplexTimeLimit;
     }
 
-    public OptimizationResultObject optimize() throws IloException {
+    public OptimizationResultObject optimize()  {
         return optimize(this.topology, this.services, this.NFRequestsMap, this.nodesMap);
     }
 
@@ -94,12 +94,18 @@ public class NFV_MCFPMLUSolver
      * @throws IloException
      */
     public OptimizationResultObject optimize(NetworkTopology topology, NFServicesMap servicesMap, NFRequestsMap req,
-                                             NFNodesMap nodes) throws IloException {
+                                             NFNodesMap nodes) {
         double[][] cp = topology.getNetGraph().createGraph().getCapacitie();
         Map<Integer, NFService> serv = servicesMap.getServices();
         Map<Integer, NFRequest> r = req.getRequestMap();
         Map<Integer, NFNode> n = nodes.getNodes();
-        OptimizationResultObject res = optimize(cp, serv, r, n);
+        OptimizationResultObject res = new OptimizationResultObject(n.size());
+        try{
+            res = optimize(cp, serv, r, n);
+        }
+        catch(IloException e){
+            e.printStackTrace();
+        }
 
         return res;
     }
@@ -358,6 +364,13 @@ public class NFV_MCFPMLUSolver
                 u[arc.getFromNode()][arc.getToNode()] = utilization;
             }
 
+            double[] nodesLoad = new double[nodes.size()];
+            for(int i = 0; i < nodes.size(); i++)
+            {
+                nodesLoad[i] = cplex.getValue(r_n.get(i));
+            }
+            object.setNodeUtilization(nodesLoad);
+
             object.setMlu(mluVal/topology.getNumberEdges());
             object.setLinkLoads(u);
 
@@ -373,8 +386,8 @@ public class NFV_MCFPMLUSolver
             servicesDeployed = getServicesDeployed(this.nodesMap.getNodes());
             object.setServicesDeployed(servicesDeployed);
 
-            boolean nodesInfo = allNodesWServices(this.nodesMap.getNodes());
-            object.setAllNodesWServices(nodesInfo);
+            boolean nodesInfo = allServicesDeployed(this.nodesMap.getNodes());
+            object.setAllservicesDeployed(nodesInfo);
         }
 
         NFVRequestsConfigurationMap configurationMap = new NFVRequestsConfigurationMap();
@@ -443,14 +456,29 @@ public class NFV_MCFPMLUSolver
         return object;
     }
 
-    private boolean allNodesWServices(Map<Integer, NFNode> nodes) {
+    private boolean allServicesDeployed(Map<Integer, NFNode> nodes) {
         boolean ret = true;
-        for (NFNode node : nodes.values()) {
-            if (node.getAvailableServices().size() == 0) {
-                ret = false;
-                break;
+
+        List<Integer> servicesAux = new ArrayList<>();
+        for(NFService service : services.getServices().values())
+        {
+            servicesAux.add(service.getId());
+        }
+
+        for(NFNode node : nodes.values())
+        {
+            List<Integer> aux = node.getAvailableServices();
+            for(Integer i : aux)
+            {
+                if(servicesAux.contains(i))
+                {
+                    servicesAux.remove(i);
+                }
             }
         }
+        if(servicesAux.size() != 0)
+            ret = false;
+
         return ret;
     }
 

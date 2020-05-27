@@ -68,14 +68,26 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
             object = solver.optimize();
         }
 
-        penalizationVal += getPenalization(object,this.maxServicesPenalization);
-
+        penalizationVal += checkIfSolutions(object);
+        if(penalizationVal == 0) {
+            penalizationVal += getPenalization(object, this.maxServicesPenalization);
+        }
         // Mnu, Mlu, Phi, Gamma are initialized at 0. Each algorithm will set the responsible variable to a new value
         // regarding its optimization objective (mlu/phi).
-        resultList[0] = object.getPhiValue() + object.getMlu();
+        resultList[0] = object.getPhiValue() + object.getMlu() + penalizationVal;
         resultList[1] = object.getGammaValue() + object.getMnu() + penalizationVal;
 
         return resultList;
+    }
+
+    private double checkIfSolutions(OptimizationResultObject object)
+    {
+        double ret = 0;
+        if(!object.isAllservicesDeployed())
+        {
+            ret = Double.MAX_VALUE;
+        }
+        return ret;
     }
 
     private double getPenalization(OptimizationResultObject object, int maxServices)
@@ -83,15 +95,10 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
         double ret = 0;
 
         int servicesDeployed = object.getNumberOfServicesDeployed();
-        if(!object.hasSolution())
-        {
-            ret = Double.MAX_VALUE;
-        }
 
-        if(maxServices < servicesDeployed)
-        {
+        if((maxServices < servicesDeployed))
             ret += (servicesDeployed-maxServices)*10000;
-        }
+
 
         return ret;
     }

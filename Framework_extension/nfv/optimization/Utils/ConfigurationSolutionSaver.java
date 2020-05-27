@@ -51,21 +51,13 @@ public class ConfigurationSolutionSaver
         {
             NFV_MCFPhiNodeUtilizationSolver2 solver = new NFV_MCFPhiNodeUtilizationSolver2(topology,services,requests,nodesMap);
             solver.setSaveConfigurations(true);
-            try {
-                ret = solver.optimize();
-            } catch (IloException e) {
-                e.printStackTrace();
-            }
+            ret = solver.optimize();
         }
         else
         {
             NFV_MCFPMLUSolver solver = new NFV_MCFPMLUSolver(topology,services,requests,nodesMap);
             solver.setSaveConfigurations(true);
-            try {
-                ret = solver.optimize();
-            } catch (IloException e) {
-                e.printStackTrace();
-            }
+            ret = solver.optimize();
         }
 
         return ret;
@@ -73,7 +65,12 @@ public class ConfigurationSolutionSaver
 
     private static void saveToJSON(OptimizationResultObject o, Arcs arcs, int length, NFNodesMap map)
     {
-        String filename = "Configuration_"+ length + ".json";
+        String algorithm = "mlu";
+        if(o.getMlu() == 0)
+        {
+            algorithm = "phi";
+        }
+        String filename = "Configuration_"+ algorithm + "_" +length + ".json";
         Map<Integer, NFNode> nodesMap= map.getNodes();
         JSONObject obj = new JSONObject();
         Map<Integer, NFVRequestConfiguration> configurations = o.getNfvRequestsConfigurationMap().getConfigurations();
@@ -127,8 +124,6 @@ public class ConfigurationSolutionSaver
             objLoad.put("Load", o.getLoad(i,j));
             loads.add(objLoad);
         }
-
-
         obj.put("Arc Loads", loads);
 
 
@@ -159,6 +154,17 @@ public class ConfigurationSolutionSaver
             objAux.put("AvailableServices",arrayServices);
             array.add(objAux);
         }
+
+        JSONArray loadsNodes = new JSONArray();
+        double[] nodesUtilization = o.getNodeUtilization();
+        for(int i = 0; i < nodesMap.size(); i++)
+        {
+            JSONObject objAux = new JSONObject();
+            objAux.put("NodeID", i);
+            objAux.put("Load", nodesUtilization[i]);
+            loadsNodes.add(objAux);
+        }
+        obj.put("NodesLoad", loadsNodes);
 
         obj.put("servicesLocationSolution", array);
 

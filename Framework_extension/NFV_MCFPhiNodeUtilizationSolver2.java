@@ -71,9 +71,11 @@ public class NFV_MCFPhiNodeUtilizationSolver2 {
 		this.saveConfigurations = false;
 	}
 
+	/**
+	 * Debug mode
 	public static void main(String[] args) {
-		String nodesFile = "abilene.nodes";// args[0];
-		String edgesFile = "abilene.edges";// args[1];
+		String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";// args[0];
+		String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.edges";//args[1];
 		String servicesFile = "frameworkConfiguration.json";
 		String requests = "pedidos.csv";// args[3];
 
@@ -89,11 +91,12 @@ public class NFV_MCFPhiNodeUtilizationSolver2 {
 			solver.setSaveConfigurations(true);
 			solver.setCplexTimeLimit(60);
 			OptimizationResultObject obj = solver.optimize();
-
+			System.out.println(obj.toString());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
+	*/
 
 	public int getCplexTimeLimit() {
 		return cplexTimeLimit;
@@ -103,7 +106,7 @@ public class NFV_MCFPhiNodeUtilizationSolver2 {
 		this.cplexTimeLimit = cplexTimeLimit;
 	}
 
-	public OptimizationResultObject optimize() throws IloException {
+	public OptimizationResultObject optimize() {
 		return optimize(this.topology, this.services, this.NFRequestsMap, this.nodesMap);
 	}
 
@@ -111,12 +114,18 @@ public class NFV_MCFPhiNodeUtilizationSolver2 {
 	 * @throws IloException
 	 */
 	public OptimizationResultObject optimize(NetworkTopology topology, NFServicesMap servicesMap, NFRequestsMap req,
-											 NFNodesMap nodes) throws IloException {
+											 NFNodesMap nodes)  {
 		double[][] cp = topology.getNetGraph().createGraph().getCapacitie();
 		Map<Integer, NFService> serv = servicesMap.getServices();
 		Map<Integer, NFRequest> r = req.getRequestMap();
 		Map<Integer, NFNode> n = nodes.getNodes();
-		OptimizationResultObject res = optimize(cp, serv, r, n);
+		OptimizationResultObject res = new OptimizationResultObject(n.size());
+		try{
+			res = optimize(cp, serv, r, n);
+		}
+		catch(IloException e){
+			e.printStackTrace();
+		}
 
 		return res;
 	}
@@ -407,9 +416,9 @@ public class NFV_MCFPhiNodeUtilizationSolver2 {
 			double[] uNodes = new double[nodesNumber];
 			double val = 0;
 			for (NFNode node : nodes.values()) {
-				double ut = cplex.getValue(gamma_n.get(node.getId()));
-				val += ut;
-				uNodes[node.getId()] = ut;
+				double utNode = cplex.getValue(r_n.get(node.getId()));
+				val += cplex.getValue(gamma_n.get(node.getId()));
+				uNodes[node.getId()] = utNode;
 			}
 			object.setGammaValue(val / nodesNumber);
 			object.setNodeUtilization(uNodes);
@@ -422,8 +431,8 @@ public class NFV_MCFPhiNodeUtilizationSolver2 {
 			servicesDeployed = getServicesDeployed(this.nodesMap.getNodes());
 			object.setServicesDeployed(servicesDeployed);
 
-			boolean nodesInfo = allNodesWServices(this.nodesMap.getNodes());
-			object.setAllNodesWServices(nodesInfo);
+			boolean nodesInfo = allServicesDeployed(this.nodesMap.getNodes());
+			object.setAllservicesDeployed(nodesInfo);
 		}
 
 		NFVRequestsConfigurationMap configurationMap = new NFVRequestsConfigurationMap();
@@ -492,14 +501,29 @@ public class NFV_MCFPhiNodeUtilizationSolver2 {
 		return object;
 	}
 
-	private boolean allNodesWServices(Map<Integer, NFNode> nodes) {
+	private boolean allServicesDeployed(Map<Integer, NFNode> nodes) {
 		boolean ret = true;
-		for (NFNode node : nodes.values()) {
-			if (node.getAvailableServices().size() == 0) {
-				ret = false;
-				break;
+
+		List<Integer> servicesAux = new ArrayList<>();
+		for(NFService service : services.getServices().values())
+		{
+			servicesAux.add(service.getId());
+		}
+
+		for(NFNode node : nodes.values())
+		{
+			List<Integer> aux = node.getAvailableServices();
+			for(Integer i : aux)
+			{
+				if(servicesAux.contains(i))
+				{
+					servicesAux.remove(i);
+				}
 			}
 		}
+		if(servicesAux.size() != 0)
+			ret = false;
+
 		return ret;
 	}
 
