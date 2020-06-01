@@ -58,20 +58,8 @@ public class WeightsAllocationTest
     }
 
     public static void save(Population p, NetworkTopology topology){
-        IntegerSolution sol = p.getLowestValuedSolutions(0, 1).get(0);
-        FileWriter f;
         try {
             WeightsSolutionSaver.save(p, topology);
-            f = new FileWriter("IGP_"+ System.currentTimeMillis() + ".csv", true);
-            BufferedWriter W = new BufferedWriter(f);
-            W.write(sol.toString());
-            W.write("\n");
-            W.flush();
-            W.close();
-            f.close();
-
-        } catch (IOException e) {
-            e.printStackTrace();
         } catch (DimensionErrorException e) {
             e.printStackTrace();
         }

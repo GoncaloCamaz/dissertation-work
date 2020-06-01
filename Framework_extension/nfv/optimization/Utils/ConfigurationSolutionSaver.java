@@ -1,6 +1,6 @@
 package pt.uminho.algoritmi.netopt.nfv.optimization.Utils;
 
-import ilog.concert.IloException;
+import com.opencsv.CSVWriter;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import pt.uminho.algoritmi.netopt.cplex.NFV_MCFPMLUSolver;
@@ -14,6 +14,7 @@ import pt.uminho.algoritmi.netopt.nfv.optimization.OptimizationResultObject;
 import pt.uminho.algoritmi.netopt.nfv.optimization.ParamsNFV;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
@@ -25,6 +26,7 @@ public class ConfigurationSolutionSaver
         EASolutionParser parser = new EASolutionParser(filename);
         NFNodesMap nodesMap = parser.solutionParser(solution);
         OptimizationResultObject obj = solve(topology, state.getServices(),state.getRequests(), nodesMap, algorithm);
+        String savingName = nodesMap.getNodes().size() + "_" +System.currentTimeMillis();
 
         Arcs arcs = new Arcs();
         int nodesNumber = state.getNodes().getNodes().size();
@@ -41,8 +43,94 @@ public class ConfigurationSolutionSaver
                 }
             }
         }
+        saveToCSV(obj, arcs, nodesMap, savingName);
+        saveToJSON(obj,arcs,solution.length, nodesMap, savingName);
+    }
 
-        saveToJSON(obj,arcs,solution.length, nodesMap);
+    private static void saveToCSV(OptimizationResultObject obj, Arcs arcs, NFNodesMap map, String filename)
+    {
+        int arcsSize = arcs.getNumberOfArcs();
+        int nodesSize = obj.getNumberOfNodes();
+
+        filename = filename+".csv";
+        String[] headersArcs = new String[3];
+        headersArcs[0] = "from";
+        headersArcs[1] = "to";
+        headersArcs[2] = "load";
+
+        String[] headersNodes = new String[2];
+        headersNodes[0] = "nodeID";
+        headersNodes[1] = "load";
+
+        List<String[]> rowsArcs = new ArrayList<>();
+        for(int i = 0; i < arcsSize; i++)
+        {
+            String[] row = new String[3];
+            Arc a = arcs.getArc(i);
+            double load = obj.getLoad(a.getFromNode(), a.getToNode());
+            double capacity = 1000;//a.getCapacity();
+            double percentage = (load/capacity);
+            percentage = Math.floor(percentage*100) / 100;
+            row[0] = String.valueOf(a.getFromNode());
+            row[1] = String.valueOf(a.getToNode());
+            row[2] = String.valueOf(percentage);
+            rowsArcs.add(row);
+        }
+        List<String[]> rowsNodes = new ArrayList<>();
+        for(int i = 0; i < nodesSize; i++)
+        {
+            String[] rowNode = new String[2];
+            NFNode node = map.getNodes().get(i);
+            double load = obj.getNodeLoad(i);
+            double capacity =  1000;//node.getProcessCapacity();
+            double percentage = (load/capacity);
+            percentage = Math.floor(percentage*100) / 100;
+            rowNode[0] = String.valueOf(i);
+            rowNode[1] = String.valueOf(percentage);
+            rowsNodes.add(rowNode);
+        }
+
+        generateSolutions(headersArcs,rowsArcs,headersNodes,rowsNodes,filename);
+    }
+
+    private static void generateSolutions(String[] headersA, List<String[]> rowsA,String[] headersN, List<String[]> rowsN, String filename) {
+
+        File fileArcs = new File("Arcs"+filename);
+        File fileNodes = new File("Nodes"+filename);
+        try
+        {
+            FileWriter outputfileA = new FileWriter(fileArcs);
+            FileWriter outputfileN = new FileWriter(fileNodes);
+            CSVWriter writerA = new CSVWriter(outputfileA, ';',
+                    CSVWriter.NO_QUOTE_CHARACTER,
+                    CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                    CSVWriter.DEFAULT_LINE_END);
+
+            CSVWriter writerN = new CSVWriter(outputfileN, ';',
+                    CSVWriter.NO_QUOTE_CHARACTER,
+                    CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                    CSVWriter.DEFAULT_LINE_END);
+
+            List<String[]> dataArcs = new ArrayList<>();
+            dataArcs.add(headersA);
+            for(String[] row : rowsA)
+            {
+                dataArcs.add(row);
+            }
+            writerA.writeAll(dataArcs);
+            writerA.close();
+
+            List<String[]> dataNodes = new ArrayList<>();
+            dataNodes.add(headersN);
+            for(String[] row : rowsN)
+            {
+                dataNodes.add(row);
+            }
+            writerN.writeAll(dataNodes);
+            writerN.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private static OptimizationResultObject solve(NetworkTopology topology, NFServicesMap services, NFRequestsMap requests, NFNodesMap nodesMap, ParamsNFV.EvaluationAlgorithm algorithm){
@@ -63,14 +151,14 @@ public class ConfigurationSolutionSaver
         return ret;
     }
 
-    private static void saveToJSON(OptimizationResultObject o, Arcs arcs, int length, NFNodesMap map)
+    private static void saveToJSON(OptimizationResultObject o, Arcs arcs, int length, NFNodesMap map, String filename)
     {
         String algorithm = "mlu";
         if(o.getMlu() == 0)
         {
             algorithm = "phi";
         }
-        String filename = "Configuration_"+ algorithm + "_" +length + ".json";
+        filename = algorithm + filename + ".json";
         Map<Integer, NFNode> nodesMap= map.getNodes();
         JSONObject obj = new JSONObject();
         Map<Integer, NFVRequestConfiguration> configurations = o.getNfvRequestsConfigurationMap().getConfigurations();

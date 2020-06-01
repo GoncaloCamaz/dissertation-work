@@ -248,8 +248,6 @@ public class NFV_MCFPhiNodeUtilizationSolver2 {
 					a[reqID][nodeID][sID] = cplex.intVar(0, 1, "alpha_" + reqID + "_" + nodeID + "_" + sID);
 					if (!nd.getAvailableServices().contains(sID))
 						cplex.addEq(a[reqID][nodeID][sID],0);
-
-					System.out.println("a r"+reqID+" "+nodeID+" "+sID);
 				}
 			}
 		}
@@ -409,9 +407,8 @@ public class NFV_MCFPhiNodeUtilizationSolver2 {
 
 			NetworkLoads loads = new NetworkLoads(u, topology);
 			Simul simul = new Simul(topology);
-			object.setPhiValue(simul.congestionMeasure(loads,u));
+			object.setPhiValue(simul.congestionMeasure(loads,nfrequestToDemand(requests,topology.getDimension())));
 			object.setLinkLoads(u);
-
 
 			double[] uNodes = new double[nodesNumber];
 			double val = 0;
@@ -499,6 +496,22 @@ public class NFV_MCFPhiNodeUtilizationSolver2 {
 
 		cplex.end();
 		return object;
+	}
+
+	private double[][] nfrequestToDemand(Map<Integer, NFRequest> requestMap, int nodesNumber)
+	{
+		double[][] ret = new double[nodesNumber][nodesNumber];
+
+		for(int i = 0; i < nodesNumber; i++)
+			for(int j = 0; j < nodesNumber; j++)
+				ret[i][j] = 0;
+
+		for(NFRequest req : requestMap.values())
+		{
+			ret[req.getSource()][req.getDestination()] += req.getBandwidth();
+		}
+
+		return ret;
 	}
 
 	private boolean allServicesDeployed(Map<Integer, NFNode> nodes) {

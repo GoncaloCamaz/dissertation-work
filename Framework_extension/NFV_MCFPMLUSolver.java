@@ -14,6 +14,7 @@ import pt.uminho.algoritmi.netopt.nfv.optimization.NFVRequestsConfigurationMap;
 import pt.uminho.algoritmi.netopt.nfv.optimization.OptimizationResultObject;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkLoads;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
+import pt.uminho.algoritmi.netopt.ospf.simulation.Simul;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -209,8 +210,6 @@ public class NFV_MCFPMLUSolver
                     a[reqID][nodeID][sID] = cplex.intVar(0, 1, "alpha_" + reqID + "_" + nodeID + "_" + sID);
                     if (!nd.getAvailableServices().contains(sID))
                         cplex.addEq(a[reqID][nodeID][sID],0);
-
-                    System.out.println("a r"+reqID+" "+nodeID+" "+sID);
                 }
             }
         }
@@ -371,7 +370,9 @@ public class NFV_MCFPMLUSolver
             }
             object.setNodeUtilization(nodesLoad);
 
-            object.setMlu(mluVal/topology.getNumberEdges());
+            NetworkLoads loads = new NetworkLoads(u, topology);
+            Simul simul = new Simul(topology);
+            object.setMlu(simul.congestionMeasure(loads,nfrequestToDemand(requests,topology.getDimension())));
             object.setLinkLoads(u);
 
             double mnuVal = cplex.getValue(mnu);
@@ -412,7 +413,7 @@ public class NFV_MCFPMLUSolver
                 for (NFRequestSegment s : request.getRequestSegments()) {
                     HashMap<Arc, IloNumVar> l = s_loads.get(s);
                     for (Arc arc : arcs) {
-                        if(cplex.getValue(l.get(arc))>0)
+                        if(cplex.getValue(l.get(arc))>0.0)
                         {
                             SourceDestinationPair pair = new SourceDestinationPair(arc.getFromNode(),arc.getToNode());
                             list.add(pair);
@@ -454,6 +455,22 @@ public class NFV_MCFPMLUSolver
 
         cplex.end();
         return object;
+    }
+
+    private double[][] nfrequestToDemand(Map<Integer, NFRequest> requestMap, int nodesNumber)
+    {
+        double[][] ret = new double[nodesNumber][nodesNumber];
+
+        for(int i = 0; i < nodesNumber; i++)
+            for(int j = 0; j < nodesNumber; j++)
+                ret[i][j] = 0;
+
+        for(NFRequest req : requestMap.values())
+        {
+            ret[req.getSource()][req.getDestination()] += req.getBandwidth();
+        }
+
+        return ret;
     }
 
     private boolean allServicesDeployed(Map<Integer, NFNode> nodes) {

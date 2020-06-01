@@ -16,23 +16,22 @@ import java.io.IOException;
 
 public class NFVServiceAllocationTest
 {
-    /** Debug mode
+   // /** Debug mode
     private static String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.nodes";// args[0];
     private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.edges";//args[1];
-    private static String servicesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/frameworkConfiguration30N_3S.json";
-    private static String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidos_30.csv";//args[3];
+    private static String servicesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/frameworkConfiguration.json";
+    private static String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidos.csv";//args[3];
     private static String evaluation = "phi";
     private static String serviceMapingFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/serviceMap.json";
-    private static int populationSize = 100;
-    private static int numberOfGenerations = 100;
+    private static int populationSize = 10;
+    private static int numberOfGenerations = 1;
     private static int lowerBound = 0;
     private static int upperBound = 7;
     private static int maxServices = 3;
     private static int cplexTimeLimit =10;
-    */
 
     public static void main(String[] args) throws Exception {
-
+/*
         if(args.length!=12)
            System.exit(1);
 
@@ -48,7 +47,7 @@ public class NFVServiceAllocationTest
         int maxServices = Integer.parseInt(args[9]);
         int cplexTimeLimit = Integer.parseInt(args[10]);
         String evaluation = args[11].toLowerCase();
-
+*/
         NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
         NFVState state = new NFVState(servicesFile, requests);
 
@@ -72,26 +71,8 @@ public class NFVServiceAllocationTest
         ea.run();
 
         Population p = new NondominatedPopulation(ea.getSolutionSet());
-        save(p,maxServices);
 
         int[] solution = p.getLowestValuedSolutions(0, 1).get(0).getVariablesArray();
         ConfigurationSolutionSaver.saveServicesLocationConfiguration(solution,serviceMapingFile,topology,state, params.getAlgorithm());
-    }
-
-    public static void save(Population p, int limit) {
-        IntegerSolution sol = p.getLowestValuedSolutions(0, 1).get(0);
-        FileWriter f;
-        try {
-            f = new FileWriter("SERVICES_"+limit +"_"+ System.currentTimeMillis() + ".csv", true);
-            BufferedWriter W = new BufferedWriter(f);
-            W.write(sol.toString());
-            W.write("\n");
-            W.flush();
-            W.close();
-            f.close();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }

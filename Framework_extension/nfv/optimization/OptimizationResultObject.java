@@ -164,6 +164,8 @@ public class OptimizationResultObject
         return this.linkLoads[i][j];
     }
 
+    public double getNodeLoad(int i) {return this.nodeUtilization[i]; }
+
     @Override
     public String toString() {
         return "OptimizationResultObject{" +
