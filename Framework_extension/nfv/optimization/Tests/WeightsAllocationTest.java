@@ -1,6 +1,6 @@
 package pt.uminho.algoritmi.netopt.nfv.optimization.Tests;
 
-import pt.uminho.algoritmi.netopt.cplex.utils.SourceDestinationPair;
+
 import pt.uminho.algoritmi.netopt.nfv.optimization.ParamsNFV;
 import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.Request;
 import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.SRSolutionLoader;
@@ -8,15 +8,10 @@ import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.WeightsSolutionSaver;
 import pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.JecoliWeights;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NondominatedPopulation;
-import pt.uminho.algoritmi.netopt.ospf.simulation.OSPFWeights;
+
 import pt.uminho.algoritmi.netopt.ospf.simulation.Population;
 import pt.uminho.algoritmi.netopt.ospf.simulation.exception.DimensionErrorException;
-import pt.uminho.algoritmi.netopt.ospf.simulation.solution.IntegerSolution;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 
 public class WeightsAllocationTest

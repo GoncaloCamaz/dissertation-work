@@ -15,6 +15,12 @@ import java.util.HashMap;
 
 public class WeightsSolutionSaver
 {
+    /**
+     * Transforms the Solution into a JSONOBject
+     * @param p
+     * @param topology
+     * @throws DimensionErrorException
+     */
     public static void save(Population p, NetworkTopology topology) throws DimensionErrorException {
         IntegerSolution sol = p.getLowestValuedSolutions(0, 1).get(0);
         double fitness = sol.getFitnessValue(0);
@@ -37,6 +43,11 @@ public class WeightsSolutionSaver
         savetoJSon(mapWeights, fitness);
     }
 
+    /**
+     * Saves the solution to a json file
+     * @param mapWeights
+     * @param fitness
+     */
     private static void savetoJSon(HashMap<SourceDestinationPair, Double> mapWeights, double fitness)
     {
         String fileName = "Weights_" + mapWeights.size() + "_" + System.currentTimeMillis() + ".json";

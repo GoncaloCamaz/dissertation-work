@@ -217,7 +217,6 @@ public class JecoliWeights
 
         ITerminationCriteria terminationCriteria;
         if (params.getCriteria().equals(ParamsNFV.TerminationCriteria.ITERATION))
-           // terminationCriteria = new IterationTerminationCriteria(params.getNumberGenerations());
             terminationCriteria = new NumberOfFunctionEvaluationsTerminationCriteria(params.getPopulationSize());
         else
             terminationCriteria = new FitnessTargetTerminationCriteria(params.getCriteriaValue());

@@ -35,6 +35,7 @@ import pt.uminho.algoritmi.netopt.SystemConf;
 import pt.uminho.algoritmi.netopt.nfv.*;
 import pt.uminho.algoritmi.netopt.nfv.optimization.ParamsNFV;
 import pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.evaluation.NFVEvaluationMO;
+import pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.evaluation.NFVEvaluationSO;
 import pt.uminho.algoritmi.netopt.ospf.optimization.jecoli.SolutionParser;
 import pt.uminho.algoritmi.netopt.ospf.optimization.jecoli.algorithm.AlgorithmInterface;
 import pt.uminho.algoritmi.netopt.ospf.optimization.jecoli.algorithm.OSPFNSGAII;
@@ -64,10 +65,10 @@ public class JecoliNFV
     private int NUMObjectives = 2;
     private int MAXServicesSolutions;
     private int MINServicesSolutions;
-    private int maxServicesPenalization;
+    private double maxServicesPenalization;
     private int cplexTimeLimit;
 
-    public JecoliNFV(NetworkTopology topology, NFVState state, int lowerBound, int upperBound, String file, int maxServicesPenalization, int cplexTimeLimit) {
+    public JecoliNFV(NetworkTopology topology, NFVState state, int lowerBound, int upperBound, String file, double maxServices, int cplexTimeLimit) {
         this.topology = topology.copy();
         this.state = state;
         this.algorithm = null;
@@ -77,7 +78,7 @@ public class JecoliNFV
         this.MINServicesSolutions = lowerBound;
         this.MAXServicesSolutions = upperBound;
         this.servicesConfiguration = file;
-        this.maxServicesPenalization = maxServicesPenalization;
+        this.maxServicesPenalization = maxServices;
         this.cplexTimeLimit = cplexTimeLimit;
     }
 
@@ -247,9 +248,16 @@ public class JecoliNFV
         NSGAIIConfiguration<ILinearRepresentation<Integer>, ILinearRepresentationFactory<Integer>> configuration = this
                 .preConfigureNSGAII(params);
 
-        NFVEvaluationMO nfvEvaluation = new NFVEvaluationMO(topology,state, servicesConfiguration, this.maxServicesPenalization, this.cplexTimeLimit, params.getAlgorithm());
-
-        configuration.setEvaluationFunction(nfvEvaluation);
+        if(this.maxServicesPenalization < 1)
+        {
+            NFVEvaluationMO nfvEvaluation = new NFVEvaluationMO(topology,state, servicesConfiguration,cplexTimeLimit, params.getAlgorithm(), this.maxServicesPenalization);
+            configuration.setEvaluationFunction(nfvEvaluation);
+        }
+        else
+        {
+            NFVEvaluationSO nfvEvaluation = new NFVEvaluationSO(topology,state, servicesConfiguration, this.maxServicesPenalization, this.cplexTimeLimit, params.getAlgorithm());
+            configuration.setEvaluationFunction(nfvEvaluation);
+        }
 
         algorithm = new OSPFNSGAII(configuration);
     }
@@ -398,11 +406,11 @@ public class JecoliNFV
         this.MINServicesSolutions = MINServicesSolutions;
     }
 
-    public int getMaxServicesPenalization() {
+    public double getMaxServicesPenalization() {
         return maxServicesPenalization;
     }
 
-    public void setMaxServicesPenalization(int maxServicesPenalization) {
+    public void setMaxServicesPenalization(double maxServicesPenalization) {
         this.maxServicesPenalization = maxServicesPenalization;
     }
 

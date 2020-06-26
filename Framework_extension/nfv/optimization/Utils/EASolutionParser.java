@@ -37,6 +37,9 @@ public class EASolutionParser
         loadJson();
     }
 
+    /**
+     * Loads the Codification File
+     */
     private void loadJson() {
         HashMap<Integer, List<Integer>> servicesNode = new HashMap<>();
         JSONParser parser = new JSONParser();
@@ -65,6 +68,11 @@ public class EASolutionParser
         }
     }
 
+    /**
+     * Transforms the result of the EA into NFNodesMap
+     * @param results
+     * @return
+     */
     public NFNodesMap solutionParser(int[] results)
     {
         NFNodesMap nodesMap = new NFNodesMap();
@@ -81,7 +89,7 @@ public class EASolutionParser
             }
             else
             {
-                processCapacity = 10000;
+                processCapacity = 2500;
             }
             NFNode node = new NFNode(i,processCapacity, availableSerices);
             nodes.put(i, node);

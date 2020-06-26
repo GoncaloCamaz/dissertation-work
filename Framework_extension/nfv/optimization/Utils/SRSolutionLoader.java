@@ -16,13 +16,6 @@ import java.util.List;
 
 public class SRSolutionLoader
 {
-    /** Debug mode **
-    public static void main(String[] args) throws IOException, ParseException {
-        List<Request> res = loadResultsFromJson("Configuration_30.json");
-        System.out.println("loaded");
-    }
-    */
-
     /**
      * Loads the json file into an object
      * @param filename

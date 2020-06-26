@@ -16,7 +16,7 @@ import java.io.IOException;
 
 public class NFVServiceAllocationTest
 {
-   // /** Debug mode
+    /** Debug mode
     private static String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.nodes";// args[0];
     private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.edges";//args[1];
     private static String servicesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/frameworkConfiguration.json";
@@ -27,11 +27,11 @@ public class NFVServiceAllocationTest
     private static int numberOfGenerations = 1;
     private static int lowerBound = 0;
     private static int upperBound = 7;
-    private static int maxServices = 3;
-    private static int cplexTimeLimit =10;
-
+    private static double maxServices = 0.5;
+    private static int cplexTimeLimit =20;
+    */
     public static void main(String[] args) throws Exception {
-/*
+
         if(args.length!=12)
            System.exit(1);
 
@@ -44,10 +44,11 @@ public class NFVServiceAllocationTest
         int numberOfGenerations = Integer.parseInt(args[6]);
         int lowerBound = Integer.parseInt(args[7]);
         int upperBound = Integer.parseInt(args[8]);
-        int maxServices = Integer.parseInt(args[9]);
+        double maxServices = Integer.parseInt(args[9]); //Can either be a number > 1 where limits te maximum number of services
+        //applying a penalization to the fitness's or it can be a percentage (number < 1) defining the importance of the fitness
         int cplexTimeLimit = Integer.parseInt(args[10]);
         String evaluation = args[11].toLowerCase();
-*/
+
         NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
         NFVState state = new NFVState(servicesFile, requests);
 
@@ -55,6 +56,7 @@ public class NFVServiceAllocationTest
         params.setArchiveSize(100);
         params.setPopulationSize(populationSize);
         params.setNumberGenerations(numberOfGenerations);
+        params.setCriteria(ParamsNFV.TerminationCriteria.ITERATION);
 
         if (evaluation.equals("phi"))
         {
@@ -65,14 +67,17 @@ public class NFVServiceAllocationTest
             params.setAlgorithm(ParamsNFV.EvaluationAlgorithm.MLU);
         }
 
-
         JecoliNFV ea = new JecoliNFV(topology,state,lowerBound,upperBound, serviceMapingFile, maxServices,cplexTimeLimit);
         ea.configureNSGAII(params);
         ea.run();
-
         Population p = new NondominatedPopulation(ea.getSolutionSet());
 
         int[] solution = p.getLowestValuedSolutions(0, 1).get(0).getVariablesArray();
-        ConfigurationSolutionSaver.saveServicesLocationConfiguration(solution,serviceMapingFile,topology,state, params.getAlgorithm());
+        String filename = ConfigurationSolutionSaver.saveServicesLocationConfiguration(solution,serviceMapingFile,topology,state, params.getAlgorithm());
+        if(maxServices < 1)
+        {
+            double[][] res = p.getParetoMatrix();
+            ConfigurationSolutionSaver.saveParetoToCSV(res, res[0].length,filename);
+        }
     }
 }
