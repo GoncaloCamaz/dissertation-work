@@ -1,6 +1,4 @@
 import csv
-from GraphGen.GenGraphs import aux
-
 
 def loadData(filename):
     with open(filename, newline='') as csvfile:
@@ -16,4 +14,14 @@ def loadData(filename):
                     values.append(0)
                 else:
                     values.append(float(row[1]))
+        return values
+
+def loadParetoData(filename, row1, row2):
+    with open(filename, newline='') as csvfile:
+        reader = csv.reader(csvfile, delimiter=';')
+        headers = next(reader, None)
+        values = []
+        for row in reader:
+            values.append([float(row[row1]), float(row[row2])])
+
         return values
