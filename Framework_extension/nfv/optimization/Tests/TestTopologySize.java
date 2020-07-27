@@ -29,6 +29,8 @@ public class TestTopologySize
 
     private static String fileGEANT ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/GEANT/geant.gml";
 
+    private static String fileeurope ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/BT Europe/BtEurope.gml";
+
 
 
 
@@ -56,10 +58,10 @@ public class TestTopologySize
             NetworkTopology topology = new NetworkTopology(netgraph);
             System.out.println("BTN: " + topology.getDimension() +" Nodes; " + topology.getNumberEdges() + " Edges;\n");
 
-            inputstream = new FileInputStream(fileGEANT);
+            inputstream = new FileInputStream(fileeurope);
             NetGraph netgraphG = readGML(inputstream);
             NetworkTopology topologyG = new NetworkTopology(netgraphG);
-            System.out.println("GEANT: " + topologyG.getDimension() +" Nodes; " + topologyG.getNumberEdges() + " Edges;\n");
+            System.out.println("BTEurope: " + topologyG.getDimension() +" Nodes; " + topologyG.getNumberEdges() + " Edges;\n");
         }
         catch (Exception e)
         {

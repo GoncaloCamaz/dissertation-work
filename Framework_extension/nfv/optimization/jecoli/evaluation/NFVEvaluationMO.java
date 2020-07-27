@@ -59,7 +59,8 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
 
         if(this.algorithm.equals(ParamsNFV.EvaluationAlgorithm.PHI))
         {
-            NFV_MCFPhiNodeUtilizationSolver solver = new NFV_MCFPhiNodeUtilizationSolver(topology, state,this.cplexTimeLimit);
+            NFV_MCFPhiNodeUtilizationSolver solver = new NFV_MCFPhiNodeUtilizationSolver(topology, state,this.cplexTimeLimit, this.alpha);
+
             object = solver.optimize();
         }
         else
@@ -69,10 +70,9 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
         }
 
         penalizationVal += checkIfSolutions(object);
-        // Mnu, Mlu, Phi, Gamma are initialized at 0. Each algorithm will set the responsible variable to a new value
-        // regarding its optimization objective (mlu/phi).
-        resultList[0] = alpha * (object.getLoadValue() + penalizationVal);
-        resultList[1] = (1 - alpha) * (object.getNumberOfServicesDeployed() + penalizationVal);
+
+        resultList[0] = object.getLoadValue() + penalizationVal;
+        resultList[1] = object.getNumberOfServicesDeployed() + penalizationVal;
 
         return resultList;
     }

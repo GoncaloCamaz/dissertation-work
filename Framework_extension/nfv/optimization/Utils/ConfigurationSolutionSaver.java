@@ -196,7 +196,7 @@ public class ConfigurationSolutionSaver
      * @param map
      * @param filename
      */
-    private static void saveToJSON(OptimizationResultObject o, Arcs arcs, NFNodesMap map, String filename)
+    public static void saveToJSON(OptimizationResultObject o, Arcs arcs, NFNodesMap map, String filename)
     {
         String algorithm = "mlu";
         if(o.getMlu() == 0)
@@ -327,9 +327,9 @@ public class ConfigurationSolutionSaver
      * @param size
      * @param filename
      */
-    public static void saveParetoToCSV(double[][] res, int size, String filename)
+    public static void saveParetoToCSV(double[][] res, int size, double max,String filename)
     {
-        File pareto = new File("Pareto"+filename);
+        File pareto = new File("Pareto_"+max+ "_"+filename);
         try
         {
             FileWriter outputfile = new FileWriter(pareto);

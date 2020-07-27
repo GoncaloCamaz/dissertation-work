@@ -66,9 +66,10 @@ public class JecoliNFV
     private int MAXServicesSolutions;
     private int MINServicesSolutions;
     private double maxServicesPenalization;
+    private double alpha;
     private int cplexTimeLimit;
 
-    public JecoliNFV(NetworkTopology topology, NFVState state, int lowerBound, int upperBound, String file, double maxServices, int cplexTimeLimit) {
+    public JecoliNFV(NetworkTopology topology, NFVState state, int lowerBound, int upperBound, String file, double maxServices, int cplexTimeLimit, double alpha) {
         this.topology = topology.copy();
         this.state = state;
         this.algorithm = null;
@@ -80,6 +81,7 @@ public class JecoliNFV
         this.servicesConfiguration = file;
         this.maxServicesPenalization = maxServices;
         this.cplexTimeLimit = cplexTimeLimit;
+        this.alpha = alpha;
     }
 
     /**
@@ -250,12 +252,12 @@ public class JecoliNFV
 
         if(this.maxServicesPenalization < 1)
         {
-            NFVEvaluationMO nfvEvaluation = new NFVEvaluationMO(topology,state, servicesConfiguration,cplexTimeLimit, params.getAlgorithm(), this.maxServicesPenalization);
+            NFVEvaluationMO nfvEvaluation = new NFVEvaluationMO(topology,state, servicesConfiguration,cplexTimeLimit, params.getAlgorithm(), this.alpha);
             configuration.setEvaluationFunction(nfvEvaluation);
         }
         else
         {
-            NFVEvaluationSO nfvEvaluation = new NFVEvaluationSO(topology,state, servicesConfiguration, this.maxServicesPenalization, this.cplexTimeLimit, params.getAlgorithm());
+            NFVEvaluationSO nfvEvaluation = new NFVEvaluationSO(topology,state, servicesConfiguration, this.maxServicesPenalization, this.alpha, this.cplexTimeLimit, params.getAlgorithm());
             configuration.setEvaluationFunction(nfvEvaluation);
         }
 

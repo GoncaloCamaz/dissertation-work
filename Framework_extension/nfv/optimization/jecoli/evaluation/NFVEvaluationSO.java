@@ -19,11 +19,12 @@ public class NFVEvaluationSO extends AbstractMultiobjectiveEvaluationFunction<IL
     private NFVState state;
     private String filename;
     private double maxServicesPenalization;
+    private double alpha;
     private int cplexTimeLimit;
     private ParamsNFV.EvaluationAlgorithm algorithm;
 
 
-    public NFVEvaluationSO(NetworkTopology topology, NFVState state, String filename, double maxServicesPenalization, int cplexTimeLimit, ParamsNFV.EvaluationAlgorithm alg)
+    public NFVEvaluationSO(NetworkTopology topology, NFVState state, String filename, double maxServicesPenalization, double alpha,int cplexTimeLimit, ParamsNFV.EvaluationAlgorithm alg)
     {
         super(false);
         this.topology = topology;
@@ -31,6 +32,7 @@ public class NFVEvaluationSO extends AbstractMultiobjectiveEvaluationFunction<IL
         this.filename = filename;
         this.maxServicesPenalization = maxServicesPenalization;
         this.cplexTimeLimit = cplexTimeLimit;
+        this.alpha = alpha;
         this.algorithm = alg;
     }
 
@@ -59,7 +61,7 @@ public class NFVEvaluationSO extends AbstractMultiobjectiveEvaluationFunction<IL
 
         if(this.algorithm.equals(ParamsNFV.EvaluationAlgorithm.PHI))
         {
-            NFV_MCFPhiNodeUtilizationSolver solver = new NFV_MCFPhiNodeUtilizationSolver(topology, state,this.cplexTimeLimit);
+            NFV_MCFPhiNodeUtilizationSolver solver = new NFV_MCFPhiNodeUtilizationSolver(topology, state,this.cplexTimeLimit, this.alpha);
             object = solver.optimize();
         }
         else
@@ -72,8 +74,7 @@ public class NFVEvaluationSO extends AbstractMultiobjectiveEvaluationFunction<IL
         if(penalizationVal == 0) {
             penalizationVal += getPenalization(object, this.maxServicesPenalization);
         }
-        // Mnu, Mlu, Phi, Gamma are initialized at 0. Each algorithm will set the responsible variable to a new value
-        // regarding its optimization objective (mlu/phi).
+
         resultList[0] = object.getPhiValue() + object.getMlu() + penalizationVal;
         resultList[1] = object.getGammaValue() + object.getMnu() + penalizationVal;
 
@@ -145,6 +146,34 @@ public class NFVEvaluationSO extends AbstractMultiobjectiveEvaluationFunction<IL
 
     public double getMaxServicesPenalization() {
         return maxServicesPenalization;
+    }
+
+    public void setMaxServicesPenalization(double maxServicesPenalization) {
+        this.maxServicesPenalization = maxServicesPenalization;
+    }
+
+    public double getAlpha() {
+        return alpha;
+    }
+
+    public void setAlpha(double alpha) {
+        this.alpha = alpha;
+    }
+
+    public int getCplexTimeLimit() {
+        return cplexTimeLimit;
+    }
+
+    public void setCplexTimeLimit(int cplexTimeLimit) {
+        this.cplexTimeLimit = cplexTimeLimit;
+    }
+
+    public ParamsNFV.EvaluationAlgorithm getAlgorithm() {
+        return algorithm;
+    }
+
+    public void setAlgorithm(ParamsNFV.EvaluationAlgorithm algorithm) {
+        this.algorithm = algorithm;
     }
 
     public void setMaxServicesPenalization(int maxServicesPenalization) {

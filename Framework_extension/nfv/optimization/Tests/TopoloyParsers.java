@@ -14,7 +14,7 @@ public class TopoloyParsers
 {
     public static void main(String[] args)
     {
-        String graphFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/BTN/btn.gml";
+        String graphFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/BT Europe/BtEurope.gml";
         InputStream inputstream;
 
         try {

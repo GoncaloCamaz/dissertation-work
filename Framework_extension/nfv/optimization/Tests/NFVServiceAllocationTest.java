@@ -32,7 +32,7 @@ public class NFVServiceAllocationTest
     */
     public static void main(String[] args) throws Exception {
 
-        if(args.length!=12)
+        if(args.length!=13)
            System.exit(1);
 
         String nodesFile = args[0];
@@ -44,10 +44,10 @@ public class NFVServiceAllocationTest
         int numberOfGenerations = Integer.parseInt(args[6]);
         int lowerBound = Integer.parseInt(args[7]);
         int upperBound = Integer.parseInt(args[8]);
-        double maxServices = Integer.parseInt(args[9]); //Can either be a number > 1 where limits te maximum number of services
-        //applying a penalization to the fitness's or it can be a percentage (number < 1) defining the importance of the fitness
-        int cplexTimeLimit = Integer.parseInt(args[10]);
-        String evaluation = args[11].toLowerCase();
+        double maxServices = Double.parseDouble(args[9]);
+        double alpha = Double.parseDouble(args[10]);
+        int cplexTimeLimit = Integer.parseInt(args[11]);
+        String evaluation = args[12].toLowerCase();
 
         NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
         NFVState state = new NFVState(servicesFile, requests);
@@ -67,7 +67,7 @@ public class NFVServiceAllocationTest
             params.setAlgorithm(ParamsNFV.EvaluationAlgorithm.MLU);
         }
 
-        JecoliNFV ea = new JecoliNFV(topology,state,lowerBound,upperBound, serviceMapingFile, maxServices,cplexTimeLimit);
+        JecoliNFV ea = new JecoliNFV(topology,state,lowerBound,upperBound, serviceMapingFile, maxServices,cplexTimeLimit, alpha);
         ea.configureNSGAII(params);
         ea.run();
         Population p = new NondominatedPopulation(ea.getSolutionSet());
@@ -77,7 +77,7 @@ public class NFVServiceAllocationTest
         if(maxServices < 1)
         {
             double[][] res = p.getParetoMatrix();
-            ConfigurationSolutionSaver.saveParetoToCSV(res, res[0].length,filename);
+            ConfigurationSolutionSaver.saveParetoToCSV(res, res[0].length, maxServices, filename);
         }
     }
 }
