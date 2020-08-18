@@ -7,13 +7,13 @@ def loadData(filename):
         values = []
         if len(headers) == 3:
             for row in reader:
-                values.append(float(row[2]))
+                values.append(float(row[2])*100)
         else:
             for row in reader:
                 if(row[1] == 'NaN'):
                     values.append(0)
                 else:
-                    values.append(float(row[1]))
+                    values.append(float(row[1])*100)
         return values
 
 def loadParetoData(filename, row1, row2):

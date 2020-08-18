@@ -12,14 +12,21 @@ import pt.uminho.algoritmi.netopt.nfv.*;
 import pt.uminho.algoritmi.netopt.nfv.optimization.NFVRequestConfiguration;
 import pt.uminho.algoritmi.netopt.nfv.optimization.NFVRequestsConfigurationMap;
 import pt.uminho.algoritmi.netopt.nfv.optimization.OptimizationResultObject;
+import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.ConfigurationSolutionSaver;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkLoads;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
 import pt.uminho.algoritmi.netopt.ospf.simulation.Simul;
+import pt.uminho.algoritmi.netopt.ospf.simulation.net.NetGraph;
 
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static pt.uminho.algoritmi.netopt.nfv.optimization.Utils.ConfigurationSolutionSaver.saveToCSV;
+import static pt.uminho.algoritmi.netopt.ospf.utils.io.GraphReader.readGML;
 
 public class NFV_MCFPMLUSolver
 {
@@ -53,31 +60,53 @@ public class NFV_MCFPMLUSolver
         this.saveConfigurations = false;
     }
 
-    /** Debug mode
-    public static void main(String[] args) {
-        String nodesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";
-        String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.edges";
-        String servicesFile = "frameworkConfiguration.json";
-        String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidos.csv";
 
+    public static void main(String[] args) {
+        String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.edges";//args[1];
+        String nodesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.nodes";//args[1];
+       // String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";// args[0];
+      //  String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.edges";//args[1];
+       // String servicesFile = "300frameworkConfiguration.json";
+       // String requests = "pedidos1200.csv";// args[3];
+      //  String topoFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/BT Europe/BtEurope.gml";// args[0];
+          String servicesFile = "frameworkConfiguration_BTEurope.json";
+         String requests = "pedidosBTEurope_1200.csv";// args[3];
+        String topoFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/BT Europe/BtEurope.gml";// args[0];
         try {
-            NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
+            InputStream inputStream = new FileInputStream(topoFile);
+            NetGraph netgraph = readGML(inputStream);
+
+            //NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
+            NetworkTopology topology = new NetworkTopology(netgraph);
             NFVState state = new NFVState(servicesFile, requests);
             NFServicesMap services = state.getServices();
             NFNodesMap map = state.getNodes();
             NFRequestsMap req = state.getRequests();
 
+            Arcs arcs = new Arcs();
+
+            double[][] capacity = topology.getNetGraph().createGraph().getCapacitie();
+            int nodesNumber = map.getNodes().size();
+            int arcID = 0;
+            for (int i = 0; i < nodesNumber; i++)
+                for (int j = 0; j < nodesNumber; j++) {
+                    if (capacity[i][j] > 0) {
+                        Arc a = new Arc(arcID, i, j, capacity[i][j]);
+                        arcID++;
+                        arcs.add(a);
+                    }
+                }
             NFV_MCFPMLUSolver solver = new NFV_MCFPMLUSolver(topology, services, req, map);
             solver.setSaveLoads(true);
             solver.setSaveConfigurations(true);
-            solver.setCplexTimeLimit(60);
+            solver.setCplexTimeLimit(600);
             OptimizationResultObject obj = solver.optimize();
-
+            saveToCSV(obj,arcs,map,"Mlu_allAvailable");
+            ConfigurationSolutionSaver.saveToJSON(obj,arcs,map,"Result");
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-    */
 
     public int getCplexTimeLimit() {
         return cplexTimeLimit;
@@ -340,7 +369,7 @@ public class NFV_MCFPMLUSolver
 
 
         // Saves the model
-        cplex.exportModel("mlumnuSolver.lp");
+        //cplex.exportModel("mlumnuSolver.lp");
         OptimizationResultObject object = new OptimizationResultObject(nodesNumber);
         // Solve
         cplex.solve();

@@ -44,12 +44,7 @@ def genPareto(scores):
     plt.show()
 
 def loadScores():
-    scores = loadParetoData('../analisePareto3.csv',4,3)
-    print(scores)
-
-    #np.array([[277.574328, 56],[277.5826335, 50],[277.5804755, 53],[344.1634928, 30],[287.194332, 25],[277.5896322, 50],
-    #                   [277.7066201, 38],[277.622437, 43],[277.5646611, 52],[277.6707621, 38],[277.5677136, 49],
-     #                  [444.0526931, 25],[297.7627356, 29],[277.8591921, 27],[396.6996284, 19],[368.9843883, 20]])
+    scores = loadParetoData('../PHIResults.csv',3,2)
     genPareto(np.array(scores))
 
 loadScores()

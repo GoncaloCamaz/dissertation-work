@@ -12,7 +12,9 @@ import pt.uminho.algoritmi.netopt.ospf.simulation.sr.Segment;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SRSolutionLoader
 {
@@ -75,5 +77,45 @@ public class SRSolutionLoader
             ret.add(request);
         }
         return ret;
+    }
+
+    public static Map<Integer, Map<Integer, Integer>> loadNumberOfExecutionsPerNode(String filename) throws IOException, ParseException
+    {
+        Map<Integer, Map<Integer, Integer>> result = new HashMap<>();
+
+        JSONObject obj = loadObject(filename);
+        JSONArray array = (JSONArray) obj.get("Configurations");
+        for(Object o : array)
+        {
+            JSONObject objArray = (JSONObject) o;
+            JSONArray arrayAux = (JSONArray) objArray.get("ServiceProcessmentLocation");
+            for(Object oAux : arrayAux)
+            {
+                JSONObject aux = (JSONObject) oAux;
+                int serviceID = Integer.parseInt(String.valueOf(aux.get("Service ID")));
+                int processment = Integer.parseInt(String.valueOf(aux.get("Node ID")));
+                if(result.containsKey(processment))
+                {
+                    if(result.get(processment).containsKey(serviceID))
+                    {
+                        int old = result.get(processment).get(serviceID);
+                        old += 1;
+                        result.get(processment).replace(serviceID, old-1, old);
+                    }
+                    else
+                    {
+                        result.get(processment).put(serviceID,1);
+                    }
+                }
+                else
+                {
+                    Map<Integer, Integer> toAdd = new HashMap<>();
+                    toAdd.put(serviceID, 1);
+                    result.put(processment,toAdd);
+                }
+            }
+        }
+
+        return result;
     }
 }

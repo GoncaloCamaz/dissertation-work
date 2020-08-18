@@ -13,23 +13,25 @@ import pt.uminho.algoritmi.netopt.ospf.simulation.solution.IntegerSolution;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
 
 public class NFVServiceAllocationTest
 {
-    /** Debug mode
-    private static String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.nodes";// args[0];
-    private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.edges";//args[1];
-    private static String servicesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/frameworkConfiguration.json";
-    private static String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidos.csv";//args[3];
+    /* Debug mode
+    private static String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";// args[0];
+    private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.edges";//args[1];
+    private static String servicesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/frameworkConfiguration_Abilene.json";
+    private static String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidosAbilene_300.csv";//args[3];
     private static String evaluation = "phi";
     private static String serviceMapingFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/serviceMap.json";
     private static int populationSize = 10;
-    private static int numberOfGenerations = 1;
+    private static int numberOfGenerations = 10;
     private static int lowerBound = 0;
     private static int upperBound = 7;
-    private static double maxServices = 0.5;
-    private static int cplexTimeLimit =20;
-    */
+    private static double maxServices = 0.75;
+    private static int cplexTimeLimit =6;
+    private static double alpha = maxServices;
+*/
     public static void main(String[] args) throws Exception {
 
         if(args.length!=13)
@@ -70,14 +72,25 @@ public class NFVServiceAllocationTest
         JecoliNFV ea = new JecoliNFV(topology,state,lowerBound,upperBound, serviceMapingFile, maxServices,cplexTimeLimit, alpha);
         ea.configureNSGAII(params);
         ea.run();
-        Population p = new NondominatedPopulation(ea.getSolutionSet());
 
-        int[] solution = p.getLowestValuedSolutions(0, 1).get(0).getVariablesArray();
-        String filename = ConfigurationSolutionSaver.saveServicesLocationConfiguration(solution,serviceMapingFile,topology,state, params.getAlgorithm());
+        // Pareto Front Cenario
         if(maxServices < 1)
         {
-            double[][] res = p.getParetoMatrix();
-            ConfigurationSolutionSaver.saveParetoToCSV(res, res[0].length, maxServices, filename);
+            NondominatedPopulation p = new NondominatedPopulation(ea.getSolutionSet());
+            int size = p.getNumberOfSolutions();
+            List<IntegerSolution> aux = p.getLowestValuedSolutions(size);
+
+            for(IntegerSolution sol : aux)
+            {
+                int[] solAux = sol.getVariablesArray();
+                ConfigurationSolutionSaver.saveServicesLocationConfiguration(solAux,serviceMapingFile,topology,state, params.getAlgorithm());
+            }
+        }
+        else
+        {
+            Population p = new NondominatedPopulation(ea.getSolutionSet());
+            int[] solution = p.getLowestValuedSolutions(0, 1).get(0).getVariablesArray();
+            ConfigurationSolutionSaver.saveServicesLocationConfiguration(solution,serviceMapingFile,topology,state, params.getAlgorithm());
         }
     }
 }

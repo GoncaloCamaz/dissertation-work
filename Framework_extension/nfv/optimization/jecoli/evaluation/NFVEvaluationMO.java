@@ -49,7 +49,7 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
     }
 
     @Override
-    public Double[] evaluateMO(ILinearRepresentation<Integer> solutionRepresentation) throws Exception
+    public Double[] evaluateMO(ILinearRepresentation<Integer> solutionRepresentation)
     {
         Double[] resultList = new Double[2];
         NFNodesMap nodes = decode(solutionRepresentation, topology.getDimension());
@@ -69,10 +69,17 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
             object = solver.optimize();
         }
 
-        penalizationVal += checkIfSolutions(object);
+        penalizationVal = checkIfSolutions(object);
 
-        resultList[0] = object.getLoadValue() + penalizationVal;
-        resultList[1] = object.getNumberOfServicesDeployed() + penalizationVal;
+        if (penalizationVal > 0)
+        {
+            resultList[0] = penalizationVal;
+            resultList[1] = penalizationVal;
+        }
+        else {
+            resultList[0] = object.getLoadValue();
+            resultList[1] = Double.valueOf(object.getNumberOfServicesDeployed());
+        }
 
         return resultList;
     }
@@ -80,7 +87,8 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
     private double checkIfSolutions(OptimizationResultObject object)
     {
         double ret = 0;
-        if(!object.isAllservicesDeployed())
+
+        if(object.isAllservicesDeployed() == false || object.hasSolution()  == false)
         {
             ret = Double.MAX_VALUE;
         }

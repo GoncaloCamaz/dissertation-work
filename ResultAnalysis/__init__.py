@@ -3,41 +3,41 @@ from GraphGen.GenGraphs import genGraph, phiVSmlu
 import numpy
 
 
-def loadMLUData_Arcs():
+def loadMLUData_Arcs(folder,number):
     i = 1
     data = []
-    while(i <= 7):
-        file = "./BTE_1200/MLUA_"+str(i)+".csv"
+    while(i <= number):
+        file = "./"+folder+"/MLUA_"+str(i)+".csv"
         data.append(loadData(file))
         i += 1
     return data
 
 
-def loadPHIData_Arcs():
+def loadPHIData_Arcs(folder, number):
     i = 1
     data = []
-    while(i <= 6):
-        file = "./BTE_1200/PHIA_"+str(i)+".csv"
+    while(i <= number):
+        file = "./"+folder+"/PHIA_"+str(i)+".csv"
         data.append(loadData(file))
         i += 1
     return data
 
 
-def loadMLUData_Nodes():
+def loadMLUData_Nodes(folder,number):
     i = 1
     data = []
-    while(i <= 7):
-        file = "./BTE_1200/MLUN_"+str(i)+".csv"
+    while(i <= number):
+        file = "./"+folder+"/MLUN_"+str(i)+".csv"
         data.append(loadData(file))
         i += 1
     return data
 
 
-def loadPHIData_Nodes():
+def loadPHIData_Nodes(folder,number):
     i = 1
     data = []
-    while(i <= 6):
-        file = "./BTE_1200/PHIN_"+str(i)+".csv"
+    while(i <= number):
+        file = "./"+folder+"/PHIN_"+str(i)+".csv"
         data.append(loadData(file))
         i += 1
     return data
@@ -60,9 +60,9 @@ def cplexEvaluation_MLU():
 
 
 def run():
-    dataphi = loadPHIData_Arcs()
-    datamlu = loadMLUData_Arcs()
-    phiVSmlu(numpy.concatenate(dataphi), numpy.concatenate(datamlu), "Carga nas Ligações")
+    dataphi = loadPHIData_Nodes("ResultsBT1200",12)
+    datamlu = loadMLUData_Nodes("ResultsBT1200",12)
+    phiVSmlu(numpy.concatenate(dataphi), numpy.concatenate(datamlu), "Carga nos Nodos - Topologia BT Europe - 1200 Pedidos")
 
 
 run()

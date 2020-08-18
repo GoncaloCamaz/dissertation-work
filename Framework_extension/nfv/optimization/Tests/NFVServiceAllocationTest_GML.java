@@ -12,6 +12,7 @@ import pt.uminho.algoritmi.netopt.ospf.simulation.net.NetGraph;
 import pt.uminho.algoritmi.netopt.ospf.simulation.solution.IntegerSolution;
 
 import java.io.*;
+import java.util.List;
 
 import static pt.uminho.algoritmi.netopt.ospf.utils.io.GraphReader.readGML;
 
@@ -74,14 +75,24 @@ public class NFVServiceAllocationTest_GML
         JecoliNFV ea = new JecoliNFV(topology,state,lowerBound,upperBound, serviceMapingFile, maxServices,cplexTimeLimit, alpha);
         ea.configureNSGAII(params);
         ea.run();
-        Population p = new NondominatedPopulation(ea.getSolutionSet());
 
-        int[] solution = p.getLowestValuedSolutions(0, 1).get(0).getVariablesArray();
-        String filename = ConfigurationSolutionSaver.saveServicesLocationConfiguration(solution,serviceMapingFile,topology,state, params.getAlgorithm());
         if(maxServices < 1)
         {
-            double[][] res = p.getParetoMatrix();
-            ConfigurationSolutionSaver.saveParetoToCSV(res, res[0].length, maxServices, filename);
+            NondominatedPopulation p = new NondominatedPopulation(ea.getSolutionSet());
+            int size = p.getNumberOfSolutions();
+            List<IntegerSolution> aux = p.getLowestValuedSolutions(size);
+
+            for(IntegerSolution sol : aux)
+            {
+                int[] solAux = sol.getVariablesArray();
+                ConfigurationSolutionSaver.saveServicesLocationConfiguration(solAux,serviceMapingFile,topology,state, params.getAlgorithm());
+            }
+        }
+        else
+        {
+            Population p = new NondominatedPopulation(ea.getSolutionSet());
+            int[] solution = p.getLowestValuedSolutions(0, 1).get(0).getVariablesArray();
+            ConfigurationSolutionSaver.saveServicesLocationConfiguration(solution,serviceMapingFile,topology,state, params.getAlgorithm());
         }
     }
 }

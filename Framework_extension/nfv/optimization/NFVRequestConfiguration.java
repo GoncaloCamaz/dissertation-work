@@ -146,34 +146,6 @@ public class NFVRequestConfiguration
         this.srpath = orderedSRPath;
     }
 
-    private List<SourceDestinationPair> pathUntilDestination(int origin, int destination)
-    {
-        List<SourceDestinationPair> pairs = new ArrayList<>();
-
-
-
-        return pairs;
-    }
-
-    private boolean reachable(SourceDestinationPair pair, int destination)
-    {
-        boolean ret = false;
-        int origin = pair.getSource();
-        int dest = pair.getDestination();
-        if(origin == destination || dest == destination)
-            ret = true;
-        else
-        {
-            int actual = pair.getDestination();
-            while (actual != destination)
-            {
-
-            }
-        }
-
-        return ret;
-    }
-
     private int getNodeLocationProcessment(int actualService)
     {
         return this.serviceProcessment.get(actualService);
