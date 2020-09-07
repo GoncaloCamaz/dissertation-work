@@ -18,18 +18,18 @@ import static pt.uminho.algoritmi.netopt.ospf.utils.io.GraphReader.readGML;
 
 public class NFVServiceAllocationTest_GML
 {
-     /**Debug mode
+    /**Debug mode
      private static String topoFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/BT Europe/BtEurope.gml";
      private static String servicesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/frameworkConfiguration_BTEurope.json";
-     private static String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidosBTEurope_300.csv";//args[3];
+     private static String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidosBTEurope_1200.csv";//args[3];
      private static String evaluation = "phi";
      private static String serviceMapingFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/serviceMap.json";
-     private static int populationSize = 10;
-     private static int numberOfGenerations = 1;
+     private static int populationSize = 100;
+     private static int numberOfGenerations = 100;
      private static int lowerBound = 0;
      private static int upperBound = 7;
      private static double maxServices = 0.5;
-     private static int cplexTimeLimit =20;
+     private static int cplexTimeLimit =60;
      private static double alpha = 0.5;
     */
 

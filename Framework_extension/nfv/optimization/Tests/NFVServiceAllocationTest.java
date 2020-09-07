@@ -17,20 +17,20 @@ import java.util.List;
 
 public class NFVServiceAllocationTest
 {
-    /* Debug mode
+    /** Debug mode
     private static String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";// args[0];
     private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.edges";//args[1];
     private static String servicesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/frameworkConfiguration_Abilene.json";
-    private static String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidosAbilene_300.csv";//args[3];
+    private static String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidosAbilene_1200.csv";//args[3];
     private static String evaluation = "phi";
     private static String serviceMapingFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/serviceMap.json";
-    private static int populationSize = 10;
-    private static int numberOfGenerations = 10;
+    private static int populationSize = 100;
+    private static int numberOfGenerations = 100;
     private static int lowerBound = 0;
     private static int upperBound = 7;
     private static double maxServices = 0.75;
-    private static int cplexTimeLimit =6;
-    private static double alpha = maxServices;
+    private static int cplexTimeLimit = 25;
+    private static double alpha = 0.25;
 */
     public static void main(String[] args) throws Exception {
 
@@ -89,8 +89,15 @@ public class NFVServiceAllocationTest
         else
         {
             Population p = new NondominatedPopulation(ea.getSolutionSet());
-            int[] solution = p.getLowestValuedSolutions(0, 1).get(0).getVariablesArray();
-            ConfigurationSolutionSaver.saveServicesLocationConfiguration(solution,serviceMapingFile,topology,state, params.getAlgorithm());
+            int size = p.getNumberOfSolutions();
+            List<IntegerSolution> solAux = p.getLowestValuedSolutions(size);
+
+            for(IntegerSolution sol : solAux)
+            {
+                int[] solution = sol.getVariablesArray();
+                ConfigurationSolutionSaver.saveServicesLocationConfiguration(solution,serviceMapingFile,topology,state, params.getAlgorithm());
+            }
+
         }
     }
 }

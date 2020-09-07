@@ -12,14 +12,14 @@ public class ParetoFrontCSVFileGenerator
 {
     public static void main(String[] args) throws IOException, ParseException {
         int i;
-        String filename = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\results\\BT\\phi/PHI_";
-        int max = 50;
+        String filename = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Resultados\\Pareto_2\\30_2\\Analysis\\PHI_";
+        int max = 83;
         List<ResultAnalystParserObject> list = new ArrayList<>();
         for(i=1; i <= max;i++)
         {
             String filenameAux = filename + i+".json";
             list.add(ResultAnalystParser.loadResults(filenameAux));
         }
-        ResultAnalystParser.saveToCSV(list, "PHIResults.csv");
+        ResultAnalystParser.saveToCSV(list, "C:\\Users\\gcama\\Desktop\\Dissertacao\\Resultados\\Pareto_2\\30_2\\Analysis\\PHIResults.csv");
     }
 }

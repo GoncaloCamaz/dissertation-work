@@ -21,7 +21,7 @@ public class WeightsSolutionSaver
      * @param topology
      * @throws DimensionErrorException
      */
-    public static void save(Population p, NetworkTopology topology) throws DimensionErrorException {
+    public static void save(Population p, NetworkTopology topology, int s) throws DimensionErrorException {
         IntegerSolution sol = p.getLowestValuedSolutions(0, 1).get(0);
         double fitness = sol.getFitnessValue(0);
         HashMap<SourceDestinationPair, Double> mapWeights = new HashMap<>();
@@ -40,7 +40,7 @@ public class WeightsSolutionSaver
             }
         }
 
-        savetoJSon(mapWeights, fitness);
+        savetoJSon(mapWeights, fitness, s);
     }
 
     /**
@@ -48,9 +48,9 @@ public class WeightsSolutionSaver
      * @param mapWeights
      * @param fitness
      */
-    private static void savetoJSon(HashMap<SourceDestinationPair, Double> mapWeights, double fitness)
+    private static void savetoJSon(HashMap<SourceDestinationPair, Double> mapWeights, double fitness, int s)
     {
-        String fileName = "Weights_" + mapWeights.size() + "_" + System.currentTimeMillis() + ".json";
+        String fileName = "Weights_" +s + "_" + mapWeights.size() + "_" + System.currentTimeMillis() + ".json";
         JSONObject obj = new JSONObject();
         JSONArray array = new JSONArray();
         for(SourceDestinationPair pair : mapWeights.keySet())

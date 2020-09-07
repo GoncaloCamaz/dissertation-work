@@ -15,6 +15,7 @@ import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.Request;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
 import pt.uminho.algoritmi.netopt.ospf.simulation.OSPFWeights;
 import pt.uminho.algoritmi.netopt.ospf.simulation.sr.LabelPath;
+import pt.uminho.algoritmi.netopt.ospf.simulation.sr.SRPathTranslator;
 import pt.uminho.algoritmi.netopt.ospf.simulation.sr.SRSimulator;
 
 import java.awt.*;
@@ -52,17 +53,18 @@ public class NFVWeightsEvaluation extends AbstractEvaluationFunction<ILinearRepr
         double result = 0;
         int nodes = topology.getDimension();
         int edges = topology.getNumberEdges();
+        int numberOfRequests = requests.size();
         int weights[] = decode(solutionRepresentation, edges);
         OSPFWeights weightsOSPF = new OSPFWeights(nodes);
         weightsOSPF.setWeights(weights,this.topology);
 
         SRSimulator simulator = new SRSimulator(topology,weightsOSPF);
-
-        for(Request r : this.requests)
+        int i = 0;
+        for(i = 0; i < numberOfRequests ; i++)
         {
+            Request r = requests.get(i);
             simulator.addFlow(r.getFlow(), r.getPath());
         }
-
         result = simulator.getCongestionValue();// new Double(object.getPhiValue());
 
         return result;

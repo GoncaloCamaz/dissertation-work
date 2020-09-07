@@ -174,14 +174,14 @@ public class ConfigurationSolutionSaver
         if(algorithm.equals(ParamsNFV.EvaluationAlgorithm.PHI))
         {
             NFV_MCFPhiNodeUtilizationSolver solver = new NFV_MCFPhiNodeUtilizationSolver(topology,services,requests,nodesMap);
-            solver.setCplexTimeLimit(3600);
+            solver.setCplexTimeLimit(600);
             solver.setSaveConfigurations(true);
             ret = solver.optimize();
         }
         else
         {
             NFV_MCFPMLUSolver solver = new NFV_MCFPMLUSolver(topology,services,requests,nodesMap);
-            solver.setCplexTimeLimit(3600);
+            solver.setCplexTimeLimit(600);
             solver.setSaveConfigurations(true);
             ret = solver.optimize();
         }
@@ -299,6 +299,82 @@ public class ConfigurationSolutionSaver
         }
         obj.put("NodesLoad", loadsNodes);
 
+        obj.put("servicesLocationSolution", array);
+
+        try {
+            save(obj,filename);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Converts random solution to an JSONObject
+     * @param o
+     * @param map
+     * @param filename
+     */
+    public static void saveRandomSolutionToJSON(OptimizationResultObject o, NFNodesMap map, String filename)
+    {
+        filename = filename + ".json";
+        Map<Integer, NFNode> nodesMap= map.getNodes();
+        JSONObject obj = new JSONObject();
+        Map<Integer, NFVRequestConfiguration> configurations = o.getNfvRequestsConfigurationMap().getConfigurations();
+        JSONArray configurationsArray = new JSONArray();
+        for(NFVRequestConfiguration configuration : configurations.values())
+        {
+            int requestID = configuration.getRequestID();
+            JSONObject configurationObject = new JSONObject();
+            configurationObject.put("RequestID", requestID);
+            configurationObject.put("Request Origin", configuration.getRequestOrigin());
+            configurationObject.put("Request Destination", configuration.getRequestDestination());
+            configurationObject.put("Request Bandwidth", configuration.getBandwidth());
+            JSONArray serviceProcessmentLocation = new JSONArray();
+            Map<Integer, Integer> services = configuration.getServiceProcessment();
+            for(Integer i : services.keySet())
+            {
+                JSONObject objA = new JSONObject();
+                objA.put("Service ID", i);
+                objA.put("Node ID",services.get(i));
+                serviceProcessmentLocation.add(objA);
+            }
+            configurationObject.put("ServiceProcessmentLocation",serviceProcessmentLocation);
+            List<Integer> path = configuration.genSRPath();
+            JSONArray finalPath = new JSONArray();
+            for(Integer i : path)
+            {
+                finalPath.add(i);
+            }
+            configurationObject.put("NodeIDPath", finalPath);
+            List<SourceDestinationPair> list = configuration.getSrpath();
+            JSONArray srpath = new JSONArray();
+            for(SourceDestinationPair pair : list)
+            {
+                JSONObject objB = new JSONObject();
+                objB.put("Origin",pair.getSource());
+                objB.put("Destination", pair.getDestination());
+                srpath.add(objB);
+            }
+            configurationObject.put("SegmentPath", srpath);
+            configurationsArray.add(configurationObject);
+        }
+
+        JSONArray array = new JSONArray();
+        for(NFNode node : nodesMap.values())
+        {
+            List<Integer> servicesAvailable = node.getAvailableServices();
+            JSONArray arrayServices = new JSONArray();
+            JSONObject objAux = new JSONObject();
+            for(Integer i : servicesAvailable)
+            {
+                arrayServices.add(i);
+            }
+            objAux.put("nodeID",node.getId());
+            objAux.put("AvailableServices",arrayServices);
+            array.add(objAux);
+        }
+
+        obj.put("Configurations", configurationsArray);
         obj.put("servicesLocationSolution", array);
 
         try {

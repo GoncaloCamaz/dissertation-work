@@ -1,6 +1,5 @@
 package pt.uminho.algoritmi.netopt.nfv.optimization.Tests;
 
-
 import pt.uminho.algoritmi.netopt.nfv.optimization.ParamsNFV;
 import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.Request;
 import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.SRSolutionLoader;
@@ -21,6 +20,12 @@ import static pt.uminho.algoritmi.netopt.ospf.utils.io.GraphReader.readGML;
 
 public class WeightsAllocationTest_GML
 {
+    /** Debug Mode
+    private static String topoFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/BT Europe/BtEurope.gml";
+    private static String requestsFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Resultados\\Random\\BT\\";
+    private static int populationSize = 100;
+    private static int numberOfGenerations = 100;
+    */
     public static void main(String[] args) throws Exception {
 
         if(args.length!=4)
@@ -48,12 +53,12 @@ public class WeightsAllocationTest_GML
         ea.run();
 
         Population p = new NondominatedPopulation(ea.getSolutionSet());
-        save(p, topology);
+        save(p, topology, req.size());
     }
 
-    public static void save(Population p, NetworkTopology topology){
+    public static void save(Population p, NetworkTopology topology, int s){
         try {
-            WeightsSolutionSaver.save(p, topology);
+            WeightsSolutionSaver.save(p, topology, s);
         } catch (DimensionErrorException e) {
             e.printStackTrace();
         }

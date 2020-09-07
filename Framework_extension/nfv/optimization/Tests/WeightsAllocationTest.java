@@ -16,15 +16,6 @@ import java.util.List;
 
 public class WeightsAllocationTest
 {
-
-    /** Debug Mode **
-    private static String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.nodes";
-    private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.edges";
-    private static String requestsFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/Configuration_30.json";
-    private static int populationSize = 5;
-    private static int numberOfGenerations = 1;
-
-     */
     public static void main(String[] args) throws Exception {
 
         if(args.length!=5)
@@ -37,6 +28,8 @@ public class WeightsAllocationTest
         int numberOfGenerations = Integer.parseInt(args[4]);
 
         NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
+
+
         List<Request> req = SRSolutionLoader.loadResultsFromJson(requestsFile);
         ParamsNFV params = new ParamsNFV();
         params.setArchiveSize(100);
@@ -49,12 +42,12 @@ public class WeightsAllocationTest
         ea.run();
 
         Population p = new NondominatedPopulation(ea.getSolutionSet());
-        save(p, topology);
+        save(p, topology,req.size());
     }
 
-    public static void save(Population p, NetworkTopology topology){
+    public static void save(Population p, NetworkTopology topology, int s){
         try {
-            WeightsSolutionSaver.save(p, topology);
+            WeightsSolutionSaver.save(p, topology,s);
         } catch (DimensionErrorException e) {
             e.printStackTrace();
         }

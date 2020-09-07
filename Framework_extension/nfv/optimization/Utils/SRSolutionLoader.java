@@ -65,14 +65,26 @@ public class SRSolutionLoader
 
             LabelPath path = new LabelPath(source,dest);
             ArrayList<Segment> segments = new ArrayList<>();
+            int old = -1;
             for(Integer i : nodesIDByOrder)
             {
-                Segment s = new Segment(i.toString(), Segment.SegmentType.NODE);
-                s.setDstNodeId(i);
-                segments.add(s);
+                if(i != Integer.parseInt(origin) && i != Integer.parseInt(destination))
+                {
+                    if(i != old)
+                    {
+                        Segment s = new Segment(i.toString(), Segment.SegmentType.NODE);
+                        s.setDstNodeId(i);
+                        if(old != -1)
+                            s.setSrcNodeId(old);
+                        else
+                            s.setSrcNodeId(Integer.parseInt(origin));
+                        segments.add(s);
+                        old = i;
+                    }
+                }
             }
             path.setLabels(segments);
-            Flow flow = new Flow(Integer.parseInt(origin), Integer.parseInt(destination), Flow.FlowType.NFV,false,Double.parseDouble(bandwidth));
+            Flow flow = new Flow(Integer.parseInt(id),Integer.parseInt(origin), Integer.parseInt(destination), Flow.FlowType.NFV,false,Double.parseDouble(bandwidth));
             Request request = new Request(id,flow,path);
             ret.add(request);
         }
