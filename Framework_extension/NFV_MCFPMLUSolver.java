@@ -60,54 +60,6 @@ public class NFV_MCFPMLUSolver
         this.saveConfigurations = false;
     }
 
-
-    public static void main(String[] args) {
-        String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.edges";//args[1];
-        String nodesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.nodes";//args[1];
-       // String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";// args[0];
-      //  String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.edges";//args[1];
-       // String servicesFile = "300frameworkConfiguration.json";
-       // String requests = "pedidos1200.csv";// args[3];
-      //  String topoFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/BT Europe/BtEurope.gml";// args[0];
-          String servicesFile = "frameworkConfiguration_BTEurope.json";
-         String requests = "pedidosBTEurope_1200.csv";// args[3];
-        String topoFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/BT Europe/BtEurope.gml";// args[0];
-        try {
-            InputStream inputStream = new FileInputStream(topoFile);
-            NetGraph netgraph = readGML(inputStream);
-
-            //NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
-            NetworkTopology topology = new NetworkTopology(netgraph);
-            NFVState state = new NFVState(servicesFile, requests);
-            NFServicesMap services = state.getServices();
-            NFNodesMap map = state.getNodes();
-            NFRequestsMap req = state.getRequests();
-
-            Arcs arcs = new Arcs();
-
-            double[][] capacity = topology.getNetGraph().createGraph().getCapacitie();
-            int nodesNumber = map.getNodes().size();
-            int arcID = 0;
-            for (int i = 0; i < nodesNumber; i++)
-                for (int j = 0; j < nodesNumber; j++) {
-                    if (capacity[i][j] > 0) {
-                        Arc a = new Arc(arcID, i, j, capacity[i][j]);
-                        arcID++;
-                        arcs.add(a);
-                    }
-                }
-            NFV_MCFPMLUSolver solver = new NFV_MCFPMLUSolver(topology, services, req, map);
-            solver.setSaveLoads(true);
-            solver.setSaveConfigurations(true);
-            solver.setCplexTimeLimit(600);
-            OptimizationResultObject obj = solver.optimize();
-            saveToCSV(obj,arcs,map,"Mlu_allAvailable");
-            ConfigurationSolutionSaver.saveToJSON(obj,arcs,map,"Result");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     public int getCplexTimeLimit() {
         return cplexTimeLimit;
     }
@@ -401,7 +353,7 @@ public class NFV_MCFPMLUSolver
 
             NetworkLoads loads = new NetworkLoads(u, topology);
             Simul simul = new Simul(topology);
-            object.setMlu(simul.congestionMeasure(loads,nfrequestToDemand(requests,topology.getDimension())));
+            object.setMlu(mluVal);
             object.setLinkLoads(u);
 
             double mnuVal = cplex.getValue(mnu);
@@ -484,22 +436,6 @@ public class NFV_MCFPMLUSolver
 
         cplex.end();
         return object;
-    }
-
-    private double[][] nfrequestToDemand(Map<Integer, NFRequest> requestMap, int nodesNumber)
-    {
-        double[][] ret = new double[nodesNumber][nodesNumber];
-
-        for(int i = 0; i < nodesNumber; i++)
-            for(int j = 0; j < nodesNumber; j++)
-                ret[i][j] = 0;
-
-        for(NFRequest req : requestMap.values())
-        {
-            ret[req.getSource()][req.getDestination()] += req.getBandwidth();
-        }
-
-        return ret;
     }
 
     private boolean allServicesDeployed(Map<Integer, NFNode> nodes) {

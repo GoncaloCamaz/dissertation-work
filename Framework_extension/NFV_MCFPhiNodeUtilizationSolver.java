@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 
 import ilog.concert.*;
+import pt.uminho.algoritmi.netopt.ospf.simulation.OSPFWeights;
 import pt.uminho.algoritmi.netopt.ospf.simulation.Simul;
 import pt.uminho.algoritmi.netopt.ospf.simulation.net.NetGraph;
 
@@ -80,53 +81,6 @@ public class NFV_MCFPhiNodeUtilizationSolver {
 		this.setSaveLoads(true);
 		this.saveConfigurations = false;
 	}
-
-	public static void main(String[] args) {
-	  	String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.nodes";// args[0];
-		String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.edges";//args[1];
-		//String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";// args[0];
-	//	String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.edges";//args[1];
-		String servicesFile = "300frameworkConfiguration.json";
-		String requests = "pedidos1200.csv";// args[3];
-		String topoFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/BT Europe/BtEurope.gml";// args[0];
-
-		try {
-			InputStream inputStream = new FileInputStream(topoFile);
-			NetGraph netgraph = readGML(inputStream);
-
-			NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
-			//NetworkTopology topology = new NetworkTopology(netgraph);
-			NFVState state = new NFVState(servicesFile, requests);
-			NFServicesMap services = state.getServices();
-			NFNodesMap map = state.getNodes();
-			NFRequestsMap req = state.getRequests();
-			Arcs arcs = new Arcs();
-
-			double[][] capacity = topology.getNetGraph().createGraph().getCapacitie();
-			int nodesNumber = map.getNodes().size();
-			int arcID = 0;
-			for (int i = 0; i < nodesNumber; i++)
-				for (int j = 0; j < nodesNumber; j++) {
-					if (capacity[i][j] > 0) {
-						System.out.println(capacity[i][j]);
-						Arc a = new Arc(arcID, i, j, capacity[i][j]);
-						arcID++;
-						arcs.add(a);
-					}
-				}
-			NFV_MCFPhiNodeUtilizationSolver solver = new NFV_MCFPhiNodeUtilizationSolver(topology, services, req, map);
-			solver.setSaveLoads(true);
-			solver.setSaveConfigurations(true);
-			solver.setCplexTimeLimit(300);
-			OptimizationResultObject obj = solver.optimize();
-			saveToCSV(obj,arcs,map,"Phi_allAvailable");
-			ConfigurationSolutionSaver.saveToJSON(obj,arcs,map,"Result");
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
 
 	public int getCplexTimeLimit() {
 		return cplexTimeLimit;
@@ -435,9 +389,35 @@ public class NFV_MCFPhiNodeUtilizationSolver {
 				u[arc.getFromNode()][arc.getToNode()] = utilization;
 			}
 
+
+			/** Normalized PHI Value demands conversion**/
 			NetworkLoads loads = new NetworkLoads(u, topology);
 			Simul simul = new Simul(topology);
-			object.setPhiValue(simul.congestionMeasure(loads,nfrequestToDemand(requests,topology.getDimension())));
+
+			/**Initialization**/
+			double[][] demands = new double[topology.getDimension()][topology.getDimension()];
+			for(int i = 0; i < topology.getDimension(); i++)
+			{
+				for(int j = 0; j < topology.getDimension(); j++)
+				{
+					demands[i][j] = 0;
+				}
+			}
+
+			/**Conversion**/
+			for(NFRequest request : requests.values())
+			{
+				for (NFRequestSegment s : request.getRequestSegments()) {
+					HashMap<Arc, IloNumVar> l = s_loads.get(s);
+					for (Arc arc : arcs) {
+						if(cplex.getValue(l.get(arc))>0)
+						{
+							demands[arc.getFromNode()][arc.getToNode()] += request.getBandwidth();
+						}
+					}
+				}
+			}
+			object.setPhiValue(simul.congestionMeasure(loads,demands));
 			object.setLinkLoads(u);
 
 			double[] uNodes = new double[nodesNumber];
@@ -464,7 +444,6 @@ public class NFV_MCFPhiNodeUtilizationSolver {
 		}
 
 		NFVRequestsConfigurationMap configurationMap = new NFVRequestsConfigurationMap();
-		// if true, save NFV Configurations
 		if(isSaveConfigurations())
 		{
 			for(NFRequest request : requests.values())
@@ -527,22 +506,6 @@ public class NFV_MCFPhiNodeUtilizationSolver {
 
 		cplex.end();
 		return object;
-	}
-
-	private double[][] nfrequestToDemand(Map<Integer, NFRequest> requestMap, int nodesNumber)
-	{
-		double[][] ret = new double[nodesNumber][nodesNumber];
-
-		for(int i = 0; i < nodesNumber; i++)
-			for(int j = 0; j < nodesNumber; j++)
-				ret[i][j] = 0;
-
-		for(NFRequest req : requestMap.values())
-		{
-			ret[req.getSource()][req.getDestination()] += req.getBandwidth();
-		}
-
-		return ret;
 	}
 
 	private boolean allServicesDeployed(Map<Integer, NFNode> nodes) {
