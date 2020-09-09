@@ -80,7 +80,6 @@ public class NFVWeightsEvaluation extends AbstractEvaluationFunction<ILinearRepr
         }
 
         return result;
-
     }
 
     public NetworkTopology getTopology() {

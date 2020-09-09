@@ -85,7 +85,7 @@ public class SRSolutionLoader
             }
             path.setLabels(segments);
             Flow flow = new Flow(Integer.parseInt(id),Integer.parseInt(origin), Integer.parseInt(destination), Flow.FlowType.NFV,false,Double.parseDouble(bandwidth));
-            Request request = new Request(id,flow,path);
+            Request request = new Request(Integer.parseInt(id),flow,path);
             ret.add(request);
         }
         return ret;

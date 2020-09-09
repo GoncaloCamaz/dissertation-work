@@ -10,9 +10,16 @@ import pt.uminho.algoritmi.netopt.cplex.utils.Arcs;
 import pt.uminho.algoritmi.netopt.cplex.utils.SourceDestinationPair;
 import pt.uminho.algoritmi.netopt.nfv.*;
 import pt.uminho.algoritmi.netopt.nfv.optimization.NFVRequestConfiguration;
+import pt.uminho.algoritmi.netopt.nfv.optimization.NFVRequestsConfigurationMap;
 import pt.uminho.algoritmi.netopt.nfv.optimization.OptimizationResultObject;
 import pt.uminho.algoritmi.netopt.nfv.optimization.ParamsNFV;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
+import pt.uminho.algoritmi.netopt.ospf.simulation.OSPFWeights;
+import pt.uminho.algoritmi.netopt.ospf.simulation.net.NetNode;
+import pt.uminho.algoritmi.netopt.ospf.simulation.sr.Flow;
+import pt.uminho.algoritmi.netopt.ospf.simulation.sr.LabelPath;
+import pt.uminho.algoritmi.netopt.ospf.simulation.sr.SRSimulator;
+import pt.uminho.algoritmi.netopt.ospf.simulation.sr.Segment;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -30,14 +37,56 @@ public class ConfigurationSolutionSaver
      * @param algorithm
      * @return
      */
-    public static String saveServicesLocationConfiguration(int[] solution, String filename, NetworkTopology topology, NFVState state, ParamsNFV.EvaluationAlgorithm algorithm)
-    {
+    public static String saveServicesLocationConfiguration(int[] solution, String filename, NetworkTopology topology, NFVState state, ParamsNFV.EvaluationAlgorithm algorithm) throws Exception {
         EASolutionParser parser = new EASolutionParser(filename);
-        NFNodesMap nodesMap = parser.solutionParser(solution);
-        OptimizationResultObject obj = solve(topology, state.getServices(),state.getRequests(), nodesMap, algorithm);
+        String savingName = String.valueOf(System.currentTimeMillis());
+        OptimizationResultObject obj = new OptimizationResultObject(topology.getDimension());
+        NFNodesMap nodesMap = new NFNodesMap();
+        OSPFWeights weightsOSPF = new OSPFWeights(topology.getDimension());
 
-        String savingName = nodesMap.getNodes().size() + "_" +System.currentTimeMillis();
+        int[] solutionConf = new int[topology.getDimension()];
+        int[] weights = new int[topology.getNumberEdges()];
+        double result = 0.0;
 
+        if(solution.length == topology.getDimension())
+        {
+            nodesMap = parser.solutionParser(solution);
+            obj = solve(topology, state.getServices(),state.getRequests(), nodesMap, algorithm);
+        }
+        else
+        {
+            int i = 0;
+
+            for(i = 0; i < topology.getDimension(); i++)
+            {
+                solutionConf[i] = solution[i];
+            }
+            for(int j = i; j < solution.length; j++)
+            {
+                weights[j-i] = solution[j];
+            }
+
+            nodesMap = parser.solutionParser(solutionConf);
+            obj = solve(topology, state.getServices(),state.getRequests(), nodesMap, algorithm);
+
+            List<Request> requests = new ArrayList<>();
+            NFVRequestsConfigurationMap configurationMap = obj.getNfvRequestsConfigurationMap();
+            for(NFVRequestConfiguration req : configurationMap.getConfigurations().values())
+            {
+                requests.add(decodeRequests(req));
+            }
+
+            int numberOfRequests = requests.size();
+            weightsOSPF.setWeights(weights,topology);
+
+            SRSimulator simulator = new SRSimulator(topology,weightsOSPF);
+            for(int j = 0; j < numberOfRequests ; j++)
+            {
+                Request r = requests.get(j);
+                simulator.addFlow(r.getFlow(), r.getPath());
+            }
+            result = simulator.getCongestionValue();
+        }
         Arcs arcs = new Arcs();
         int nodesNumber = state.getNodes().getNodes().size();
         double[][] capacity = topology.getNetGraph().createGraph().getCapacitie();
@@ -53,8 +102,8 @@ public class ConfigurationSolutionSaver
                 }
             }
         }
+        saveToJSON(obj, arcs, nodesMap, savingName,weightsOSPF, result);
         saveToCSV(obj, arcs, nodesMap, savingName);
-        saveToJSON(obj,arcs, nodesMap, savingName);
 
         return savingName;
     }
@@ -174,14 +223,14 @@ public class ConfigurationSolutionSaver
         if(algorithm.equals(ParamsNFV.EvaluationAlgorithm.PHI))
         {
             NFV_MCFPhiNodeUtilizationSolver solver = new NFV_MCFPhiNodeUtilizationSolver(topology,services,requests,nodesMap);
-            solver.setCplexTimeLimit(600);
+            solver.setCplexTimeLimit(500);
             solver.setSaveConfigurations(true);
             ret = solver.optimize();
         }
         else
         {
             NFV_MCFPMLUSolver solver = new NFV_MCFPMLUSolver(topology,services,requests,nodesMap);
-            solver.setCplexTimeLimit(600);
+            solver.setCplexTimeLimit(500);
             solver.setSaveConfigurations(true);
             ret = solver.optimize();
         }
@@ -196,7 +245,7 @@ public class ConfigurationSolutionSaver
      * @param map
      * @param filename
      */
-    public static void saveToJSON(OptimizationResultObject o, Arcs arcs, NFNodesMap map, String filename)
+    public static void saveToJSON(OptimizationResultObject o, Arcs arcs, NFNodesMap map, String filename, OSPFWeights weights, double congestionVal)
     {
         String algorithm = "mlu";
         if(o.getMlu() == 0)
@@ -255,9 +304,11 @@ public class ConfigurationSolutionSaver
             objLoad.put("Origin", i);
             objLoad.put("Destination",j);
             objLoad.put("Load", o.getLoad(i,j));
+            objLoad.put("IGPWeight", weights.getWeight(i,j));
             loads.add(objLoad);
         }
         obj.put("Arc Loads", loads);
+        obj.put("SimulatorCongestion",congestionVal);
 
 
         obj.put("Configurations",configurationsArray);
@@ -429,5 +480,48 @@ public class ConfigurationSolutionSaver
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static Request decodeRequests(NFVRequestConfiguration req)
+    {
+        int origin = req.getRequestOrigin();
+        NetNode source = new NetNode(origin);
+        int destination = req.getRequestDestination();
+        NetNode dest = new NetNode(destination);
+        double bandwidth = req.getBandwidth();
+        List<Integer> srPath = req.genSRPath();
+        LabelPath path = new LabelPath(source,dest);
+
+        ArrayList<Segment> segments = new ArrayList<>();
+        int old = -1;
+        int it = 0;
+        for(Integer i : srPath)
+        {
+            if(i != old)
+            {
+                if(i != origin && i != destination || i == origin && old != -1 || i == destination && destination != origin && it < srPath.size())
+                {
+                    Segment s = new Segment(i.toString(), Segment.SegmentType.NODE);
+                    s.setDstNodeId(i);
+                    if( old == -1)
+                    {
+                        s.setSrcNodeId(origin);
+                    }
+                    else
+                    {
+                        s.setSrcNodeId(old);
+                    }
+                    segments.add(s);
+                }
+                old = i;
+            }
+            it++;
+        }
+
+        path.setLabels(segments);
+        Flow flow = new Flow(req.getRequestID(), origin, destination, Flow.FlowType.NFV,false, bandwidth);
+        Request request = new Request(req.getRequestID(),flow,path);
+
+        return request;
     }
 }
