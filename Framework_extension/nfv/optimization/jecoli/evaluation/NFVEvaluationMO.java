@@ -5,7 +5,7 @@ import jecoli.algorithm.components.evaluationfunction.IEvaluationFunction;
 import jecoli.algorithm.components.evaluationfunction.InvalidEvaluationFunctionInputDataException;
 import jecoli.algorithm.components.representation.linear.ILinearRepresentation;
 import pt.uminho.algoritmi.netopt.cplex.NFV_MCFPMLUSolver;
-import pt.uminho.algoritmi.netopt.cplex.NFV_MCFPhiNodeUtilizationSolver;
+import pt.uminho.algoritmi.netopt.cplex.NFV_MCFPhiSolver;
 import pt.uminho.algoritmi.netopt.nfv.NFNodesMap;
 import pt.uminho.algoritmi.netopt.nfv.NFVState;
 import pt.uminho.algoritmi.netopt.nfv.optimization.OptimizationResultObject;
@@ -59,7 +59,7 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
 
         if(this.algorithm.equals(ParamsNFV.EvaluationAlgorithm.PHI))
         {
-            NFV_MCFPhiNodeUtilizationSolver solver = new NFV_MCFPhiNodeUtilizationSolver(topology, state,this.cplexTimeLimit, this.alpha);
+            NFV_MCFPhiSolver solver = new NFV_MCFPhiSolver(topology, state,this.cplexTimeLimit, this.alpha);
 
             object = solver.optimize();
         }

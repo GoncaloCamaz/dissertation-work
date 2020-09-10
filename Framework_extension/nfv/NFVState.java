@@ -31,14 +31,13 @@ public class NFVState
         this.loadState(filename,requestsFile);
     }
 
-    public NFVState(String requestsFile)
+    public NFVState(String frameworkConfig)
     {
         this.requests = new NFRequestsMap();
         this.nodes = new NFNodesMap();
         this.services = new NFServicesMap();
-        this.nsfile = "";
-        this.reqfile = requestsFile;
-        this.loadRequests(requestsFile);
+        this.nsfile = frameworkConfig;
+        this.loadState(frameworkConfig);
     }
 
     public NFVState(NFRequestsMap requests, NFNodesMap nodes, NFServicesMap services, String filename, String requestsfile) {
@@ -105,6 +104,19 @@ public class NFVState
             this.nodes = NFVStateLoader.loadNodes(ndsvfile);
             this.services = NFVStateLoader.loadServices(ndsvfile);
             this.requests = NFVStateLoader.loadRequests(requestsFile);
+        }
+        catch (IOException | ParseException e){
+            e.printStackTrace();
+        }
+    }
+
+    public void loadState(String ndsvfile)
+    {
+        try
+        {
+            this.nodes = NFVStateLoader.loadNodes(ndsvfile);
+            this.services = NFVStateLoader.loadServices(ndsvfile);
+            this.requests = new NFRequestsMap();
         }
         catch (IOException | ParseException e){
             e.printStackTrace();

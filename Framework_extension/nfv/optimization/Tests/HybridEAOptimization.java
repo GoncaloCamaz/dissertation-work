@@ -75,8 +75,7 @@ public class HybridEAOptimization
 
 
         Population p = new NondominatedPopulation(ea.getSolutionSet());
-        int size = p.getNumberOfSolutions();
-        List<IntegerSolution> solAux = p.getLowestValuedSolutions(size);
+        List<IntegerSolution> solAux = p.getLowestTradeOffSolutions(0.5);
 
         for(IntegerSolution sol : solAux)
         {

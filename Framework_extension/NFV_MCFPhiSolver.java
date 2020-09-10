@@ -47,7 +47,7 @@ import pt.uminho.algoritmi.netopt.ospf.simulation.net.NetGraph;
 import static pt.uminho.algoritmi.netopt.nfv.optimization.Utils.ConfigurationSolutionSaver.saveToCSV;
 import static pt.uminho.algoritmi.netopt.ospf.utils.io.GraphReader.readGML;
 
-public class NFV_MCFPhiNodeUtilizationSolver {
+public class NFV_MCFPhiSolver {
 
 	private NetworkTopology topology;
 	private NFServicesMap services;
@@ -59,8 +59,8 @@ public class NFV_MCFPhiNodeUtilizationSolver {
 	private boolean saveLoads;
 	private boolean saveConfigurations;
 
-	public NFV_MCFPhiNodeUtilizationSolver(NetworkTopology topology, NFServicesMap servicesMap, NFRequestsMap r,
-										   NFNodesMap n) {
+	public NFV_MCFPhiSolver(NetworkTopology topology, NFServicesMap servicesMap, NFRequestsMap r,
+							NFNodesMap n) {
 		this.topology = topology;
 		this.services = servicesMap;
 		this.NFRequestsMap = r;
@@ -71,7 +71,7 @@ public class NFV_MCFPhiNodeUtilizationSolver {
 		this.saveConfigurations = false;
 	}
 
-	public NFV_MCFPhiNodeUtilizationSolver(NetworkTopology topology, NFVState state, int timelimit, double alpha) {
+	public NFV_MCFPhiSolver(NetworkTopology topology, NFVState state, int timelimit, double alpha) {
 		this.topology = topology;
 		this.services = state.getServices();
 		this.NFRequestsMap = state.getRequests();
@@ -81,6 +81,47 @@ public class NFV_MCFPhiNodeUtilizationSolver {
 		this.setSaveLoads(true);
 		this.saveConfigurations = false;
 	}
+
+	public static void main(String[] args) {
+		String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.nodes";
+		String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.edges";
+		String servicesFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Resultados\\Random\\30\\1200\\frameworkConfiguration.json";
+		String requests = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Resultados\\Random\\30\\1200\\pedidos1200.csv";
+
+		try {
+			NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
+			NFVState state = new NFVState(servicesFile, requests);
+			NFServicesMap services = state.getServices();
+			NFNodesMap map = state.getNodes();
+			NFRequestsMap req = state.getRequests();
+			Arcs arcs = new Arcs();
+
+			double[][] capacity = topology.getNetGraph().createGraph().getCapacitie();
+			int nodesNumber = map.getNodes().size();
+			int arcID = 0;
+			for (int i = 0; i < nodesNumber; i++)
+				for (int j = 0; j < nodesNumber; j++) {
+					if (capacity[i][j] > 0) {
+						Arc a = new Arc(arcID, i, j, capacity[i][j]);
+						arcID++;
+						arcs.add(a);
+					}
+				}
+
+			NFV_MCFPhiSolver solver = new NFV_MCFPhiSolver(topology, services, req, map);
+			solver.setSaveLoads(true);
+			solver.setSaveConfigurations(true);
+			solver.setCplexTimeLimit(60);
+			OptimizationResultObject obj = solver.optimize();
+			saveToCSV(obj,arcs,map,"Phi_allAvailable");
+			OSPFWeights res = new OSPFWeights(topology.getDimension());
+			ConfigurationSolutionSaver.saveToJSON(obj,arcs,map,"Result",res,0);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 
 	public int getCplexTimeLimit() {
 		return cplexTimeLimit;

@@ -4,7 +4,7 @@ import com.opencsv.CSVWriter;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import pt.uminho.algoritmi.netopt.cplex.NFV_MCFPMLUSolver;
-import pt.uminho.algoritmi.netopt.cplex.NFV_MCFPhiNodeUtilizationSolver;
+import pt.uminho.algoritmi.netopt.cplex.NFV_MCFPhiSolver;
 import pt.uminho.algoritmi.netopt.cplex.utils.Arc;
 import pt.uminho.algoritmi.netopt.cplex.utils.Arcs;
 import pt.uminho.algoritmi.netopt.cplex.utils.SourceDestinationPair;
@@ -222,7 +222,7 @@ public class ConfigurationSolutionSaver
         OptimizationResultObject ret = new OptimizationResultObject(nodesMap.getNodes().size());
         if(algorithm.equals(ParamsNFV.EvaluationAlgorithm.PHI))
         {
-            NFV_MCFPhiNodeUtilizationSolver solver = new NFV_MCFPhiNodeUtilizationSolver(topology,services,requests,nodesMap);
+            NFV_MCFPhiSolver solver = new NFV_MCFPhiSolver(topology,services,requests,nodesMap);
             solver.setCplexTimeLimit(500);
             solver.setSaveConfigurations(true);
             ret = solver.optimize();

@@ -1,24 +1,16 @@
 package pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.evaluation;
 
 import jecoli.algorithm.components.evaluationfunction.AbstractEvaluationFunction;
-import jecoli.algorithm.components.evaluationfunction.AbstractMultiobjectiveEvaluationFunction;
 import jecoli.algorithm.components.evaluationfunction.IEvaluationFunction;
 import jecoli.algorithm.components.evaluationfunction.InvalidEvaluationFunctionInputDataException;
 import jecoli.algorithm.components.representation.linear.ILinearRepresentation;
-import pt.uminho.algoritmi.netopt.cplex.MCFPhiNodeUtilizationSolver;
 
-import pt.uminho.algoritmi.netopt.nfv.NFVState;
-import pt.uminho.algoritmi.netopt.nfv.optimization.OptimizationResultObject;
-
-import pt.uminho.algoritmi.netopt.nfv.optimization.ParamsNFV;
 import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.Request;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
 import pt.uminho.algoritmi.netopt.ospf.simulation.OSPFWeights;
-import pt.uminho.algoritmi.netopt.ospf.simulation.sr.LabelPath;
-import pt.uminho.algoritmi.netopt.ospf.simulation.sr.SRPathTranslator;
+
 import pt.uminho.algoritmi.netopt.ospf.simulation.sr.SRSimulator;
 
-import java.awt.*;
 import java.util.List;
 
 public class NFVWeightsEvaluation extends AbstractEvaluationFunction<ILinearRepresentation<Integer>>
