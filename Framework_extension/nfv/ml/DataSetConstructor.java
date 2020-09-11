@@ -28,8 +28,7 @@ public class DataSetConstructor
 
         List<DataSetEntry> entries = builder.getEntries();
 
-        CSVFileGenerator.saveToCSV(entries);
-
+        CSVFileGenerator.saveToCSV(entries, topology.getDimension(), topology.getNumberEdges(), state.getServices().getServices().size());
     }
 
     public static int returnRandomInt(int limit)

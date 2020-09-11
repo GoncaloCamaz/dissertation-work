@@ -74,8 +74,10 @@ public class DataSetBuilder
     {
         Random random = new Random();
         int number = random.nextInt(limit);
+        double ret = number + random.nextDouble();
+        ret = Math.floor(ret*1000) / 1000;
 
-        return number + random.nextDouble();
+        return ret;
     }
 
     public double[] returnRandomCapacities(int arraySize)
@@ -85,7 +87,9 @@ public class DataSetBuilder
 
         for(int i = 0; i < arraySize; i++)
         {
-            ret[i] = 0 + random.nextDouble();
+            double retVal = 0 + random.nextDouble();
+            retVal = Math.floor(retVal*1000) / 1000;
+            ret[i] = 0 + retVal;
         }
 
         return ret;
