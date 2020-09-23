@@ -21,7 +21,7 @@ public class WeightsSolutionSaver
      * @param topology
      * @throws DimensionErrorException
      */
-    public static void save(Population p, NetworkTopology topology, int s) throws DimensionErrorException {
+    public static void save(Population p, NetworkTopology topology,double mlu,int s) throws DimensionErrorException {
         IntegerSolution sol = p.getLowestValuedSolutions(0, 1).get(0);
         double fitness = sol.getFitnessValue(0);
         HashMap<SourceDestinationPair, Double> mapWeights = new HashMap<>();
@@ -40,7 +40,34 @@ public class WeightsSolutionSaver
             }
         }
 
-        savetoJSon(mapWeights, fitness, s);
+        savetoJSon(mapWeights, fitness, mlu,s);
+    }
+
+    /**
+     * Transforms the Solution into a JSONOBject
+     * @param solution
+     * @param topology
+     * @throws DimensionErrorException
+     */
+    public static void saveAux(IntegerSolution solution, NetworkTopology topology,double mlu,int s) throws DimensionErrorException {
+        double fitness = solution.getFitnessValue(0);
+        HashMap<SourceDestinationPair, Double> mapWeights = new HashMap<>();
+        int result[] = solution.getVariablesArray();
+        OSPFWeights weights = new OSPFWeights(result.length);
+        weights.setWeights(result, topology);
+
+        double[][] res = weights.getWeights();
+
+        for(int i = 0; i < topology.getDimension(); i++)
+        {
+            for(int j = 0; j < topology.getDimension(); j++)
+            {
+                if(res[i][j] > 0)
+                    mapWeights.put(new SourceDestinationPair(i,j),res[i][j]);
+            }
+        }
+
+        savetoJSon(mapWeights, fitness, mlu,s);
     }
 
     /**
@@ -48,7 +75,7 @@ public class WeightsSolutionSaver
      * @param mapWeights
      * @param fitness
      */
-    private static void savetoJSon(HashMap<SourceDestinationPair, Double> mapWeights, double fitness, int s)
+    private static void savetoJSon(HashMap<SourceDestinationPair, Double> mapWeights, double fitness, double mlu,int s)
     {
         String fileName = "Weights_" +s + "_" + mapWeights.size() + "_" + System.currentTimeMillis() + ".json";
         JSONObject obj = new JSONObject();
@@ -62,6 +89,7 @@ public class WeightsSolutionSaver
             array.add(objAux);
         }
         obj.put("Weights", array);
+        obj.put("MLU", mlu);
         obj.put("Congestion", fitness);
         try {
             save(obj, fileName);

@@ -21,8 +21,10 @@ import jecoli.algorithm.components.solution.ISolutionContainer;
 import jecoli.algorithm.components.solution.ISolutionFactory;
 import jecoli.algorithm.components.solution.ISolutionSet;
 import jecoli.algorithm.components.statistics.StatisticsConfiguration;
+import jecoli.algorithm.components.terminationcriteria.FitnessTargetTerminationCriteria;
 import jecoli.algorithm.components.terminationcriteria.ITerminationCriteria;
 import jecoli.algorithm.components.terminationcriteria.IterationTerminationCriteria;
+import jecoli.algorithm.components.terminationcriteria.NumberOfFunctionEvaluationsTerminationCriteria;
 import jecoli.algorithm.multiobjective.archive.components.ArchiveManager;
 import jecoli.algorithm.multiobjective.archive.components.InsertionStrategy;
 import jecoli.algorithm.multiobjective.archive.components.ProcessingStrategy;
@@ -200,7 +202,8 @@ public class JecoliHybrid
     }
 
     public ILinearRepresentationFactory<Integer> configureSolutionFactoryWP (int numberNodes, int numberEdges, int numberOfObjectives)
-    {	int numberVariables =numberNodes+numberEdges;
+    {
+        int numberVariables =numberNodes+numberEdges;
         ArrayList<Integer> l=new ArrayList<Integer>();
         ArrayList<Integer> u=new ArrayList<Integer>();
         for(int i=0;i<numberNodes;i++){
@@ -240,7 +243,12 @@ public class JecoliHybrid
         configuration.setInitialPopulation(newSolutions);
         configuration.setPopulationInitialization(false);
 
-        ITerminationCriteria terminationCriteria = new IterationTerminationCriteria(params.getNumberGenerations());
+        ITerminationCriteria terminationCriteria;
+        if (params.getCriteria().equals(ParamsNFV.TerminationCriteria.ITERATION))
+            terminationCriteria = new NumberOfFunctionEvaluationsTerminationCriteria(params.getPopulationSize());
+        else
+            terminationCriteria = new FitnessTargetTerminationCriteria(params.getCriteriaValue());
+
         configuration.setTerminationCriteria(terminationCriteria);
 
         RecombinationParameters recombinationParameters = new RecombinationParameters(0, params.getPopulationSize(), 0,

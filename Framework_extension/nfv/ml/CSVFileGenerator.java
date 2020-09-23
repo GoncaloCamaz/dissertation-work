@@ -46,7 +46,15 @@ public class CSVFileGenerator
                 }
                 for(int l = 0; l < numberOfServices; l++)
                 {
-                    row[l+3+numberOfServices+numberOfEdges+numberOfNodes] = String.valueOf(entry.getProcessmentLocation()[l]);
+                    if(entry.getProcessmentLocation()[l] == -1)
+                    {
+                        row[l+3+numberOfServices+numberOfEdges+numberOfNodes] = "NR";
+                    }
+                    else
+                    {
+                        row[l+3+numberOfServices+numberOfEdges+numberOfNodes] = String.valueOf(entry.getProcessmentLocation()[l]);
+
+                    }
                 }
                 data.add(row);
             }

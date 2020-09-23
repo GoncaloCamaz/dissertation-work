@@ -47,7 +47,7 @@ public class WeightsAllocationTest
 
     public static void save(Population p, NetworkTopology topology, int s){
         try {
-            WeightsSolutionSaver.save(p, topology,s);
+            WeightsSolutionSaver.save(p, topology,1,s);
         } catch (DimensionErrorException e) {
             e.printStackTrace();
         }

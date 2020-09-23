@@ -95,8 +95,6 @@ public class HybridEvaluation extends AbstractMultiobjectiveEvaluationFunction<I
             resultList[0] = resultConfiguration;
             resultList[1] = resultWeights;
         }
-        System.out.println("FITNESS Configurations: " + resultList[0]);
-        System.out.println("FITNESS Weights: " + resultList[1]);
 
         return resultList;
     }

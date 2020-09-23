@@ -33,7 +33,11 @@ public class DataSetBuilder
             DataSetEntry entry = new DataSetEntry(numberOfNodes,numberOfEdges,numberOfServices);
             entry.setOrigin(returnRandomInt(numberOfNodes));
             entry.setDestination(returnRandomInt(numberOfNodes));
-            entry.setBandwidth(returnRandomDouble(12));
+
+            double bandwidth = 5+returnRandomDouble(7);
+            bandwidth = Math.floor(bandwidth*100) / 100;
+            entry.setBandwidth(bandwidth);
+
             entry.setLinksState(returnRandomCapacities(numberOfEdges));
             entry.setNodesState(returnRandomCapacities(numberOfNodes));
             entry.setRequests(returnRandomRequests(numberOfServices));
@@ -44,8 +48,8 @@ public class DataSetBuilder
         return entries;
     }
 
-    public void evaluateEntries(NetworkTopology topology, NFVState state, int cplexTimeLimit, double alpha) throws IloException
-    {
+    public void evaluateEntries(NetworkTopology topology, NFVState state, int cplexTimeLimit, double alpha) throws IloException {
+
         for(DataSetEntry entry : this.entries)
         {
             NFV_MCFlowMachineLearning solver = new NFV_MCFlowMachineLearning(topology,state,entry,cplexTimeLimit,alpha);
@@ -75,7 +79,7 @@ public class DataSetBuilder
         Random random = new Random();
         int number = random.nextInt(limit);
         double ret = number + random.nextDouble();
-        ret = Math.floor(ret*1000) / 1000;
+        ret = Math.floor(ret*100) / 100;
 
         return ret;
     }
@@ -88,7 +92,7 @@ public class DataSetBuilder
         for(int i = 0; i < arraySize; i++)
         {
             double retVal = 0 + random.nextDouble();
-            retVal = Math.floor(retVal*1000) / 1000;
+            retVal = Math.floor(retVal*100) / 100;
             ret[i] = 0 + retVal;
         }
 
@@ -98,10 +102,23 @@ public class DataSetBuilder
     public int[] returnRandomRequests(int arraySize)
     {
         int[] ret = new int[arraySize];
+        int hasService = 0;
 
         for(int i = 0; i < arraySize; i++)
         {
-            ret[i] = returnRandomInt(2);
+            int val = returnRandomInt(2);
+            ret[i] = val;
+            if(val == 1)
+            {
+                hasService = 1;
+            }
+        }
+
+        if(hasService == 0)
+        {
+            ret[0] = 1;
+            ret[1] = 1;
+            ret[2] = 1;
         }
 
         return ret;

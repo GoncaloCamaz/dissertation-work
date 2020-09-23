@@ -1,0 +1,79 @@
+package pt.uminho.algoritmi.netopt.nfv.optimization.Tests;
+
+import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.Request;
+import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.SRSolutionLoader;
+import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
+import pt.uminho.algoritmi.netopt.ospf.simulation.OSPFWeights;
+import pt.uminho.algoritmi.netopt.ospf.simulation.net.NetGraph;
+import pt.uminho.algoritmi.netopt.ospf.simulation.sr.SRSimulator;
+
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Random;
+
+import static pt.uminho.algoritmi.netopt.ospf.utils.io.GraphReader.readGML;
+
+public class ResultAnalysis_RandomWeights
+{
+    private static String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.nodes";// args[0];
+    private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.edges";//args[1];
+    private static String requestsFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Resultados\\Random_2\\30\\";// args[3]
+    private static String topoFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/BT Europe/BtEurope.gml";
+
+    public static void main(String[] args) throws Exception {
+        int size3 = 300;
+        int size12 = 1200;
+        String req300 = "300";
+        String req1200 = "1200";
+        String file1 = "EA_ResultMLU.json";
+        String file2 = "RandomResult30_30Services_30MLU.json";
+
+        NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
+
+        InputStream inputStream = new FileInputStream(topoFile);
+        NetGraph netgraph = readGML(inputStream);
+      //  NetworkTopology topology = new NetworkTopology(netgraph);
+
+        List<Request> req = SRSolutionLoader.loadResultsFromJson(requestsFile+req1200+"\\"+file2);
+        double[] result = evaluate(topology,req);
+
+        System.out.println("MLU: " + result[1]);
+        System.out.println("PHI: " + result[0]);
+    }
+
+    public static double[] evaluate(NetworkTopology topology, List<Request> requests) throws Exception
+    {
+        double[] result = new double[2];
+        int nodes = topology.getDimension();
+        int numberOfRequests = requests.size();
+        int weights[] = random(topology.getNumberEdges());
+        OSPFWeights weightsOSPF = new OSPFWeights(nodes);
+        weightsOSPF.setWeights(weights,topology);
+
+        SRSimulator simulator = new SRSimulator(topology,weightsOSPF);
+        int i = 0;
+        for(i = 0; i < numberOfRequests ; i++)
+        {
+            Request r = requests.get(i);
+            simulator.addFlow(r.getFlow(), r.getPath());
+        }
+        result[0] = simulator.getCongestionValue();// new Double(object.getPhiValue());
+        result[1] = simulator.getMLU();
+
+        return result;
+    }
+
+    private static int[] random(int numberEdges)
+    {
+        int[] result = new int[numberEdges];
+        Random rand = new Random();
+
+        for(int i = 0; i < numberEdges; i++)
+        {
+            result[i] = 1 + rand.nextInt(20);
+        }
+
+        return result;
+    }
+}

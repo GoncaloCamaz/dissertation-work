@@ -7,20 +7,25 @@ import pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.JecoliHybrid;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NondominatedPopulation;
 import pt.uminho.algoritmi.netopt.ospf.simulation.Population;
+import pt.uminho.algoritmi.netopt.ospf.simulation.net.NetGraph;
 import pt.uminho.algoritmi.netopt.ospf.simulation.solution.IntegerSolution;
 
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.List;
 
-public class HybridEAOptimization
+import static pt.uminho.algoritmi.netopt.ospf.utils.io.GraphReader.readGML;
+
+public class HybridEAOptimization_GML
 {
     /** Debug mode
      private static String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";// args[0];
      private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.edges";//args[1];
-     private static String configurationFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/frameworkConfiguration_Abilene_EA.json";
-     private static String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidosAbilene_1200.csv";//args[3];
+     private static String configurationFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/frameworkConfiguration_Abilene.json";
+     private static String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidosAbilene_300.csv";//args[3];
      private static String evaluation = "phi";
      private static String serviceMapingFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/serviceMap.json";
-     private static int populationSize = 15;
+     private static int populationSize = 5;
      private static int numberOfGenerations = 5;
      private static int lowerBoundConf = 0;
      private static int upperBoundConf = 7;
@@ -32,25 +37,27 @@ public class HybridEAOptimization
 
     public static void main(String[] args) throws Exception {
 
-        if(args.length!=14)
+        if(args.length!=13)
             System.exit(1);
 
-        String nodesFile = args[0];
-        String edgesFile = args[1];
-        String requests = args[2];
-        String configurationFile =args[3];
-        String serviceMapingFile = args[4];
-        int populationSize = Integer.parseInt(args[5]);
-        int numberOfGenerations = Integer.parseInt(args[6]);
-        int lowerBoundConf = Integer.parseInt(args[7]);
-        int upperBoundConf = Integer.parseInt(args[8]);
-        int lowerBoundIGP = Integer.parseInt(args[9]);
-        int upperBoundIGP = Integer.parseInt(args[10]);
-        double alpha = Double.parseDouble(args[11]);
-        int cplexTimeLimit = Integer.parseInt(args[12]);
-        String evaluation = args[13].toLowerCase();
+        String topoFile = args[0];
+        String requests = args[1];
+        String configurationFile =args[2];
+        String serviceMapingFile = args[3];
+        int populationSize = Integer.parseInt(args[4]);
+        int numberOfGenerations = Integer.parseInt(args[5]);
+        int lowerBoundConf = Integer.parseInt(args[6]);
+        int upperBoundConf = Integer.parseInt(args[7]);
+        int lowerBoundIGP = Integer.parseInt(args[8]);
+        int upperBoundIGP = Integer.parseInt(args[9]);
+        double alpha = Double.parseDouble(args[10]);
+        int cplexTimeLimit = Integer.parseInt(args[11]);
+        String evaluation = args[12].toLowerCase();
 
-        NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
+        InputStream inputStream = new FileInputStream(topoFile);
+        NetGraph netgraph = readGML(inputStream);
+
+        NetworkTopology topology = new NetworkTopology(netgraph);
         NFVState state = new NFVState(configurationFile, requests);
 
         ParamsNFV params = new ParamsNFV();

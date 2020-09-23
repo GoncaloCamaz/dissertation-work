@@ -47,6 +47,7 @@ public class ConfigurationSolutionSaver
         int[] solutionConf = new int[topology.getDimension()];
         int[] weights = new int[topology.getNumberEdges()];
         double result = 0.0;
+        double mluRes = 0.0;
 
         if(solution.length == topology.getDimension())
         {
@@ -86,6 +87,7 @@ public class ConfigurationSolutionSaver
                 simulator.addFlow(r.getFlow(), r.getPath());
             }
             result = simulator.getCongestionValue();
+            mluRes = simulator.getMLU();
         }
         Arcs arcs = new Arcs();
         int nodesNumber = state.getNodes().getNodes().size();
@@ -102,7 +104,7 @@ public class ConfigurationSolutionSaver
                 }
             }
         }
-        saveToJSON(obj, arcs, nodesMap, savingName,weightsOSPF, result);
+        saveToJSON(obj, arcs, nodesMap, savingName,weightsOSPF, result, mluRes);
         saveToCSV(obj, arcs, nodesMap, savingName);
 
         return savingName;
@@ -245,7 +247,7 @@ public class ConfigurationSolutionSaver
      * @param map
      * @param filename
      */
-    public static void saveToJSON(OptimizationResultObject o, Arcs arcs, NFNodesMap map, String filename, OSPFWeights weights, double congestionVal)
+    public static void saveToJSON(OptimizationResultObject o, Arcs arcs, NFNodesMap map, String filename, OSPFWeights weights, double congestionVal, double mluVal)
     {
         String algorithm = "mlu";
         if(o.getMlu() == 0)
@@ -309,6 +311,7 @@ public class ConfigurationSolutionSaver
         }
         obj.put("Arc Loads", loads);
         obj.put("SimulatorCongestion",congestionVal);
+        obj.put("SimulatorMLU", mluVal);
 
 
         obj.put("Configurations",configurationsArray);

@@ -45,7 +45,7 @@ public class NFV_MCFlowMachineLearning
         Arcs arcs = decodeLinksCapacity(this.topology.getGraph().getCapacitie(), this.entry.getLinksState(), this.topology.getDimension());
         NFNodesMap nodesMap = decodeNodeCapacity(this.state.getNodes().getNodes(), this.entry.getNodesState());
         NFRequestsMap requestsMap = decodeRequests(this.entry.getOrigin(), this.entry.getDestination(), this.entry.getBandwidth(),
-                    this.entry.getRequests(), this.state.getServices().getServices());
+                this.entry.getRequests(), this.state.getServices().getServices());
 
         int[] result = optimize(arcs, this.state.getServices().getServices(), requestsMap.getRequestMap(), nodesMap.getNodes(), this.alpha);
 
@@ -53,11 +53,19 @@ public class NFV_MCFlowMachineLearning
     }
 
     public int[] optimize(Arcs arcs, Map<Integer, NFService> services,
-                                             Map<Integer, NFRequest> requests, Map<Integer, NFNode> nodes, double alphaVal) throws IloException {
+                          Map<Integer, NFRequest> requests, Map<Integer, NFNode> nodes, double alphaVal) throws IloException {
 
         IloCplex cplex = new IloCplex();
         int[] serviceProcessmentLocation = new int[services.size()];
+        for(int i = 0; i < services.size(); i++)
+        {
+            serviceProcessmentLocation[i] = -1;
+        }
         cplex.setName("Multi commodity flow Phi and Node optimization");
+        this.state.getServices().setServices(services);
+        this.state.getRequests().setRequestList(requests);
+        this.state.getNodes().setNodes(nodes);
+
         // variable for objective function
         double alpha = alphaVal;
 
@@ -278,11 +286,8 @@ public class NFV_MCFlowMachineLearning
             }
         }
 
-        // Saves the model
-        //cplex.exportModel("phigammaSolver.lp");
         // Solve
         cplex.solve();
-
         //===================================================================================================
 
         // SAVE RESULTS
@@ -323,11 +328,7 @@ public class NFV_MCFlowMachineLearning
     private NFRequestsMap decodeRequests(int origin, int destination, double bw, int[] servicesRequired, Map<Integer, NFService> servicesAvailable)
     {
         NFRequestsMap requestsMap = new NFRequestsMap();
-        NFRequest request = new NFRequest();
-        request.setId(0);
-        request.setSource(origin);
-        request.setDestination(destination);
-        request.setBandwidth(bw);
+
         List<Integer> serviceList = new ArrayList<>();
 
         for(int i = 0; i < servicesAvailable.size(); i++)
@@ -337,9 +338,11 @@ public class NFV_MCFlowMachineLearning
                 serviceList.add(i);
             }
         }
-        request.setServiceList(serviceList);
+        NFRequest request = new NFRequest(0,origin,destination,bw,serviceList);
+
         Map<Integer,NFRequest> rList = new HashMap<>();
         rList.put(request.getId(),request);
+
         requestsMap.setRequestList(rList);
 
         return requestsMap;
@@ -439,5 +442,13 @@ public class NFV_MCFlowMachineLearning
 
     public void setAlpha(double alpha) {
         this.alpha = alpha;
+    }
+
+    public DataSetEntry getEntry() {
+        return entry;
+    }
+
+    public void setEntry(DataSetEntry entry) {
+        this.entry = entry;
     }
 }

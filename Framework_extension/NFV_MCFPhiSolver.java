@@ -83,12 +83,17 @@ public class NFV_MCFPhiSolver {
 	}
 
 	public static void main(String[] args) {
-		String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.nodes";
-		String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.edges";
-		String servicesFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Resultados\\Random\\30\\1200\\frameworkConfiguration.json";
-		String requests = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Resultados\\Random\\30\\1200\\pedidos1200.csv";
+		String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";// args[0];
+		String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.edges";//args[1];
+		String topoFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/BT Europe/BtEurope.gml";
+		String servicesFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\frameworkConfiguration_Abilene_Services.json";
+		String requests = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\pedidosAbilene_1200.csv";
 
 		try {
+			InputStream inputStream = new FileInputStream(topoFile);
+			NetGraph netgraph = readGML(inputStream);
+
+			//NetworkTopology topology = new NetworkTopology(netgraph);
 			NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
 			NFVState state = new NFVState(servicesFile, requests);
 			NFServicesMap services = state.getServices();
@@ -111,11 +116,11 @@ public class NFV_MCFPhiSolver {
 			NFV_MCFPhiSolver solver = new NFV_MCFPhiSolver(topology, services, req, map);
 			solver.setSaveLoads(true);
 			solver.setSaveConfigurations(true);
-			solver.setCplexTimeLimit(60);
+			solver.setCplexTimeLimit(300);
 			OptimizationResultObject obj = solver.optimize();
 			saveToCSV(obj,arcs,map,"Phi_allAvailable");
 			OSPFWeights res = new OSPFWeights(topology.getDimension());
-			ConfigurationSolutionSaver.saveToJSON(obj,arcs,map,"Result",res,0);
+			ConfigurationSolutionSaver.saveToJSON(obj,arcs,map,"Result",res,0,0);
 
 		} catch (Exception e) {
 			e.printStackTrace();

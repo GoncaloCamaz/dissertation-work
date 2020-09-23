@@ -1,20 +1,32 @@
 package pt.uminho.algoritmi.netopt.nfv.optimization.Tests;
 
+import pt.uminho.algoritmi.netopt.cplex.MCFMLUSolver;
 import pt.uminho.algoritmi.netopt.cplex.MCFPhiSolver;
 import pt.uminho.algoritmi.netopt.nfv.*;
 import pt.uminho.algoritmi.netopt.ospf.simulation.Demands;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
+import pt.uminho.algoritmi.netopt.ospf.simulation.net.NetGraph;
+
+import java.io.FileInputStream;
+import java.io.InputStream;
+
+import static pt.uminho.algoritmi.netopt.ospf.utils.io.GraphReader.readGML;
 
 
 public class NoServicesMCFTest
 {
-    private static String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.nodes";// args[0];
-    private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.edges";//args[1];
-    private static String servicesFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Resultados\\Random\\30\\1200\\frameworkConfiguration.json";
-    private static String requestsFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Resultados\\Random\\30\\300\\pedidos300.csv";
+    private static String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";// args[0];
+    private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.edges";//args[1];
+    private static String topoFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/BT Europe/BtEurope.gml";
+    private static String servicesFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\frameworkConfiguration_Abilene.json";
+    private static String requestsFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\pedidosAbilene_1200.csv";
 
     public static void main(String[] args) throws Exception {
         NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
+        InputStream inputStream = new FileInputStream(topoFile);
+        NetGraph netgraph = readGML(inputStream);
+
+        //NetworkTopology topology = new NetworkTopology(netgraph);
         NFVState state = new NFVState(servicesFile, requestsFile);
         NFRequestsMap req = state.getRequests();
 
@@ -24,7 +36,11 @@ public class NoServicesMCFTest
         MCFPhiSolver solver = new MCFPhiSolver(topology, demands);
         double congestionVal = solver.optimize();
 
-        System.out.println("Congestion: " + congestionVal);
+        MCFMLUSolver solverMLU = new MCFMLUSolver(topology,demands);
+        double mluVal = solverMLU.optimize();
+
+        System.out.println("Congestion PHI: " + congestionVal);
+        System.out.println("Congestion MLU: " + mluVal);
     }
 
     private static double[][] convertToDemands(NetworkTopology topology, NFRequestsMap requests)

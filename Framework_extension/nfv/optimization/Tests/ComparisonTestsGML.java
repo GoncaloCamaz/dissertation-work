@@ -8,9 +8,12 @@ import pt.uminho.algoritmi.netopt.nfv.optimization.jecoli.JecoliWeights;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NondominatedPopulation;
 
+import pt.uminho.algoritmi.netopt.ospf.simulation.OSPFWeights;
 import pt.uminho.algoritmi.netopt.ospf.simulation.Population;
 import pt.uminho.algoritmi.netopt.ospf.simulation.exception.DimensionErrorException;
 import pt.uminho.algoritmi.netopt.ospf.simulation.net.NetGraph;
+import pt.uminho.algoritmi.netopt.ospf.simulation.solution.IntegerSolution;
+import pt.uminho.algoritmi.netopt.ospf.simulation.sr.SRSimulator;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -21,7 +24,7 @@ import static pt.uminho.algoritmi.netopt.ospf.utils.io.GraphReader.readGML;
 public class ComparisonTestsGML
 {
     private static String topoFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/BT Europe/BtEurope.gml";
-    private static String requestsFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Resultados\\Random\\BT\\";
+    private static String requestsFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Resultados\\Random_2\\BT\\";
     private static int populationSize = 100;
     private static int numberOfGenerations = 100;
 
@@ -30,17 +33,15 @@ public class ComparisonTestsGML
         int size12 = 1200;
         String req300 = "300";
         String req1200 = "1200";
-        String file1 = "EA_PHI_1200.json";
-        String file2 = "cplexMLUResult_24_1200.json";
-        String file3 = "EA_PHI_300.json";
-        String file4 = "cplexMLUResult_24.json";
+        String file1 = "EA_ResultMLU.json";
+        String file2 = "EA_ResultMLU.json";
+
 
         InputStream inputStream = new FileInputStream(topoFile);
         NetGraph netgraph = readGML(inputStream);
-
         NetworkTopology topology = new NetworkTopology(netgraph);
 
-        List<Request> req = SRSolutionLoader.loadResultsFromJson(requestsFile+req1200+"\\"+file1);
+        List<Request> req = SRSolutionLoader.loadResultsFromJson(requestsFile+req300+"\\"+file1);
         ParamsNFV params = new ParamsNFV();
         params.setArchiveSize(100);
         params.setPopulationSize(populationSize);
@@ -52,8 +53,14 @@ public class ComparisonTestsGML
         ea.run();
 
         Population p = new NondominatedPopulation(ea.getSolutionSet());
-        save(p, topology, size12);
-        System.out.println("Finished " + file1);
+        List<IntegerSolution> sol = p.getLowestValuedSolutions(15);
+        for(IntegerSolution s : sol)
+        {
+            double[] result = evaluate(topology,req,s);
+            save(s,topology,result[1], size3);
+        }
+        System.out.println("Ended first analysis");
+
 
         List<Request> req1 = SRSolutionLoader.loadResultsFromJson(requestsFile+req1200+"\\"+file2);
         ParamsNFV params1 = new ParamsNFV();
@@ -67,45 +74,50 @@ public class ComparisonTestsGML
         ea1.run();
 
         Population p1 = new NondominatedPopulation(ea1.getSolutionSet());
-        save(p1, topology, size12);
-        System.out.println("Finished " + file2);
-
-        List<Request> req2 = SRSolutionLoader.loadResultsFromJson(requestsFile+req300+"\\"+file3);
-        ParamsNFV params2 = new ParamsNFV();
-        params2.setArchiveSize(100);
-        params2.setPopulationSize(populationSize);
-        params2.setNumberGenerations(numberOfGenerations);
-        params2.setCriteria(ParamsNFV.TerminationCriteria.ITERATION);
-
-        JecoliWeights ea2 = new JecoliWeights(topology,req2);
-        ea2.configureEvolutionaryAlgorithm(params2);
-        ea2.run();
-
-        Population p2 = new NondominatedPopulation(ea2.getSolutionSet());
-        save(p2, topology, size3);
-        System.out.println("Finished " + file3);
-
-        List<Request> req3 = SRSolutionLoader.loadResultsFromJson(requestsFile+req300+"\\"+file4);
-        ParamsNFV params3 = new ParamsNFV();
-        params3.setArchiveSize(100);
-        params3.setPopulationSize(populationSize);
-        params3.setNumberGenerations(numberOfGenerations);
-        params3.setCriteria(ParamsNFV.TerminationCriteria.ITERATION);
-
-        JecoliWeights ea3 = new JecoliWeights(topology,req3);
-        ea3.configureEvolutionaryAlgorithm(params3);
-        ea3.run();
-
-        Population p3 = new NondominatedPopulation(ea3.getSolutionSet());
-        save(p3, topology, size3);
-        System.out.println("Finished " + file4);
+        List<IntegerSolution> sol1 = p1.getLowestValuedSolutions(15);
+        for(IntegerSolution s1 : sol1)
+        {
+            double[] result = evaluate(topology,req1,s1);
+            save(s1,topology,result[1], size12);
+        }
+        System.out.println("Ended second analysis");
     }
 
-    public static void save(Population p, NetworkTopology topology, int s){
+    public static void save(IntegerSolution p, NetworkTopology topology, double mlu, int s){
         try {
-            WeightsSolutionSaver.save(p, topology, s);
+            WeightsSolutionSaver.saveAux(p, topology,mlu,s);
         } catch (DimensionErrorException e) {
             e.printStackTrace();
         }
+    }
+
+    public static double[] evaluate(NetworkTopology topology, List<Request> requests, IntegerSolution solutionRepresentation) throws Exception
+    {
+        double[] result = new double[2];
+        int nodes = topology.getDimension();
+        int numberOfRequests = requests.size();
+        int weights[] = decode(solutionRepresentation, topology.getNumberEdges());
+        OSPFWeights weightsOSPF = new OSPFWeights(nodes);
+        weightsOSPF.setWeights(weights,topology);
+
+        SRSimulator simulator = new SRSimulator(topology,weightsOSPF);
+        int i = 0;
+        for(i = 0; i < numberOfRequests ; i++)
+        {
+            Request r = requests.get(i);
+            simulator.addFlow(r.getFlow(), r.getPath());
+        }
+        result[0] = simulator.getCongestionValue();// new Double(object.getPhiValue());
+        result[1] = simulator.getMLU();
+
+        return result;
+    }
+
+    public static int[] decode(IntegerSolution solution, int edges)
+    {
+        int[] result = new int[edges];
+        result = solution.getVariablesArray();
+
+        return result;
     }
 }
