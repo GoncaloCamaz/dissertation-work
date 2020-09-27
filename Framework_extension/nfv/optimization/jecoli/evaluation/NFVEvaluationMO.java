@@ -57,15 +57,24 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
         OptimizationResultObject object = new OptimizationResultObject(nodes.getNodes().size());
         double penalizationVal = 0;
 
-        if(this.algorithm.equals(ParamsNFV.EvaluationAlgorithm.PHI))
+        if(this.algorithm.equals(ParamsNFV.EvaluationAlgorithm.PHI_MPTCP))
         {
-            NFV_MCFPhiSolver solver = new NFV_MCFPhiSolver(topology, state,this.cplexTimeLimit, this.alpha);
-
+            NFV_MCFPhiSolver solver = new NFV_MCFPhiSolver(topology, state,this.cplexTimeLimit, this.alpha, true);
+            object = solver.optimize();
+        }
+        else if (this.algorithm.equals(ParamsNFV.EvaluationAlgorithm.MLU_MPTCP))
+        {
+            NFV_MCFPMLUSolver solver = new NFV_MCFPMLUSolver(topology, state,this.cplexTimeLimit, true);
+            object = solver.optimize();
+        }
+        else if(this.algorithm.equals(ParamsNFV.EvaluationAlgorithm.PHI))
+        {
+            NFV_MCFPhiSolver solver = new NFV_MCFPhiSolver(topology, state,this.cplexTimeLimit, this.alpha,false);
             object = solver.optimize();
         }
         else
         {
-            NFV_MCFPMLUSolver solver = new NFV_MCFPMLUSolver(topology, state,this.cplexTimeLimit);
+            NFV_MCFPMLUSolver solver = new NFV_MCFPMLUSolver(topology, state,this.cplexTimeLimit,false);
             object = solver.optimize();
         }
 
@@ -88,7 +97,7 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
     {
         double ret = 0;
 
-        if(object.isAllservicesDeployed() == false || object.hasSolution()  == false)
+        if(!object.isAllservicesDeployed() || !object.hasSolution())
         {
             ret = Double.MAX_VALUE;
         }

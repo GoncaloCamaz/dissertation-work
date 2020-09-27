@@ -36,6 +36,7 @@ public class NFV_MCFPMLUSolver
     private pt.uminho.algoritmi.netopt.nfv.NFRequestsMap NFRequestsMap;
     private NFNodesMap nodesMap;
     private int cplexTimeLimit;
+    private boolean mptcpenabled;
     private boolean saveLoads;
     private boolean saveConfigurations;
 
@@ -46,16 +47,18 @@ public class NFV_MCFPMLUSolver
         this.NFRequestsMap = r;
         this.nodesMap = n;
         this.cplexTimeLimit = 86400;
+        this.mptcpenabled = true;
         this.setSaveLoads(true);
         this.saveConfigurations = false;
     }
 
-    public NFV_MCFPMLUSolver(NetworkTopology topology, NFVState state, int timelimit) {
+    public NFV_MCFPMLUSolver(NetworkTopology topology, NFVState state, int timelimit, boolean mptcpenabled) {
         this.topology = topology;
         this.services = state.getServices();
         this.NFRequestsMap = state.getRequests();
         this.nodesMap = state.getNodes();
         this.cplexTimeLimit = timelimit;
+        this.mptcpenabled = mptcpenabled;
         this.setSaveLoads(true);
         this.saveConfigurations = false;
     }
@@ -226,6 +229,35 @@ public class NFV_MCFPMLUSolver
 
         // CONSTRAINTS
         // ===================================================================================
+
+        if(this.mptcpenabled == false)
+        {
+            HashMap<NFRequestSegment,HashMap<Arc, IloIntVar>> beta = new HashMap<NFRequestSegment,HashMap<Arc, IloIntVar>>();
+
+            for (NFRequest request : requests.values()) {
+                for (NFRequestSegment s : request.getRequestSegments()) {
+                    HashMap<Arc, IloIntVar> l = new HashMap<>();
+                    for (Arc arc : arcs) {
+                        int source = arc.getFromNode();
+                        int dest = arc.getToNode();
+                        l.put(arc, cplex.intVar(0, 1, "beta_"+s.getRequestID()+"_"+s.getFrom()+"_"+s.getTo() + "_" +  source + "_" + dest));
+                    }
+                    beta.put(s,l);
+                }
+            }
+
+            // EQUATION 20
+            // laik = baik * xik
+            for (Arc arc : arcs) {
+                for (NFRequest request : requests.values()) {
+                    for (NFRequestSegment s : request.getRequestSegments()) {
+                        IloLinearNumExpr la = cplex.linearNumExpr();
+                        la.addTerm(s.getBandwidth(), beta.get(s).get(arc));
+                        cplex.addEq(s_loads.get(s).get(arc), la, "EQ20_Arc_" + arc.getFromNode() + "_" + arc.getToNode() + "_Req_" + request.getId() + "_Seg_" + s.getFrom() + "_" + s.getTo());
+                    }
+                }
+            }
+        }
 
         /** EQUATION 1
          * link loads are the sum of flows traveling over it, l(a) =
@@ -536,5 +568,13 @@ public class NFV_MCFPMLUSolver
 
     public NetworkLoads getNetworkLoads() {
         return this.loads;
+    }
+
+    public boolean isMptcpenabled() {
+        return mptcpenabled;
+    }
+
+    public void setMptcpenabled(boolean mptcpenabled) {
+        this.mptcpenabled = mptcpenabled;
     }
 }

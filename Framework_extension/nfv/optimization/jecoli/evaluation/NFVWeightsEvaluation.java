@@ -51,8 +51,7 @@ public class NFVWeightsEvaluation extends AbstractEvaluationFunction<ILinearRepr
         weightsOSPF.setWeights(weights,this.topology);
 
         SRSimulator simulator = new SRSimulator(topology,weightsOSPF);
-        int i = 0;
-        for(i = 0; i < numberOfRequests ; i++)
+        for(int i = 0; i < numberOfRequests ; i++)
         {
             Request r = requests.get(i);
             simulator.addFlow(r.getFlow(), r.getPath());

@@ -13,12 +13,6 @@ public class DataSetBuilder
 {
     private List<DataSetEntry> entries;
 
-
-    public DataSetBuilder()
-    {
-        this.entries = new ArrayList<>();
-    }
-
     public DataSetBuilder(int entries, int numberOfNodes, int numberOfEdges, int numberOfServices)
     {
         this.entries = genEntries(entries, numberOfNodes, numberOfEdges, numberOfServices);
@@ -69,9 +63,7 @@ public class DataSetBuilder
     public int returnRandomInt(int limit)
     {
         Random random = new Random();
-        int number = random.nextInt(limit);
-
-        return number;
+        return random.nextInt(limit);
     }
 
     public double returnRandomDouble(int limit)

@@ -60,13 +60,19 @@ public class NFVServiceAllocationTest
         params.setNumberGenerations(numberOfGenerations);
         params.setCriteria(ParamsNFV.TerminationCriteria.ITERATION);
 
-        if (evaluation.equals("phi"))
-        {
-            params.setAlgorithm(ParamsNFV.EvaluationAlgorithm.PHI);
-        }
-        else
-        {
-            params.setAlgorithm(ParamsNFV.EvaluationAlgorithm.MLU);
+        switch (evaluation) {
+            case "phimptcp":
+                params.setAlgorithm(ParamsNFV.EvaluationAlgorithm.PHI_MPTCP);
+                break;
+            case "mlumptcp":
+                params.setAlgorithm(ParamsNFV.EvaluationAlgorithm.MLU_MPTCP);
+                break;
+            case "phi":
+                params.setAlgorithm(ParamsNFV.EvaluationAlgorithm.PHI);
+                break;
+            default:
+                params.setAlgorithm(ParamsNFV.EvaluationAlgorithm.MLU);
+                break;
         }
 
         JecoliNFV ea = new JecoliNFV(topology,state,lowerBound,upperBound, serviceMapingFile, maxServices,cplexTimeLimit, alpha);

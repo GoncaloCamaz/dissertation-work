@@ -33,7 +33,7 @@ public class ParamsNFV
     }
 
     public enum EvaluationAlgorithm {
-        PHI("Phi"), MLU("MLU");
+        PHI_MPTCP("Phi-MPTCP"), MLU_MPTCP("MLU-MPTCP"), PHI("Phi"), MLU("Mlu");
         private final String evaluation;
 
         EvaluationAlgorithm(String eval) {this.evaluation = eval;}
@@ -70,7 +70,7 @@ public class ParamsNFV
         this.beta=1;
         this.populationSize=100;
         this.archiveSize=100;
-        this.numberGenerations = 200;
+        this.numberGenerations = 100;
         this.percentage=0.0;
         this.setCriteriaValue(0.0);
         this.setAlgorithm(EvaluationAlgorithm.PHI);

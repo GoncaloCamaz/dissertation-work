@@ -12,7 +12,7 @@ public class NFNode
     public NFNode()
     {
         this.id = 0;
-        this.processCapacity = 1000;
+        this.processCapacity = 25000;
         this.availableServices = new ArrayList<>();
     }
 

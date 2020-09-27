@@ -66,13 +66,19 @@ public class HybridEAOptimization_GML
         params.setNumberGenerations(numberOfGenerations);
         params.setCriteria(ParamsNFV.TerminationCriteria.ITERATION);
 
-        if (evaluation.equals("phi"))
-        {
-            params.setAlgorithm(ParamsNFV.EvaluationAlgorithm.PHI);
-        }
-        else
-        {
-            params.setAlgorithm(ParamsNFV.EvaluationAlgorithm.MLU);
+        switch (evaluation) {
+            case "phimptcp":
+                params.setAlgorithm(ParamsNFV.EvaluationAlgorithm.PHI_MPTCP);
+                break;
+            case "mlumptcp":
+                params.setAlgorithm(ParamsNFV.EvaluationAlgorithm.MLU_MPTCP);
+                break;
+            case "phi":
+                params.setAlgorithm(ParamsNFV.EvaluationAlgorithm.PHI);
+                break;
+            default:
+                params.setAlgorithm(ParamsNFV.EvaluationAlgorithm.MLU);
+                break;
         }
 
         JecoliHybrid ea = new JecoliHybrid(topology,state,lowerBoundConf,upperBoundConf, lowerBoundIGP, upperBoundIGP, serviceMapingFile,cplexTimeLimit, alpha);

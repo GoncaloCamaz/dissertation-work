@@ -115,8 +115,8 @@ public class HybridEvaluation extends AbstractMultiobjectiveEvaluationFunction<I
         weightsOSPF.setWeights(weights,this.topology);
 
         SRSimulator simulator = new SRSimulator(topology,weightsOSPF);
-        int i = 0;
-        for(i = 0; i < numberOfRequests ; i++)
+
+        for(int i = 0; i < numberOfRequests ; i++)
         {
             Request r = requests.get(i);
             simulator.addFlow(r.getFlow(), r.getPath());
@@ -178,15 +178,27 @@ public class HybridEvaluation extends AbstractMultiobjectiveEvaluationFunction<I
         OptimizationResultObject object = new OptimizationResultObject(nodes.getNodes().size());
         double penalizationVal = 0;
 
-        if(this.algorithm.equals(ParamsNFV.EvaluationAlgorithm.PHI))
+        if(this.algorithm.equals(ParamsNFV.EvaluationAlgorithm.PHI_MPTCP))
         {
-            NFV_MCFPhiSolver solver = new NFV_MCFPhiSolver(topology, state,this.cplexTimeLimit, this.alpha);
+            NFV_MCFPhiSolver solver = new NFV_MCFPhiSolver(topology, state,this.cplexTimeLimit, this.alpha, true);
+            solver.setSaveConfigurations(true);
+            object = solver.optimize();
+        }
+        else if (this.algorithm.equals(ParamsNFV.EvaluationAlgorithm.MLU_MPTCP))
+        {
+            NFV_MCFPMLUSolver solver = new NFV_MCFPMLUSolver(topology, state,this.cplexTimeLimit, true);
+            solver.setSaveConfigurations(true);
+            object = solver.optimize();
+        }
+        else if (this.algorithm.equals(ParamsNFV.EvaluationAlgorithm.PHI))
+        {
+            NFV_MCFPhiSolver solver = new NFV_MCFPhiSolver(topology, state,this.cplexTimeLimit, this.alpha,false);
             solver.setSaveConfigurations(true);
             object = solver.optimize();
         }
         else
         {
-            NFV_MCFPMLUSolver solver = new NFV_MCFPMLUSolver(topology, state,this.cplexTimeLimit);
+            NFV_MCFPMLUSolver solver = new NFV_MCFPMLUSolver(topology, state,this.cplexTimeLimit, false);
             solver.setSaveConfigurations(true);
             object = solver.optimize();
         }
@@ -200,7 +212,7 @@ public class HybridEvaluation extends AbstractMultiobjectiveEvaluationFunction<I
     {
         double ret = 0;
 
-        if(object.isAllservicesDeployed() == false || object.hasSolution()  == false)
+        if(!object.isAllservicesDeployed() || !object.hasSolution())
         {
             ret = Double.MAX_VALUE;
         }

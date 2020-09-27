@@ -20,7 +20,7 @@ public class HybridEAOptimization
      private static String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidosAbilene_1200.csv";//args[3];
      private static String evaluation = "phi";
      private static String serviceMapingFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/serviceMap.json";
-     private static int populationSize = 15;
+     private static int populationSize = 2;
      private static int numberOfGenerations = 5;
      private static int lowerBoundConf = 0;
      private static int upperBoundConf = 7;
@@ -59,13 +59,19 @@ public class HybridEAOptimization
         params.setNumberGenerations(numberOfGenerations);
         params.setCriteria(ParamsNFV.TerminationCriteria.ITERATION);
 
-        if (evaluation.equals("phi"))
-        {
-            params.setAlgorithm(ParamsNFV.EvaluationAlgorithm.PHI);
-        }
-        else
-        {
-            params.setAlgorithm(ParamsNFV.EvaluationAlgorithm.MLU);
+        switch (evaluation) {
+            case "phimptcp":
+                params.setAlgorithm(ParamsNFV.EvaluationAlgorithm.PHI_MPTCP);
+                break;
+            case "mlumptcp":
+                params.setAlgorithm(ParamsNFV.EvaluationAlgorithm.MLU_MPTCP);
+                break;
+            case "phi":
+                params.setAlgorithm(ParamsNFV.EvaluationAlgorithm.PHI);
+                break;
+            default:
+                params.setAlgorithm(ParamsNFV.EvaluationAlgorithm.MLU);
+                break;
         }
 
         JecoliHybrid ea = new JecoliHybrid(topology,state,lowerBoundConf,upperBoundConf, lowerBoundIGP, upperBoundIGP, serviceMapingFile,cplexTimeLimit, alpha);

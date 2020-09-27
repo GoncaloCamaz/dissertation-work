@@ -28,7 +28,7 @@ import java.util.*;
 
 public class ConfigurationSolutionSaver
 {
-    /**
+      /**
      * Gets the best solution and orchestrates the algorithm to run the cplex model again for that configuration
      * @param solution
      * @param filename
@@ -222,16 +222,33 @@ public class ConfigurationSolutionSaver
      */
     private static OptimizationResultObject solve(NetworkTopology topology, NFServicesMap services, NFRequestsMap requests, NFNodesMap nodesMap, ParamsNFV.EvaluationAlgorithm algorithm){
         OptimizationResultObject ret = new OptimizationResultObject(nodesMap.getNodes().size());
-        if(algorithm.equals(ParamsNFV.EvaluationAlgorithm.PHI))
+        if(algorithm.equals(ParamsNFV.EvaluationAlgorithm.PHI_MPTCP))
         {
             NFV_MCFPhiSolver solver = new NFV_MCFPhiSolver(topology,services,requests,nodesMap);
+            solver.setMptcpenabled(true);
             solver.setCplexTimeLimit(500);
             solver.setSaveConfigurations(true);
             ret = solver.optimize();
         }
-        else
+        else if (algorithm.equals(ParamsNFV.EvaluationAlgorithm.MLU_MPTCP))
         {
             NFV_MCFPMLUSolver solver = new NFV_MCFPMLUSolver(topology,services,requests,nodesMap);
+            solver.setMptcpenabled(true);
+            solver.setCplexTimeLimit(500);
+            solver.setSaveConfigurations(true);
+            ret = solver.optimize();
+        }
+        else if (algorithm.equals(ParamsNFV.EvaluationAlgorithm.PHI))
+        {
+            NFV_MCFPhiSolver solver = new NFV_MCFPhiSolver(topology,services,requests,nodesMap);
+            solver.setMptcpenabled(false);
+            solver.setCplexTimeLimit(500);
+            solver.setSaveConfigurations(true);
+            ret = solver.optimize();
+        }
+        else{
+            NFV_MCFPMLUSolver solver = new NFV_MCFPMLUSolver(topology,services,requests,nodesMap);
+            solver.setMptcpenabled(false);
             solver.setCplexTimeLimit(500);
             solver.setSaveConfigurations(true);
             ret = solver.optimize();

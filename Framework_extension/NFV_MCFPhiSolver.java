@@ -55,6 +55,7 @@ public class NFV_MCFPhiSolver {
 	private NFRequestsMap NFRequestsMap;
 	private NFNodesMap nodesMap;
 	private int cplexTimeLimit;
+	private boolean mptcpenabled;
 	private double alpha;
 	private boolean saveLoads;
 	private boolean saveConfigurations;
@@ -67,17 +68,19 @@ public class NFV_MCFPhiSolver {
 		this.nodesMap = n;
 		this.cplexTimeLimit = 86400;
 		this.alpha = 0.5;
+		this.mptcpenabled = true;
 		this.setSaveLoads(true);
 		this.saveConfigurations = false;
 	}
 
-	public NFV_MCFPhiSolver(NetworkTopology topology, NFVState state, int timelimit, double alpha) {
+	public NFV_MCFPhiSolver(NetworkTopology topology, NFVState state, int timelimit, double alpha, boolean mtcpenabled) {
 		this.topology = topology;
 		this.services = state.getServices();
 		this.NFRequestsMap = state.getRequests();
 		this.nodesMap = state.getNodes();
 		this.cplexTimeLimit = timelimit;
 		this.alpha = alpha;
+		this.mptcpenabled = mptcpenabled;
 		this.setSaveLoads(true);
 		this.saveConfigurations = false;
 	}
@@ -413,6 +416,35 @@ public class NFV_MCFPhiSolver {
 			}
 		}
 
+		if(this.mptcpenabled == false)
+		{
+			HashMap<NFRequestSegment,HashMap<Arc, IloIntVar>> beta = new HashMap<NFRequestSegment,HashMap<Arc, IloIntVar>>();
+
+			for (NFRequest request : requests.values()) {
+				for (NFRequestSegment s : request.getRequestSegments()) {
+					HashMap<Arc, IloIntVar> l = new HashMap<>();
+					for (Arc arc : arcs) {
+						int source = arc.getFromNode();
+						int dest = arc.getToNode();
+						l.put(arc, cplex.intVar(0, 1, "beta_"+s.getRequestID()+"_"+s.getFrom()+ "_"+s.getTo() + "_" + source + "_" + dest));
+					}
+					beta.put(s,l);
+				}
+			}
+
+			// EQUATION 20
+			// laik = baik * xik
+			for (Arc arc : arcs) {
+				for (NFRequest request : requests.values()) {
+					for (NFRequestSegment s : request.getRequestSegments()) {
+						IloLinearNumExpr la = cplex.linearNumExpr();
+						la.addTerm(s.getBandwidth(), beta.get(s).get(arc));
+						cplex.addEq(s_loads.get(s).get(arc), la, "EQ20_Arc_" + arc.getFromNode() + "_" + arc.getToNode() + "_Req_" + request.getId() + "_Seg_" + s.getFrom() + "_" + s.getTo());
+					}
+				}
+			}
+		}
+
 		// Saves the model
 		//cplex.exportModel("phigammaSolver.lp");
 		OptimizationResultObject object = new OptimizationResultObject(nodesNumber);
@@ -652,5 +684,21 @@ public class NFV_MCFPhiSolver {
 
 	public NetworkLoads getNetworkLoads() {
 		return this.loads;
+	}
+
+	public boolean isMptcpenabled() {
+		return mptcpenabled;
+	}
+
+	public void setMptcpenabled(boolean mptcpenabled) {
+		this.mptcpenabled = mptcpenabled;
+	}
+
+	public double getAlpha() {
+		return alpha;
+	}
+
+	public void setAlpha(double alpha) {
+		this.alpha = alpha;
 	}
 }
