@@ -27,7 +27,7 @@ public class ResultAnalysis_RandomWeights
         String req300 = "300";
         String req1200 = "1200";
         String file1 = "EA_ResultMLU.json";
-        String file2 = "RandomResult30_30Services_30MLU.json";
+        String file2 = "EA_ResultPHI.json";
 
         NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
 

@@ -13,22 +13,22 @@ public class DataSetBuilder
 {
     private List<DataSetEntry> entries;
 
-    public DataSetBuilder(int entries, int numberOfNodes, int numberOfEdges, int numberOfServices)
+    public DataSetBuilder(int entries, int numberOfNodes, int numberOfEdges, int numberOfServices, boolean binaryOutput)
     {
-        this.entries = genEntries(entries, numberOfNodes, numberOfEdges, numberOfServices);
+        this.entries = genEntries(entries, numberOfNodes, numberOfEdges, numberOfServices, binaryOutput);
     }
 
-    private List<DataSetEntry> genEntries(int numberOfEntries, int numberOfNodes, int numberOfEdges, int numberOfServices)
+    private List<DataSetEntry> genEntries(int numberOfEntries, int numberOfNodes, int numberOfEdges, int numberOfServices, boolean binaryOutput)
     {
         List<DataSetEntry> entries = new ArrayList<>();
 
         while(numberOfEntries > 0)
         {
-            DataSetEntry entry = new DataSetEntry(numberOfNodes,numberOfEdges,numberOfServices);
+            DataSetEntry entry = new DataSetEntry(numberOfNodes,numberOfEdges,numberOfServices, binaryOutput);
             entry.setOrigin(returnRandomInt(numberOfNodes));
             entry.setDestination(returnRandomInt(numberOfNodes));
 
-            double bandwidth = 5+returnRandomDouble(7);
+            double bandwidth = 8+returnRandomDouble(7);
             bandwidth = Math.floor(bandwidth*100) / 100;
             entry.setBandwidth(bandwidth);
 

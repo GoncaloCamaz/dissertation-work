@@ -27,10 +27,10 @@ public class MCFTestWServices
     private static String servicesFileBT = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\frameworkConfiguration_BTEurope.json";
     private static String requestsFileBT_300 = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\pedidosBTEurope_300.csv";
     private static String requestsFileBT_1200 = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\pedidosBTEurope_1200.csv";
-    private static String servicesFile30 = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\frameworkConfiguration_Services.json";
+    private static String servicesFile30 = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\frameworkConfiguration_WorstCase.json";
     private static String requestsFile30_300 = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\pedidos300.csv";
     private static String requestsFile30_1200 = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\pedidos1200.csv";
-    private static String servicesFileAB = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\frameworkConfiguration_Abilene_Services.json";
+    private static String servicesFileAB = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\frameworkConfiguration_Abilene_WorstCase.json";
     private static String requestsFileAB_300 = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\pedidosAbilene_300.csv";
     private static String requestsFileAB_1200 = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\pedidosAbilene_1200.csv";
     private static String requestsFileBT_1200A = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\pedidosBT_Altered1200.csv";
@@ -79,6 +79,7 @@ public class MCFTestWServices
         System.out.println("Congestion MLU BT 1200: " + mluVal.getMlu());
         System.out.println("Congestion MNU BT 1200: " + mluVal.getMnu());
 
+        enableMPTCP = true;
         NFV_MCFPhiSolver phiSolver2 = new NFV_MCFPhiSolver(topologyBT,state,800,0.5, enableMPTCP);
         OptimizationResultObject congestionVal2 = phiSolver2.optimize();
         ConfigurationSolutionSaver.saveToCSV(congestionVal2,arcsBT,state.getNodes(),"BT_PHI_1200A");

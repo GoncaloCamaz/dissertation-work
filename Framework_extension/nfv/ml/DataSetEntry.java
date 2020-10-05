@@ -10,7 +10,7 @@ public class DataSetEntry
     private double[] nodesState;
     private int[] processmentLocation;
 
-    public DataSetEntry(int numberOfNodes, int numberOfEdges, int numberOfServices)
+    public DataSetEntry(int numberOfNodes, int numberOfEdges, int numberOfServices, boolean binaryOutput)
     {
         this.origin = -1;
         this.destination = -1;
@@ -18,7 +18,11 @@ public class DataSetEntry
         this.requests = new int[numberOfServices];
         this.linksState = new double[numberOfEdges];
         this.nodesState = new double[numberOfNodes];
-        this.processmentLocation = new int[numberOfServices];
+        if(binaryOutput)
+            this.processmentLocation = new int[numberOfServices*numberOfNodes];
+        else
+            this.processmentLocation = new int[numberOfServices];
+
     }
 
     public int getOrigin() {
