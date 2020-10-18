@@ -17,12 +17,14 @@ public class NFVWeightsEvaluation extends AbstractEvaluationFunction<ILinearRepr
 {
     private NetworkTopology topology;
     private List<Request> requests;
+    private double milpCongestionVal;
 
-    public NFVWeightsEvaluation(NetworkTopology topology, List<Request> requests)
+    public NFVWeightsEvaluation(NetworkTopology topology, List<Request> requests, double milpCongestionVal)
     {
         super(false);
         this.topology = topology;
         this.requests = requests;
+        this.milpCongestionVal = milpCongestionVal;
     }
 
     @Override
@@ -58,7 +60,7 @@ public class NFVWeightsEvaluation extends AbstractEvaluationFunction<ILinearRepr
         }
         result = simulator.getCongestionValue();// new Double(object.getPhiValue());
 
-        return result;
+        return Math.abs(result-this.milpCongestionVal);
     }
 
     public int[] decode(ILinearRepresentation<Integer> solution, int edges)

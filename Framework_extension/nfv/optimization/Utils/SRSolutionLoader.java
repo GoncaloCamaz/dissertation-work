@@ -91,6 +91,12 @@ public class SRSolutionLoader
         return ret;
     }
 
+    public static double loadCongestionval(String filename, String mode) throws IOException, ParseException {
+        JSONObject obj = loadObject(filename);
+        JSONObject value = (JSONObject) obj.get(mode);
+        return Double.parseDouble( value.toJSONString());
+    }
+
     public static Map<Integer, Map<Integer, Integer>> loadNumberOfExecutionsPerNode(String filename) throws IOException, ParseException
     {
         Map<Integer, Map<Integer, Integer>> result = new HashMap<>();

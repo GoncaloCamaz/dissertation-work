@@ -18,7 +18,7 @@ public class WeightsAllocationTest
 {
     public static void main(String[] args) throws Exception {
 
-        if(args.length!=5)
+        if(args.length!=6)
             System.exit(1);
 
         String nodesFile = args[0];
@@ -26,18 +26,20 @@ public class WeightsAllocationTest
         String requestsFile = args[2];
         int populationSize = Integer.parseInt(args[3]);
         int numberOfGenerations = Integer.parseInt(args[4]);
+        String mode = args[5];
 
         NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
 
 
         List<Request> req = SRSolutionLoader.loadResultsFromJson(requestsFile);
+        double congestionValue = SRSolutionLoader.loadCongestionval(requestsFile, mode);
         ParamsNFV params = new ParamsNFV();
         params.setArchiveSize(100);
         params.setPopulationSize(populationSize);
         params.setNumberGenerations(numberOfGenerations);
         params.setCriteria(ParamsNFV.TerminationCriteria.ITERATION);
 
-        JecoliWeights ea = new JecoliWeights(topology,req);
+        JecoliWeights ea = new JecoliWeights(topology,req, congestionValue);
         ea.configureEvolutionaryAlgorithm(params);
         ea.run();
 

@@ -66,6 +66,19 @@ public class JecoliWeights
     private int MINWeight;
     private int MAXWeight;
     private int NUMObjectives = 1;
+    private double milpcongestionVal;
+
+    public JecoliWeights(NetworkTopology topology,List<Request> requests, double milpcongestionVal) {
+        this.topology = topology.copy();
+        this.requests = requests;
+        this.algorithm = null;
+        this.results = null;
+        this.statistics = null;
+        randomNumberGenerator = new DefaultRandomNumberGenerator();
+        MAXWeight = SystemConf.getPropertyInt("ospf.maxweight", 20);
+        MINWeight = SystemConf.getPropertyInt("ospf.minweight", 1);
+        this.milpcongestionVal = milpcongestionVal;
+    }
 
     public JecoliWeights(NetworkTopology topology,List<Request> requests) {
         this.topology = topology.copy();
@@ -76,6 +89,7 @@ public class JecoliWeights
         randomNumberGenerator = new DefaultRandomNumberGenerator();
         MAXWeight = SystemConf.getPropertyInt("ospf.maxweight", 20);
         MINWeight = SystemConf.getPropertyInt("ospf.minweight", 1);
+        this.milpcongestionVal = 0;
     }
 
 
@@ -259,7 +273,7 @@ public class JecoliWeights
         EvolutionaryConfiguration<ILinearRepresentation<Integer>, ILinearRepresentationFactory<Integer>> configuration = buildPreConfigurationEA(
                 params);
 
-        NFVWeightsEvaluation evaluation = new NFVWeightsEvaluation(topology,requests);
+        NFVWeightsEvaluation evaluation = new NFVWeightsEvaluation(topology,requests, milpcongestionVal);
         configuration.setEvaluationFunction(evaluation);
 
         this.algorithm = new OSPFEvolutionaryAlgorithm(configuration);

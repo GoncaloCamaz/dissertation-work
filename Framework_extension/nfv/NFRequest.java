@@ -110,4 +110,23 @@ public class NFRequest
     public void setRequestSegments(List<NFRequestSegment> segments) {
         this.segments = segments;
     }
+
+    public int[] getBooleanRequestList(int numberofServices)
+    {
+        int[] ret = new int[numberofServices];
+
+        for(int i = 0; i < numberofServices; i++)
+        {
+            if(this.serviceList.contains(i))
+            {
+                ret[i] = 1;
+            }
+            else
+            {
+                ret[i] = 0;
+            }
+        }
+
+        return ret;
+    }
 }

@@ -2,6 +2,8 @@ package pt.uminho.algoritmi.netopt.nfv.optimization;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class OptimizationResultObject
 {
@@ -17,11 +19,19 @@ public class OptimizationResultObject
     private boolean allservicesDeployed;
     private NFVRequestsConfigurationMap nfvRequestsConfigurationMap;
 
+    /**
+     * Machine Learning Cplex result
+     */
+    private double[] linksLoad1D;
+    private int[] serviceProcessmentLocation;
+
     public OptimizationResultObject(int numberOfNodes)
     {
         this.linkLoads = new double[numberOfNodes][numberOfNodes];
         this.nodeUtilization = new double[numberOfNodes];
         this.numberOfNodes = numberOfNodes;
+        this.linksLoad1D = new double[0];
+        this.serviceProcessmentLocation = new int[0];
         this.loadValue = 0;
         this.mlu = 0;
         this.mnu = 0;
@@ -178,5 +188,21 @@ public class OptimizationResultObject
                 ", servicesDeployed=" + servicesDeployed +
                 ", allServicesDeployed=" + allservicesDeployed +
                 '}';
+    }
+
+    public double[] getLinksLoad1D() {
+        return linksLoad1D;
+    }
+
+    public void setLinksLoad1D(double[] linksLoad1D) {
+        this.linksLoad1D = linksLoad1D;
+    }
+
+    public int[] getServiceProcessmentLocation() {
+        return serviceProcessmentLocation;
+    }
+
+    public void setServiceProcessmentLocation(int[] serviceProcessmentLocation) {
+        this.serviceProcessmentLocation = serviceProcessmentLocation;
     }
 }

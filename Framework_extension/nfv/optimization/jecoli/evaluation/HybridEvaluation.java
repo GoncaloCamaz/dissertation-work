@@ -81,9 +81,9 @@ public class HybridEvaluation extends AbstractMultiobjectiveEvaluationFunction<I
     public Double[] evaluateMO(ILinearRepresentation<Integer> solutionRepresentation) throws Exception {
         Double[] resultList = new Double[2];
 
-        double resultConfiguration = evaluateConfiguration(solutionRepresentation);
+        double[] resultConfiguration = evaluateConfiguration(solutionRepresentation);
 
-        if(resultConfiguration == Double.MAX_VALUE)
+        if(resultConfiguration[0] == Double.MAX_VALUE)
         {
             resultList[0] = Double.MAX_VALUE;
             resultList[1] = Double.MAX_VALUE;
@@ -92,8 +92,8 @@ public class HybridEvaluation extends AbstractMultiobjectiveEvaluationFunction<I
         {
             double resultWeights = evaluateWeights(solutionRepresentation);
 
-            resultList[0] = resultConfiguration;
-            resultList[1] = resultWeights;
+            resultList[0] = resultConfiguration[0];
+            resultList[1] = Math.abs(resultConfiguration[1]-resultWeights);
         }
 
         return resultList;
@@ -121,7 +121,10 @@ public class HybridEvaluation extends AbstractMultiobjectiveEvaluationFunction<I
             Request r = requests.get(i);
             simulator.addFlow(r.getFlow(), r.getPath());
         }
-        result = simulator.getCongestionValue();
+        if(this.algorithm.equals(ParamsNFV.EvaluationAlgorithm.PHI_MPTCP) || this.algorithm.equals(ParamsNFV.EvaluationAlgorithm.PHI))
+            result = simulator.getCongestionValue();
+        else
+            result = simulator.getMLU();
 
         return result;
     }
@@ -169,43 +172,59 @@ public class HybridEvaluation extends AbstractMultiobjectiveEvaluationFunction<I
         return request;
     }
 
-    private double evaluateConfiguration(ILinearRepresentation<Integer> solution)
+    private double[] evaluateConfiguration(ILinearRepresentation<Integer> solution)
     {
         NFNodesMap nodes = new NFNodesMap();
         nodes = this.parser.solutionParser(decodeConfiguration(solution));
         this.state.setNodes(nodes);
+        double[] result = new double[2];
 
         OptimizationResultObject object = new OptimizationResultObject(nodes.getNodes().size());
         double penalizationVal = 0;
 
-        if(this.algorithm.equals(ParamsNFV.EvaluationAlgorithm.PHI_MPTCP))
-        {
-            NFV_MCFPhiSolver solver = new NFV_MCFPhiSolver(topology, state,this.cplexTimeLimit, this.alpha, true);
-            solver.setSaveConfigurations(true);
-            object = solver.optimize();
-        }
-        else if (this.algorithm.equals(ParamsNFV.EvaluationAlgorithm.MLU_MPTCP))
-        {
-            NFV_MCFPMLUSolver solver = new NFV_MCFPMLUSolver(topology, state,this.cplexTimeLimit, true);
-            solver.setSaveConfigurations(true);
-            object = solver.optimize();
-        }
-        else if (this.algorithm.equals(ParamsNFV.EvaluationAlgorithm.PHI))
-        {
-            NFV_MCFPhiSolver solver = new NFV_MCFPhiSolver(topology, state,this.cplexTimeLimit, this.alpha,false);
-            solver.setSaveConfigurations(true);
-            object = solver.optimize();
-        }
-        else
-        {
-            NFV_MCFPMLUSolver solver = new NFV_MCFPMLUSolver(topology, state,this.cplexTimeLimit, false);
-            solver.setSaveConfigurations(true);
-            object = solver.optimize();
+        switch (this.algorithm) {
+            case PHI_MPTCP: {
+                NFV_MCFPhiSolver solver = new NFV_MCFPhiSolver(topology, state, this.cplexTimeLimit, this.alpha, true);
+                solver.setSaveConfigurations(true);
+                object = solver.optimize();
+                result[0] = object.getGammaValue();
+                result[1] = object.getPhiValue();
+                break;
+            }
+            case MLU_MPTCP: {
+                NFV_MCFPMLUSolver solver = new NFV_MCFPMLUSolver(topology, state, this.cplexTimeLimit, true);
+                solver.setSaveConfigurations(true);
+                object = solver.optimize();
+                result[0] = object.getMnu();
+                result[1] = object.getMlu();
+                break;
+            }
+            case PHI: {
+                NFV_MCFPhiSolver solver = new NFV_MCFPhiSolver(topology, state, this.cplexTimeLimit, this.alpha, false);
+                solver.setSaveConfigurations(true);
+                object = solver.optimize();
+                result[0] = object.getGammaValue();
+                result[1] = object.getPhiValue();
+                break;
+            }
+            default: {
+                NFV_MCFPMLUSolver solver = new NFV_MCFPMLUSolver(topology, state, this.cplexTimeLimit, false);
+                solver.setSaveConfigurations(true);
+                object = solver.optimize();
+                result[0] = object.getMnu();
+                result[1] = object.getMlu();
+                break;
+            }
         }
 
         penalizationVal = checkIfSolutions(object);
+        if(penalizationVal > 0)
+        {
+            result[0] = penalizationVal;
+            result[1] = penalizationVal;
+        }
 
-        return (penalizationVal > 0 ? penalizationVal : object.getLoadValue());
+        return result;
     }
 
     private double checkIfSolutions(OptimizationResultObject object)

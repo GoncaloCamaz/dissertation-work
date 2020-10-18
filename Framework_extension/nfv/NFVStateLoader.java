@@ -102,4 +102,39 @@ public class NFVStateLoader
         requestsMap.setRequestList(requests);
         return requestsMap;
     }
+
+    public static NFRequestsMap loadRequestsSorted(String filename) throws IOException
+    {
+        NFRequestsMap requestsMap = new NFRequestsMap();
+        Map<Integer, NFRequest> requests = new HashMap<>();
+        Reader input = Files.newBufferedReader(Paths.get(filename));
+        CSVReader reader = new CSVReader(input, ';');
+        String[] headers = reader.readNext();
+        List<String[]> rows = reader.readAll();
+        for(String[] r : rows)
+        {
+            String[] row = r;
+            List<Integer> req = new ArrayList<>();
+            int requestID = Integer.parseInt(row[0]);
+            int from = Integer.parseInt(row[1]);
+            int to = Integer.parseInt(row[2]);
+            double bandwidth = Double.valueOf(row[3]);
+            int size = row.length;
+            int i = 4;
+            while(i < size)
+            {
+                int rq = Integer.parseInt(row[i]);
+                if(rq != -1)
+                {
+                    req.add(rq);
+                }
+                i++;
+            }
+            Collections.sort(req);
+            NFRequest request = new NFRequest(requestID, from, to, bandwidth, req);
+            requests.put(requestID, request);
+        }
+        requestsMap.setRequestList(requests);
+        return requestsMap;
+    }
 }

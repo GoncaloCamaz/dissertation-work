@@ -1,9 +1,10 @@
-package pt.uminho.algoritmi.netopt.nfv.ml;
+package pt.uminho.algoritmi.netopt.nfv.ml.Generator;
 
 public class DataSetEntry
 {
     private int origin;
     private int destination;
+    private int duration;
     private double bandwidth;
     private int[] requests;
     private double[] linksState;
@@ -15,14 +16,31 @@ public class DataSetEntry
         this.origin = -1;
         this.destination = -1;
         this.bandwidth = -1;
+        this.duration = -1;
         this.requests = new int[numberOfServices];
         this.linksState = new double[numberOfEdges];
         this.nodesState = new double[numberOfNodes];
+        for(int i = 0; i < numberOfEdges; i++)
+        {
+            linksState[i] = 0;
+        }
+
+        for(int i = 0; i < numberOfNodes; i++)
+        {
+            nodesState[i] = 0;
+        }
         if(binaryOutput)
             this.processmentLocation = new int[numberOfServices*numberOfNodes];
         else
             this.processmentLocation = new int[numberOfServices];
 
+    }
+
+    public DataSetEntry(int origin, int destination, int duration, double bandwidth) {
+        this.origin = origin;
+        this.destination = destination;
+        this.duration = duration;
+        this.bandwidth = bandwidth;
     }
 
     public int getOrigin() {
@@ -80,4 +98,14 @@ public class DataSetEntry
     public void setProcessmentLocation(int[] processmentLocation) {
         this.processmentLocation = processmentLocation;
     }
+
+    public int getDuration() {
+        return duration;
+    }
+
+    public void setDuration(int duration) {
+        this.duration = duration;
+    }
+
+
 }

@@ -28,13 +28,14 @@ public class WeightsAllocationTest_GML
     */
     public static void main(String[] args) throws Exception {
 
-        if(args.length!=4)
+        if(args.length!=5)
             System.exit(1);
 
         String topoFile = args[0];
         String requestsFile = args[1];
         int populationSize = Integer.parseInt(args[2]);
         int numberOfGenerations = Integer.parseInt(args[3]);
+        String mode = args[4];
 
         InputStream inputStream = new FileInputStream(topoFile);
         NetGraph netgraph = readGML(inputStream);
@@ -42,13 +43,14 @@ public class WeightsAllocationTest_GML
         NetworkTopology topology = new NetworkTopology(netgraph);
 
         List<Request> req = SRSolutionLoader.loadResultsFromJson(requestsFile);
+        double congestion = SRSolutionLoader.loadCongestionval(requestsFile, mode);
         ParamsNFV params = new ParamsNFV();
         params.setArchiveSize(100);
         params.setPopulationSize(populationSize);
         params.setNumberGenerations(numberOfGenerations);
         params.setCriteria(ParamsNFV.TerminationCriteria.ITERATION);
 
-        JecoliWeights ea = new JecoliWeights(topology,req);
+        JecoliWeights ea = new JecoliWeights(topology,req, congestion);
         ea.configureEvolutionaryAlgorithm(params);
         ea.run();
 

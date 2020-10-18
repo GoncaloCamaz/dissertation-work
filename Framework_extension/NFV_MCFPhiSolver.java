@@ -73,14 +73,14 @@ public class NFV_MCFPhiSolver {
 		this.saveConfigurations = false;
 	}
 
-	public NFV_MCFPhiSolver(NetworkTopology topology, NFVState state, int timelimit, double alpha, boolean mtcpenabled) {
+	public NFV_MCFPhiSolver(NetworkTopology topology, NFVState state, int timelimit, double alpha, boolean mptcp) {
 		this.topology = topology;
 		this.services = state.getServices();
 		this.NFRequestsMap = state.getRequests();
 		this.nodesMap = state.getNodes();
 		this.cplexTimeLimit = timelimit;
 		this.alpha = alpha;
-		this.mptcpenabled = mptcpenabled;
+		this.mptcpenabled = mptcp;
 		this.setSaveLoads(true);
 		this.saveConfigurations = false;
 	}
@@ -89,15 +89,15 @@ public class NFV_MCFPhiSolver {
 		String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";// args[0];
 		String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.edges";//args[1];
 		String topoFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/BT Europe/BtEurope.gml";
-		String servicesFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\frameworkConfiguration_Abilene_Services.json";
-		String requests = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\pedidosAbilene_1200.csv";
+		String servicesFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\frameworkConfiguration_BTEurope.json";
+		String requests = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\pedidosBTEurope_1200.csv";
 
 		try {
 			InputStream inputStream = new FileInputStream(topoFile);
 			NetGraph netgraph = readGML(inputStream);
 
-			//NetworkTopology topology = new NetworkTopology(netgraph);
-			NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
+			NetworkTopology topology = new NetworkTopology(netgraph);
+			//NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
 			NFVState state = new NFVState(servicesFile, requests);
 			NFServicesMap services = state.getServices();
 			NFNodesMap map = state.getNodes();
@@ -110,13 +110,14 @@ public class NFV_MCFPhiSolver {
 			for (int i = 0; i < nodesNumber; i++)
 				for (int j = 0; j < nodesNumber; j++) {
 					if (capacity[i][j] > 0) {
-						Arc a = new Arc(arcID, i, j, capacity[i][j]);
+						Arc a = new Arc(arcID, i, j, 1000);
 						arcID++;
 						arcs.add(a);
 					}
 				}
 
 			NFV_MCFPhiSolver solver = new NFV_MCFPhiSolver(topology, services, req, map);
+			solver.setMptcpenabled(true);
 			solver.setSaveLoads(true);
 			solver.setSaveConfigurations(true);
 			solver.setCplexTimeLimit(300);
@@ -129,7 +130,6 @@ public class NFV_MCFPhiSolver {
 			e.printStackTrace();
 		}
 	}
-
 
 	public int getCplexTimeLimit() {
 		return cplexTimeLimit;
@@ -286,9 +286,7 @@ public class NFV_MCFPhiSolver {
 				}
 			}
 		}
-
-
-
+		
 		// OBJECTIVE FUNCTION: alpha* phi + (1-alpha) * gamma
 		// ============================================
 
@@ -445,8 +443,9 @@ public class NFV_MCFPhiSolver {
 			}
 		}
 
+
 		// Saves the model
-		//cplex.exportModel("phigammaSolver.lp");
+		cplex.exportModel("phigammaSolver.lp");
 		OptimizationResultObject object = new OptimizationResultObject(nodesNumber);
 		// Solve
 		cplex.solve();

@@ -28,7 +28,17 @@ public class NFVState
         this.services = new NFServicesMap();
         this.nsfile = filename;
         this.reqfile = requestsFile;
-        this.loadState(filename,requestsFile);
+        this.loadState(filename,requestsFile, false);
+    }
+
+    public NFVState(String filename, String requestsFile, boolean requestsSorted)
+    {
+        this.requests = new NFRequestsMap();
+        this.nodes = new NFNodesMap();
+        this.services = new NFServicesMap();
+        this.nsfile = filename;
+        this.reqfile = requestsFile;
+        this.loadState(filename,requestsFile, requestsSorted);
     }
 
     public NFVState(String frameworkConfig)
@@ -97,13 +107,16 @@ public class NFVState
         this.reqfile = reqfile;
     }
 
-    public void loadState(String ndsvfile, String requestsFile)
+    public void loadState(String ndsvfile, String requestsFile, boolean sorted)
     {
         try
         {
             this.nodes = NFVStateLoader.loadNodes(ndsvfile);
             this.services = NFVStateLoader.loadServices(ndsvfile);
-            this.requests = NFVStateLoader.loadRequests(requestsFile);
+            if(!sorted)
+                this.requests = NFVStateLoader.loadRequests(requestsFile);
+            else
+                this.requests = NFVStateLoader.loadRequestsSorted(requestsFile);
         }
         catch (IOException | ParseException e){
             e.printStackTrace();

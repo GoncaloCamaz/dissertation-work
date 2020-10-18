@@ -1,6 +1,7 @@
-package pt.uminho.algoritmi.netopt.nfv.ml;
+package pt.uminho.algoritmi.netopt.nfv.ml.Generator;
 
 import com.opencsv.CSVWriter;
+import pt.uminho.algoritmi.netopt.nfv.ml.Generator.DataSetEntry;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -12,9 +13,8 @@ public class CSVFileGenerator
     public static void saveToCSV(List<DataSetEntry> entries, int numberOfNodes, int numberOfEdges, int numberOfServices, boolean binaryOutput)
     {
         String filename = "trainingDataSet.csv";
-        int entrySize = 3+numberOfEdges+numberOfNodes+numberOfServices+(numberOfServices*numberOfNodes);
-        if(binaryOutput)
-            entrySize += 3;
+        int entrySize = 4+numberOfEdges+numberOfNodes+numberOfServices+(numberOfServices*numberOfNodes);
+
         try
         {
             FileWriter outputfile = new FileWriter(filename);
@@ -33,47 +33,36 @@ public class CSVFileGenerator
                 row[0] = String.valueOf(entry.getOrigin());
                 row[1] = String.valueOf(entry.getDestination());
                 row[2] = String.valueOf(entry.getBandwidth());
+                row[3] = String.valueOf(entry.getDuration());
                 for(int i = 0; i < numberOfServices; i++)
                 {
-                    row[i+3] = String.valueOf(entry.getRequests()[i]);
+                    row[i+4] = String.valueOf(entry.getRequests()[i]);
                 }
                 for(int j = 0; j < numberOfEdges; j++)
                 {
-                    row[j+3+numberOfServices] = String.valueOf(entry.getLinksState()[j]);
+                    row[j+4+numberOfServices] = String.valueOf(entry.getLinksState()[j]);
                 }
                 for(int k = 0; k < numberOfNodes; k++)
                 {
-                    row[k+3+numberOfServices+numberOfEdges] = String.valueOf(entry.getNodesState()[k]);
+                    row[k+4+numberOfServices+numberOfEdges] = String.valueOf(entry.getNodesState()[k]);
 
                 }
 
                 if(binaryOutput)
                 {
                     int index = 0;
-                    boolean placed = false;
                     for(int l = 0; l < numberOfServices; l++)
                     {
-                        placed = false;
                         for(int n = 0; n < numberOfNodes; n++)
                         {
                             if (entry.getProcessmentLocation()[l] == n) {
-                                row[index + 3 + numberOfServices + numberOfEdges + numberOfNodes] = "1";
-                                placed = true;
+                                row[index + 4 + numberOfServices + numberOfEdges + numberOfNodes] = "1";
                             } else {
-                                row[index + 3 + numberOfServices + numberOfEdges + numberOfNodes] = "0";
+                                row[index + 4 + numberOfServices + numberOfEdges + numberOfNodes] = "0";
 
                             }
                             index++;
                         }
-                        if(placed == false)
-                        {
-                            row[index + 3 + numberOfServices + numberOfEdges + numberOfNodes] = "1";
-                        }
-                        else
-                        {
-                            row[index + 3 + numberOfServices + numberOfEdges + numberOfNodes] = "0";
-                        }
-                        index++;
                     }
                 }
                 else
@@ -82,11 +71,11 @@ public class CSVFileGenerator
                     {
                         if(entry.getProcessmentLocation()[l] == -1)
                         {
-                            row[l+3+numberOfServices+numberOfEdges+numberOfNodes] = "NR";
+                            row[l+4+numberOfServices+numberOfEdges+numberOfNodes] = "NR";
                         }
                         else
                         {
-                            row[l+3+numberOfServices+numberOfEdges+numberOfNodes] = String.valueOf(entry.getProcessmentLocation()[l]);
+                            row[l+4+numberOfServices+numberOfEdges+numberOfNodes] = String.valueOf(entry.getProcessmentLocation()[l]);
 
                         }
                     }
@@ -104,24 +93,25 @@ public class CSVFileGenerator
 
     private static String[] genHeaders(int numberOfNodes, int numberOfEdges, int numberOfServices, boolean binaryOutput)
     {
-        String[] headers = new String[6+numberOfNodes+numberOfEdges+numberOfServices+(numberOfServices*numberOfNodes)];
+        String[] headers = new String[4+numberOfNodes+numberOfEdges+numberOfServices+(numberOfServices*numberOfNodes)];
         headers[0] = "origin";
         headers[1] = "destination";
         headers[2] = "bandwidth";
+        headers[3] = "duration";
 
         for(int i = 0; i < numberOfServices; i++)
         {
-            headers[i+3] = "S" + i;
+            headers[i+4] = "S" + i;
         }
 
         for(int j = 0; j < numberOfEdges; j++)
         {
-            headers[j+3+numberOfServices] = "E"+ j;
+            headers[j+4+numberOfServices] = "E"+ j;
         }
 
         for(int k = 0; k < numberOfNodes; k++)
         {
-            headers[k+3+numberOfServices+numberOfEdges] = "N"+k;
+            headers[k+4+numberOfServices+numberOfEdges] = "N"+k;
         }
 
         if(binaryOutput)
@@ -131,18 +121,16 @@ public class CSVFileGenerator
             {
                 for(int n = 0; n < numberOfNodes; n++)
                 {
-                    headers[index+3+numberOfServices+numberOfEdges+numberOfNodes] = "RN" + n + "S" + l1;
+                    headers[index+4+numberOfServices+numberOfEdges+numberOfNodes] = "RN" + n + "S" + l1;
                     index++;
                 }
-                headers[index+3+numberOfServices+numberOfEdges+numberOfNodes] = "RNExe" + "S" + l1;
-                index++;
             }
         }
         else
         {
             for(int l = 0; l < numberOfServices; l++)
             {
-                headers[l+3+numberOfServices+numberOfEdges+numberOfNodes] = "RPL" + l;
+                headers[l+4+numberOfServices+numberOfEdges+numberOfNodes] = "RPL" + l;
             }
         }
 
