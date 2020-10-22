@@ -28,7 +28,7 @@ public class WeightsAllocationTest_GML
     */
     public static void main(String[] args) throws Exception {
 
-        if(args.length!=5)
+        if(args.length!=6)
             System.exit(1);
 
         String topoFile = args[0];
@@ -36,11 +36,24 @@ public class WeightsAllocationTest_GML
         int populationSize = Integer.parseInt(args[2]);
         int numberOfGenerations = Integer.parseInt(args[3]);
         String mode = args[4];
+        String lowmode = args[5].toLowerCase();
 
         InputStream inputStream = new FileInputStream(topoFile);
         NetGraph netgraph = readGML(inputStream);
 
         NetworkTopology topology = new NetworkTopology(netgraph);
+
+        if(lowmode.equals("low"))
+        {
+            double[][] capacity = topology.getNetGraph().createGraph().getCapacitie();
+            int nodesNumber = topology.getDimension();
+            for (int i = 0; i < nodesNumber; i++)
+                for (int j = 0; j < nodesNumber; j++) {
+                    if (capacity[i][j] > 0) {
+                        topology.getNetGraph().setBandwidth(i,j,750);
+                    }
+                }
+        }
 
         List<Request> req = SRSolutionLoader.loadResultsFromJson(requestsFile);
         double congestion = SRSolutionLoader.loadCongestionval(requestsFile, mode);

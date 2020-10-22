@@ -66,7 +66,7 @@ public class Network
 
         for(NFRequest request : requestsMap.getRequestMap().values())
         {
-            int duration = 4 + getRandomDuration();
+            int duration = getRandomDuration();
             OnlineNFRequest onlineNFRequest = new OnlineNFRequest(request,duration, this.state.getServices().getServices().size());
             requests.add(onlineNFRequest);
         }
@@ -77,7 +77,7 @@ public class Network
     private int getRandomDuration()
     {
         Random rand = new Random();
-        return rand.nextInt(this.maxRequestDuration);
+        return 10 + rand.nextInt(this.maxRequestDuration);
     }
 
     public int getNumberOfEntries() {

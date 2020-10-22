@@ -20,11 +20,11 @@ import static pt.uminho.algoritmi.netopt.ospf.utils.io.GraphReader.readGML;
 public class MCFTestWServices
 {
     private static String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";// args[0];
-    private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.edges";//args[1];
+    private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abileneHalfCapacity.edges";//args[1];
     private static String nodesFile1 ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.nodes";// args[0];
-    private static String edgesFile1 = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.edges";//args[1];
+    private static String edgesFile1 = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2Low.edges";//args[1];
     private static String topoFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/BT Europe/BtEurope.gml";
-    private static String servicesFileBT = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\frameworkConfiguration_BTEurope.json";
+    private static String servicesFileBT = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\frameworkConfiguration_BTEurope_WorstCase.json";
     private static String requestsFileBT_300 = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\pedidosBTEurope_300.csv";
     private static String requestsFileBT_1200 = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\pedidosBTEurope_1200.csv";
     private static String servicesFile30 = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\frameworkConfiguration_WorstCase.json";
@@ -38,15 +38,15 @@ public class MCFTestWServices
 
 
     public static void main(String[] args) throws Exception {
-        enableMPTCP = false;
+        enableMPTCP = true;
     //    runAbilene300();
-      //  runAbilene1200();
+        runAbilene1200();
       //  runBT300();
-     //   runBT1200();
+        runBT1200();
      //   run30300();
-     //   run301200();
+        run301200();
 
-        runSpecialStuff();
+    //    runSpecialStuff();
     }
 
     private static void runSpecialStuff() throws IOException {
@@ -241,11 +241,18 @@ public class MCFTestWServices
         for (int i = 0; i < topologyBT.getDimension(); i++)
             for (int j = 0; j < topologyBT.getDimension(); j++) {
                 if (capacity[i][j] > 0) {
-                    Arc a = new Arc(arcID, i, j, capacity[i][j]);
+                    Arc a = new Arc(arcID, i, j,750);
                     arcID++;
                     arcsBT.add(a);
                 }
             }
+
+        double cap[][] = topologyBT.getNetGraph().createGraph().getCapacitie();
+        for(int i = 0; i < topologyBT.getDimension(); i++)
+            for(int j = 0; j < topologyBT.getDimension(); j++)
+                if(cap[i][j] > 0)
+                    topologyBT.getNetGraph().setBandwidth(i,j,750);
+
         NFV_MCFPhiSolver phiSolver = new NFV_MCFPhiSolver (topologyBT,state,800,0.5, enableMPTCP);
         OptimizationResultObject congestionVal = phiSolver.optimize();
         ConfigurationSolutionSaver.saveToCSV(congestionVal,arcsBT,state.getNodes(),"BT_PHI_1200");

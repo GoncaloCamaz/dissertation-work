@@ -21,7 +21,7 @@ public class NFVServiceAllocationTest_GML
     /**Debug mode
      private static String topoFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/BT Europe/BtEurope.gml";
      private static String servicesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/frameworkConfiguration_BTEurope.json";
-     private static String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidosBTEurope_1200.csv";//args[3];
+     private static String requests = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/pedidosBTEurope_300.csv";//args[3];
      private static String evaluation = "phi";
      private static String serviceMapingFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/serviceMap.json";
      private static int populationSize = 100;
@@ -35,7 +35,7 @@ public class NFVServiceAllocationTest_GML
 
     public static void main(String[] args) throws Exception {
 
-        if(args.length!=12)
+        if(args.length!=13)
             System.exit(1);
 
         String topoFile = args[0];
@@ -50,12 +50,25 @@ public class NFVServiceAllocationTest_GML
         double alpha = Double.parseDouble(args[9]);
         int cplexTimeLimit = Integer.parseInt(args[10]);
         String evaluation = args[11].toLowerCase();
+        String mode = args[12].toLowerCase();
 
         InputStream inputStream = new FileInputStream(topoFile);
         NetGraph netgraph = readGML(inputStream);
 
         NetworkTopology topology = new NetworkTopology(netgraph);
         NFVState state = new NFVState(servicesFile, requests);
+
+        if(mode.equals("low"))
+        {
+            double[][] capacity = topology.getNetGraph().createGraph().getCapacitie();
+            int nodesNumber = state.getNodes().getNodes().size();
+            for (int i = 0; i < nodesNumber; i++)
+                for (int j = 0; j < nodesNumber; j++) {
+                    if (capacity[i][j] > 0) {
+                        topology.getNetGraph().setBandwidth(i,j,750);
+                    }
+                }
+        }
 
         ParamsNFV params = new ParamsNFV();
         params.setArchiveSize(100);

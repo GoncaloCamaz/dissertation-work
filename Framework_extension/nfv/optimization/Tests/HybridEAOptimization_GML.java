@@ -1,5 +1,6 @@
 package pt.uminho.algoritmi.netopt.nfv.optimization.Tests;
 
+import pt.uminho.algoritmi.netopt.cplex.utils.Arc;
 import pt.uminho.algoritmi.netopt.nfv.NFVState;
 import pt.uminho.algoritmi.netopt.nfv.optimization.ParamsNFV;
 import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.ConfigurationSolutionSaver;
@@ -37,7 +38,7 @@ public class HybridEAOptimization_GML
 
     public static void main(String[] args) throws Exception {
 
-        if(args.length!=13)
+        if(args.length!=14)
             System.exit(1);
 
         String topoFile = args[0];
@@ -53,12 +54,25 @@ public class HybridEAOptimization_GML
         double alpha = Double.parseDouble(args[10]);
         int cplexTimeLimit = Integer.parseInt(args[11]);
         String evaluation = args[12].toLowerCase();
+        String mode = args[13].toLowerCase();
 
         InputStream inputStream = new FileInputStream(topoFile);
         NetGraph netgraph = readGML(inputStream);
 
         NetworkTopology topology = new NetworkTopology(netgraph);
         NFVState state = new NFVState(configurationFile, requests);
+
+        if(mode.equals("low"))
+        {
+            double[][] capacity = topology.getNetGraph().createGraph().getCapacitie();
+            int nodesNumber = state.getNodes().getNodes().size();
+            for (int i = 0; i < nodesNumber; i++)
+                for (int j = 0; j < nodesNumber; j++) {
+                    if (capacity[i][j] > 0) {
+                        topology.getNetGraph().setBandwidth(i,j,750);
+                    }
+                }
+        }
 
         ParamsNFV params = new ParamsNFV();
         params.setArchiveSize(100);

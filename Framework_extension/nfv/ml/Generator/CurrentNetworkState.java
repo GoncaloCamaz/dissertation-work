@@ -60,6 +60,13 @@ public class CurrentNetworkState
 
         NFV_DataSetMILPSolver solver = new NFV_DataSetMILPSolver(topology, state, this.requestsQueue,this.currentRequest,50, 0.5); // remove DataSetEntry
         ob = solver.solve();
+        for(OnlineNFRequest r : this.requestsQueue)
+        {
+            if(r.getRequest().getId() == this.currentRequest)
+            {
+                r.setProcessmentLocation(ob.getServiceProcessmentLocation());
+            }
+        }
         decrementDuration();
 
         return ob;
