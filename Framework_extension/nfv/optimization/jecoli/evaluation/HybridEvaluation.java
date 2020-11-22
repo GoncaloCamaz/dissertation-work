@@ -142,13 +142,16 @@ public class HybridEvaluation extends AbstractMultiobjectiveEvaluationFunction<I
         ArrayList<Segment> segments = new ArrayList<>();
         int old = -1;
         int it = 0;
-        for(Integer i : srPath)
+        int i;
+        int index = 0;
+        for(index = 0; index < srPath.size(); index++)
         {
+            i = srPath.get(index);
             if(i != old)
             {
                 if(i != origin && i != destination || i == origin && old != -1 || i == destination && destination != origin && it < srPath.size())
                 {
-                    Segment s = new Segment(i.toString(), Segment.SegmentType.NODE);
+                    Segment s = new Segment(String.valueOf(i), Segment.SegmentType.NODE);
                     s.setDstNodeId(i);
                     if( old == -1)
                     {
@@ -175,7 +178,7 @@ public class HybridEvaluation extends AbstractMultiobjectiveEvaluationFunction<I
     private double[] evaluateConfiguration(ILinearRepresentation<Integer> solution)
     {
         NFNodesMap nodes = new NFNodesMap();
-        nodes = this.parser.solutionParser(decodeConfiguration(solution));
+        nodes = this.parser.solutionParser(decodeConfiguration(solution), decodeNodesProcessCapacity());
         this.state.setNodes(nodes);
         double[] result = new double[2];
 
@@ -225,6 +228,22 @@ public class HybridEvaluation extends AbstractMultiobjectiveEvaluationFunction<I
         }
 
         return result;
+    }
+
+    private double decodeNodesProcessCapacity()
+    {
+        double nodesCapacity = 0;
+        boolean breakcycle = false;
+        for(int i = 0; i < topology.getDimension() && !breakcycle; i++)
+        {
+            if(state.getNodes().getNodes().get(i).getProcessCapacity() > 0)
+            {
+                nodesCapacity = state.getNodes().getNodes().get(i).getProcessCapacity();
+                breakcycle = true;
+            }
+        }
+
+        return nodesCapacity;
     }
 
     private double checkIfSolutions(OptimizationResultObject object)

@@ -18,28 +18,50 @@ public class ResultAnalysis_RandomWeights
 {
     private static String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.nodes";// args[0];
     private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.edges";//args[1];
-    private static String requestsFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Resultados\\Random_2\\30\\";// args[3]
+    private static String requestsFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\NewAnalysisConfigurations\\30\\SOEA\\Analise\\";// args[3]
     private static String topoFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/BT Europe/BtEurope.gml";
+
+    public ResultAnalysis_RandomWeights() throws Exception {
+    }
 
     public static void main(String[] args) throws Exception {
         int size3 = 300;
         int size12 = 1200;
-        String req300 = "300";
         String req1200 = "1200";
-        String file1 = "EA_ResultMLU.json";
-        String file2 = "EA_ResultPHI.json";
+        String file2 = "RR_MLU_300.json";
+        Boolean low = false;
 
-        NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
-
+        /*
         InputStream inputStream = new FileInputStream(topoFile);
         NetGraph netgraph = readGML(inputStream);
-      //  NetworkTopology topology = new NetworkTopology(netgraph);
+        NetworkTopology topology = new NetworkTopology(netgraph);
 
-        List<Request> req = SRSolutionLoader.loadResultsFromJson(requestsFile+req1200+"\\"+file2);
-        double[] result = evaluate(topology,req);
+        if(low)
+        {
+            double[][] capacity = topology.getNetGraph().createGraph().getCapacitie();
+            int nodesNumber = 24;
+                for (int j = 0; j < nodesNumber; j++) {
+                    if (capacity[i][j] > 0) {
+                        topology.getNetGraph().setBandwidth(i,j,750);
+                    }
+                }
+        }
+         */
+        NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
 
-        System.out.println("MLU: " + result[1]);
-        System.out.println("PHI: " + result[0]);
+        double phi = 0;
+        double mlu = 0;
+        for(int i = 0; i<15; i++)
+        {
+            List<Request> req = SRSolutionLoader.loadResultsFromJson(requestsFile+file2);
+            double[] result = evaluate(topology,req);
+            mlu += result[1];
+            phi += result[0];
+        }
+
+
+        System.out.println("MLU: " + mlu/15);
+        System.out.println("PHI: " + phi/15);
     }
 
     public static double[] evaluate(NetworkTopology topology, List<Request> requests) throws Exception

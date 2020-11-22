@@ -24,7 +24,7 @@ import static pt.uminho.algoritmi.netopt.ospf.utils.io.GraphReader.readGML;
 public class ComparisonTestsGML
 {
     private static String topoFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/BT Europe/BtEurope.gml";
-    private static String requestsFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Resultados\\Random_2\\BT\\";
+    private static String requestsFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\NewAnalysisConfigurations\\BT\\SOEA\\Analise\\";// args[3]
     private static int populationSize = 100;
     private static int numberOfGenerations = 100;
 
@@ -33,15 +33,28 @@ public class ComparisonTestsGML
         int size12 = 1200;
         String req300 = "300";
         String req1200 = "1200";
-        String file1 = "EA_ResultMLU.json";
+        String file1 = "EA_MLU_300.json";
         String file2 = "EA_ResultMLU.json";
+        Boolean low = false;
 
 
         InputStream inputStream = new FileInputStream(topoFile);
         NetGraph netgraph = readGML(inputStream);
         NetworkTopology topology = new NetworkTopology(netgraph);
 
-        List<Request> req = SRSolutionLoader.loadResultsFromJson(requestsFile+req300+"\\"+file1);
+        if(low)
+        {
+            double[][] capacity = topology.getNetGraph().createGraph().getCapacitie();
+            int nodesNumber = 24;
+            for (int i = 0; i < nodesNumber; i++)
+                for (int j = 0; j < nodesNumber; j++) {
+                    if (capacity[i][j] > 0) {
+                        topology.getNetGraph().setBandwidth(i,j,750);
+                    }
+                }
+        }
+
+        List<Request> req = SRSolutionLoader.loadResultsFromJson(requestsFile+"\\"+file1);
         ParamsNFV params = new ParamsNFV();
         params.setArchiveSize(100);
         params.setPopulationSize(populationSize);
@@ -57,11 +70,11 @@ public class ComparisonTestsGML
         for(IntegerSolution s : sol)
         {
             double[] result = evaluate(topology,req,s);
-            save(s,topology,result[1], size3);
+            save(s,topology,result[0],result[1], size3);
         }
         System.out.println("Ended first analysis");
 
-
+/*
         List<Request> req1 = SRSolutionLoader.loadResultsFromJson(requestsFile+req1200+"\\"+file2);
         ParamsNFV params1 = new ParamsNFV();
         params1.setArchiveSize(100);
@@ -81,11 +94,12 @@ public class ComparisonTestsGML
             save(s1,topology,result[1], size12);
         }
         System.out.println("Ended second analysis");
+        */
     }
 
-    public static void save(IntegerSolution p, NetworkTopology topology, double mlu, int s){
+    public static void save(IntegerSolution p, NetworkTopology topology,double phi,double mlu, int s){
         try {
-            WeightsSolutionSaver.saveAux(p, topology,mlu,s);
+            WeightsSolutionSaver.saveAux(p, topology,phi,mlu,s);
         } catch (DimensionErrorException e) {
             e.printStackTrace();
         }

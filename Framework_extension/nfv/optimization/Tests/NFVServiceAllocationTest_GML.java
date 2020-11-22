@@ -104,14 +104,19 @@ public class NFVServiceAllocationTest_GML
             for(IntegerSolution sol : aux)
             {
                 int[] solAux = sol.getVariablesArray();
-                ConfigurationSolutionSaver.saveServicesLocationConfiguration(solAux,serviceMapingFile,topology,state, params.getAlgorithm());
+                ConfigurationSolutionSaver.saveServicesLocationConfiguration(solAux,serviceMapingFile,topology,state, params.getAlgorithm(),topology.getDimension());
             }
         }
-        else
-        {
-            Population p = new NondominatedPopulation(ea.getSolutionSet());
-            int[] solution = p.getLowestValuedSolutions(0, 1).get(0).getVariablesArray();
-            ConfigurationSolutionSaver.saveServicesLocationConfiguration(solution,serviceMapingFile,topology,state, params.getAlgorithm());
+        else {
+            Population p = new Population(ea.getSolutionSet());
+            int solutions = p.getNumberOfSolutions();
+            List<IntegerSolution> solAux = p.getLowestValuedSolutions(solutions);
+
+            for(IntegerSolution sol : solAux)
+            {
+                int[] solution = sol.getVariablesArray();
+                ConfigurationSolutionSaver.saveServicesLocationConfiguration(solution,serviceMapingFile,topology,state, params.getAlgorithm(),topology.getDimension());
+            }
         }
     }
 }

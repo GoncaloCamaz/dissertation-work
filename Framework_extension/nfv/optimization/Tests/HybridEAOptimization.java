@@ -85,7 +85,7 @@ public class HybridEAOptimization
         for(IntegerSolution sol : solAux)
         {
             int[] solution = sol.getVariablesArray();
-            ConfigurationSolutionSaver.saveServicesLocationConfiguration(solution,serviceMapingFile,topology,state,params.getAlgorithm());
+            ConfigurationSolutionSaver.saveServicesLocationConfiguration(solution,serviceMapingFile,topology,state,params.getAlgorithm(), topology.getDimension());
         }
     }
 }

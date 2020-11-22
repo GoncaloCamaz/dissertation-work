@@ -7,6 +7,7 @@ import pt.uminho.algoritmi.netopt.nfv.NFVState;
 import pt.uminho.algoritmi.netopt.nfv.optimization.OptimizationResultObject;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -29,12 +30,15 @@ public class Network
         this.currentState = new CurrentNetworkState(topology.getDimension(), topology.getNumberEdges());
     }
 
-    public List<DataSetEntry> startEvaluation() throws IloException {
-        List<DataSetEntry> entries = new ArrayList<>();
+    public void startEvaluation() throws IloException, IOException {
+
+        OptimizationResultObject obj = new OptimizationResultObject(topology.getDimension());
+        NFRequest r = new NFRequest();
+        CSVFileGenerator.genFileHeaders(this.topology.getDimension(), this.topology.getNumberEdges(),this.state.getServices().getServices().size(), true);
 
         for(OnlineNFRequest request : requests)
         {
-            NFRequest r = request.getRequest();
+            r = request.getRequest();
             DataSetEntry entry = new DataSetEntry(r.getSource(), r.getDestination(), request.getDuration(), r.getBandwidth());
             entry.setLinksState(this.currentState.getLinks());
             entry.setNodesState(this.currentState.getNodes());
@@ -43,14 +47,12 @@ public class Network
             currentState.addRequestToQueue(request);
             currentState.setCurrentRequest(request.getRequest().getId());
 
-            OptimizationResultObject obj = this.currentState.evaluateState(topology, state);
+            obj = this.currentState.evaluateState(topology, state);
             entry.setProcessmentLocation(obj.getServiceProcessmentLocation());
-            entries.add(entry);
+            CSVFileGenerator.addEntrytoFile(entry,this.topology.getDimension(), this.topology.getNumberEdges(),this.state.getServices().getServices().size(), true);
 
             updateCurrentState(obj);
         }
-
-        return entries;
     }
 
     private void updateCurrentState(OptimizationResultObject obj)
@@ -63,21 +65,16 @@ public class Network
     {
         NFRequestsMap requestsMap = this.state.getRequests();
         List<OnlineNFRequest> requests = new ArrayList<>();
+        Random rand = new Random();
 
         for(NFRequest request : requestsMap.getRequestMap().values())
         {
-            int duration = getRandomDuration();
+            int duration = 10 + rand.nextInt(this.maxRequestDuration);
             OnlineNFRequest onlineNFRequest = new OnlineNFRequest(request,duration, this.state.getServices().getServices().size());
             requests.add(onlineNFRequest);
         }
 
         return requests;
-    }
-
-    private int getRandomDuration()
-    {
-        Random rand = new Random();
-        return 10 + rand.nextInt(this.maxRequestDuration);
     }
 
     public int getNumberOfEntries() {

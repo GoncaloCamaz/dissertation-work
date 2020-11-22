@@ -37,9 +37,9 @@ public class ConfigurationSolutionSaver
      * @param algorithm
      * @return
      */
-    public static String saveServicesLocationConfiguration(int[] solution, String filename, NetworkTopology topology, NFVState state, ParamsNFV.EvaluationAlgorithm algorithm) throws Exception {
+    public static String saveServicesLocationConfiguration(int[] solution, String filename, NetworkTopology topology, NFVState state, ParamsNFV.EvaluationAlgorithm algorithm, int topologyName) throws Exception {
         EASolutionParser parser = new EASolutionParser(filename);
-        String savingName = String.valueOf(System.currentTimeMillis());
+        String savingName = topologyName + "_" + System.currentTimeMillis();
         OptimizationResultObject obj = new OptimizationResultObject(topology.getDimension());
         NFNodesMap nodesMap = new NFNodesMap();
         OSPFWeights weightsOSPF = new OSPFWeights(topology.getDimension());
@@ -49,9 +49,20 @@ public class ConfigurationSolutionSaver
         double result = 0.0;
         double mluRes = 0.0;
 
+        double nodesCapacity = 0;
+        boolean breakcycle = false;
+        for(int i = 0; i < topology.getDimension() && !breakcycle; i++)
+        {
+            if(state.getNodes().getNodes().get(i).getProcessCapacity() > 0)
+            {
+                nodesCapacity = state.getNodes().getNodes().get(i).getProcessCapacity();
+                breakcycle = true;
+            }
+        }
+
         if(solution.length == topology.getDimension())
         {
-            nodesMap = parser.solutionParser(solution);
+            nodesMap = parser.solutionParser(solution,nodesCapacity);
             obj = solve(topology, state.getServices(),state.getRequests(), nodesMap, algorithm);
         }
         else
@@ -67,7 +78,7 @@ public class ConfigurationSolutionSaver
                 weights[j-i] = solution[j];
             }
 
-            nodesMap = parser.solutionParser(solutionConf);
+            nodesMap = parser.solutionParser(solutionConf, nodesCapacity);
             obj = solve(topology, state.getServices(),state.getRequests(), nodesMap, algorithm);
 
             List<Request> requests = new ArrayList<>();
@@ -514,16 +525,19 @@ public class ConfigurationSolutionSaver
 
         ArrayList<Segment> segments = new ArrayList<>();
         int old = -1;
+        int i;
         int it = 0;
-        for(Integer i : srPath)
+        int index = 0;
+        for(index = 0; index < srPath.size(); index++)
         {
+            i = srPath.get(index);
             if(i != old)
             {
                 if(i != origin && i != destination || i == origin && old != -1 || i == destination && destination != origin && it < srPath.size())
                 {
-                    Segment s = new Segment(i.toString(), Segment.SegmentType.NODE);
+                    Segment s = new Segment(String.valueOf(i), Segment.SegmentType.NODE);
                     s.setDstNodeId(i);
-                    if( old == -1)
+                    if(old == -1)
                     {
                         s.setSrcNodeId(origin);
                     }

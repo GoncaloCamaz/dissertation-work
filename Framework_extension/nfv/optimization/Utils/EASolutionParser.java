@@ -73,11 +73,10 @@ public class EASolutionParser
      * @param results
      * @return
      */
-    public NFNodesMap solutionParser(int[] results)
+    public NFNodesMap solutionParser(int[] results, double processCapacity)
     {
         NFNodesMap nodesMap = new NFNodesMap();
         Map<Integer, NFNode> nodes = new HashMap<>();
-        int processCapacity = 0;
         for(int i = 0; i < results.length; i++)
         {
             List<Integer> availableSerices = new ArrayList<>();
@@ -89,7 +88,7 @@ public class EASolutionParser
             }
             else
             {
-                processCapacity = 2500;
+                processCapacity = processCapacity;
             }
             NFNode node = new NFNode(i,processCapacity, availableSerices);
             nodes.put(i, node);

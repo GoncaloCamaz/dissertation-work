@@ -59,6 +59,7 @@ public class CurrentNetworkState
         OptimizationResultObject ob = new OptimizationResultObject(topology.getDimension());
 
         NFV_DataSetMILPSolver solver = new NFV_DataSetMILPSolver(topology, state, this.requestsQueue,this.currentRequest,50, 0.5); // remove DataSetEntry
+
         ob = solver.solve();
         for(OnlineNFRequest r : this.requestsQueue)
         {
@@ -79,7 +80,7 @@ public class CurrentNetworkState
             request.decrementDuration();
         }
 
-        this.requestsQueue = this.requestsQueue.stream().filter(r -> r.getDuration() > 0).collect(Collectors.toList());
+        this.setRequestsQueue(this.requestsQueue.stream().filter(r -> r.getDuration() > 0).collect(Collectors.toList()));
     }
 
     public List<OnlineNFRequest> getRequestinQueue() {

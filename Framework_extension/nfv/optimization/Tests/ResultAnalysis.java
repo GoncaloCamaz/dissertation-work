@@ -12,7 +12,8 @@ public class ResultAnalysis
     public static void main(String[] args) throws IOException, ParseException {
         double mlu = 0;
         double phi = 0;
-        String filename = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\test\\weights  (";
+
+        String filename = "C:\\Users\\gcama\\Desktop\\Dissertacao\\NewAnalysisConfigurations\\Abilene\\newwww\\weights (";
         int i;
 
         for(i = 1; i <= 15; i++)

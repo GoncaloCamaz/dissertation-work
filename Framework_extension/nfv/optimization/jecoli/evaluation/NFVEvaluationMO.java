@@ -116,9 +116,25 @@ public class NFVEvaluationMO extends AbstractMultiobjectiveEvaluationFunction<IL
             result[i] = solution.getElementAt(i);
         }
 
-        nodes = parser.solutionParser(result);
+        nodes = parser.solutionParser(result,decodeNodesProcessCapacity());
 
         return nodes;
+    }
+
+    private double decodeNodesProcessCapacity()
+    {
+        double nodesCapacity = 0;
+        boolean breakcycle = false;
+        for(int i = 0; i < topology.getDimension() && !breakcycle; i++)
+        {
+            if(state.getNodes().getNodes().get(i).getProcessCapacity() > 0)
+            {
+                nodesCapacity = state.getNodes().getNodes().get(i).getProcessCapacity();
+                breakcycle = true;
+            }
+        }
+        System.out.println(nodesCapacity);
+        return nodesCapacity;
     }
 
     public NetworkTopology getTopology() {

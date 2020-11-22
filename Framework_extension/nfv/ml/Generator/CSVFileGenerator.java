@@ -1,7 +1,6 @@
 package pt.uminho.algoritmi.netopt.nfv.ml.Generator;
 
 import com.opencsv.CSVWriter;
-import pt.uminho.algoritmi.netopt.nfv.ml.Generator.DataSetEntry;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -134,8 +133,88 @@ public class CSVFileGenerator
             }
         }
 
-
-
         return headers;
+    }
+
+    public static void genFileHeaders(int numberOfNodes, int numberOfEdges, int numberOfServices, boolean binaryOutput) throws IOException {
+        String filename = "trainingDataSet.csv";
+
+        FileWriter outputfile = new FileWriter(filename);
+        CSVWriter writer = new CSVWriter(outputfile, ';',
+                CSVWriter.NO_QUOTE_CHARACTER,
+                CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                CSVWriter.DEFAULT_LINE_END);
+
+        String[] headers = genHeaders(numberOfNodes,numberOfEdges,numberOfServices, binaryOutput);
+        List<String[]> data = new ArrayList<>();
+        data.add(headers);
+        writer.writeAll(data);
+        writer.close();
+    }
+
+    public static void addEntrytoFile(DataSetEntry entry,int numberOfNodes, int numberOfEdges, int numberOfServices, boolean binaryOutput) throws IOException {
+        String filename = "trainingDataSet.csv";
+        FileWriter outputfile = new FileWriter(filename, true);
+        CSVWriter writer = new CSVWriter(outputfile, ';',
+                CSVWriter.NO_QUOTE_CHARACTER,
+                CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                CSVWriter.DEFAULT_LINE_END);
+        int entrySize = 4+numberOfEdges+numberOfNodes+numberOfServices+(numberOfServices*numberOfNodes);
+        List<String[]> data = new ArrayList<>();
+        String[] row = new String[entrySize];
+        row[0] = String.valueOf(entry.getOrigin());
+        row[1] = String.valueOf(entry.getDestination());
+        row[2] = String.valueOf(entry.getBandwidth());
+        row[3] = String.valueOf(entry.getDuration());
+        for(int i = 0; i < numberOfServices; i++)
+        {
+            row[i+4] = String.valueOf(entry.getRequests()[i]);
+        }
+        for(int j = 0; j < numberOfEdges; j++)
+        {
+            row[j+4+numberOfServices] = String.valueOf(entry.getLinksState()[j]);
+        }
+        for(int k = 0; k < numberOfNodes; k++)
+        {
+            row[k+4+numberOfServices+numberOfEdges] = String.valueOf(entry.getNodesState()[k]);
+
+        }
+
+        if(binaryOutput)
+        {
+            int index = 0;
+            for(int l = 0; l < numberOfServices; l++)
+            {
+                for(int n = 0; n < numberOfNodes; n++)
+                {
+                    if (entry.getProcessmentLocation()[l] == n) {
+                        row[index + 4 + numberOfServices + numberOfEdges + numberOfNodes] = "1";
+                    } else {
+                        row[index + 4 + numberOfServices + numberOfEdges + numberOfNodes] = "0";
+
+                    }
+                    index++;
+                }
+            }
+        }
+        else
+        {
+            for(int l = 0; l < numberOfServices; l++)
+            {
+                if(entry.getProcessmentLocation()[l] == -1)
+                {
+                    row[l+4+numberOfServices+numberOfEdges+numberOfNodes] = "NR";
+                }
+                else
+                {
+                    row[l+4+numberOfServices+numberOfEdges+numberOfNodes] = String.valueOf(entry.getProcessmentLocation()[l]);
+
+                }
+            }
+        }
+        data.add(row);
+
+        writer.writeAll(data);
+        writer.close();
     }
 }

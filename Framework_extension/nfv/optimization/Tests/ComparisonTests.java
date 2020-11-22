@@ -18,9 +18,9 @@ import java.util.List;
 
 public class ComparisonTests
 {
-        private static String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";// args[0];
-    private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.edges";//args[1];
-    private static String requestsFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Resultados\\Random_2\\Abilene\\";// args[3]
+    private static String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";// args[0];
+    private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abileneHalfCapacity.edges";//args[1];
+    private static String requestsFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\NewAnalysisConfigurations\\Abilene\\SOEA\\Analise\\";// args[3]
     private static int populationSize = 100;
     private static int numberOfGenerations = 100;
 
@@ -28,14 +28,14 @@ public class ComparisonTests
 
         int size3 = 300;
         int size12 = 1200;
-        String req300 = "300";
-        String req1200 = "1200";
-        String file1 = "EA_ResultMLU.json";
-        String file2 = "EA_ResultMLU.json";
+        String req300 = "LC";
+        String req1200 = "300";
+        String file1 = "EA_MLU_"; //size 300
+        String file2 = "EA_MLU_"; // size 1200
 
         NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
 
-        List<Request> req = SRSolutionLoader.loadResultsFromJson(requestsFile+req300+"\\"+file1);
+        List<Request> req = SRSolutionLoader.loadResultsFromJson(requestsFile+file1+req300+".json");
         ParamsNFV params = new ParamsNFV();
         params.setArchiveSize(100);
         params.setPopulationSize(populationSize);
@@ -51,12 +51,11 @@ public class ComparisonTests
         for(IntegerSolution s : sol)
         {
             double[] result = evaluate(topology,req,s);
-            save(s,topology,result[1], size3);
+            save(s,topology,result[0],result[1], size3);
         }
         System.out.println("Ended first analysis");
-
-
-        List<Request> req1 = SRSolutionLoader.loadResultsFromJson(requestsFile+req1200+"\\"+file2);
+/*
+        List<Request> req1 = SRSolutionLoader.loadResultsFromJson(requestsFile+file2+req1200+".json");
         ParamsNFV params1 = new ParamsNFV();
         params1.setArchiveSize(100);
         params1.setPopulationSize(populationSize);
@@ -75,11 +74,13 @@ public class ComparisonTests
             save(s1,topology,result[1], size12);
         }
         System.out.println("Ended second analysis");
+
+ */
     }
 
-    public static void save(IntegerSolution p, NetworkTopology topology, double mlu, int s){
+    public static void save(IntegerSolution p, NetworkTopology topology,double phi ,double mlu, int s){
         try {
-            WeightsSolutionSaver.saveAux(p, topology,mlu,s);
+            WeightsSolutionSaver.saveAux(p, topology,phi,mlu,s);
         } catch (DimensionErrorException e) {
             e.printStackTrace();
         }
@@ -101,6 +102,7 @@ public class ComparisonTests
             Request r = requests.get(i);
             simulator.addFlow(r.getFlow(), r.getPath());
         }
+
         result[0] = simulator.getCongestionValue();// new Double(object.getPhiValue());
         result[1] = simulator.getMLU();
 

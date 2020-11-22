@@ -18,14 +18,14 @@ public class NoServicesMCFTest
     private static String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";// args[0];
     private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abileneHalfCapacity.edges";//args[1];
     private static String topoFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/BT Europe/BtEurope.gml";
-    private static String servicesFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\frameworkConfiguration_Abilene.json";
-    private static String requestsFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\pedidosAbilene_1200.csv";
+    private static String servicesFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\frameworkConfiguration_BTEurope.json";
+    private static String requestsFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\pedidosBTEurope_1200.csv";
 
     public static void main(String[] args) throws Exception {
-        NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
+      //  NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
         InputStream inputStream = new FileInputStream(topoFile);
         NetGraph netgraph = readGML(inputStream);
-/*
+
         NetworkTopology topology = new NetworkTopology(netgraph);
 
         double cap[][] = topology.getNetGraph().createGraph().getCapacitie();
@@ -33,7 +33,7 @@ public class NoServicesMCFTest
             for(int j = 0; j < topology.getDimension(); j++)
                 if(cap[i][j] > 0)
                     topology.getNetGraph().setBandwidth(i,j,750);
-*/
+
         NFVState state = new NFVState(servicesFile, requestsFile);
         NFRequestsMap req = state.getRequests();
 

@@ -49,8 +49,8 @@ public class WeightsSolutionSaver
      * @param topology
      * @throws DimensionErrorException
      */
-    public static void saveAux(IntegerSolution solution, NetworkTopology topology,double mlu,int s) throws DimensionErrorException {
-        double fitness = solution.getFitnessValue(0);
+    public static void saveAux(IntegerSolution solution, NetworkTopology topology,double phi, double mlu,int s) throws DimensionErrorException {
+        double fitness = phi;
         HashMap<SourceDestinationPair, Double> mapWeights = new HashMap<>();
         int result[] = solution.getVariablesArray();
         OSPFWeights weights = new OSPFWeights(result.length);
