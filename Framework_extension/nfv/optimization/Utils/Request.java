@@ -10,20 +10,27 @@ import java.util.List;
 public class Request
 {
     private int requestID;
-    private Flow flow;
+    private List<Flow> flows;
     private LabelPath path;
     private List<NetNode> segPath;
 
-    public Request(int requestID, Flow flow, LabelPath path) {
+    public Request(int requestID, List<Flow> flows)
+    {
         this.requestID = requestID;
-        this.flow = flow;
+        this.flows = flows;
+        this.segPath = new ArrayList<>();
+    }
+
+    public Request(int requestID, List<Flow> flow, LabelPath path) {
+        this.requestID = requestID;
+        this.flows = flow;
         this.path = path;
         this.segPath = new ArrayList<>();
     }
 
-    public Request(int requestID, Flow flow, List<NetNode> list) {
+    public Request(int requestID, List<Flow> flow, List<NetNode> list) {
         this.requestID = requestID;
-        this.flow = flow;
+        this.flows = flow;
         this.segPath = list;
     }
 
@@ -43,12 +50,12 @@ public class Request
         this.requestID = requestID;
     }
 
-    public Flow getFlow() {
-        return flow;
+    public List<Flow> getFlow() {
+        return flows;
     }
 
-    public void setFlow(Flow flow) {
-        this.flow = flow;
+    public void setFlow(List<Flow> flow) {
+        this.flows = flow;
     }
 
     public LabelPath getPath() {

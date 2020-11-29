@@ -1,6 +1,7 @@
 package pt.uminho.algoritmi.netopt.nfv.optimization.Tests;
 
 import pt.uminho.algoritmi.netopt.nfv.optimization.ParamsNFV;
+import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.IGPWeightsOptimizationInputObject;
 import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.Request;
 import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.SRSolutionLoader;
 import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.WeightsSolutionSaver;
@@ -12,6 +13,7 @@ import pt.uminho.algoritmi.netopt.ospf.simulation.OSPFWeights;
 import pt.uminho.algoritmi.netopt.ospf.simulation.Population;
 import pt.uminho.algoritmi.netopt.ospf.simulation.exception.DimensionErrorException;
 import pt.uminho.algoritmi.netopt.ospf.simulation.solution.IntegerSolution;
+import pt.uminho.algoritmi.netopt.ospf.simulation.sr.Flow;
 import pt.uminho.algoritmi.netopt.ospf.simulation.sr.SRSimulator;
 
 import java.util.List;
@@ -32,17 +34,18 @@ public class ComparisonTests
         String req1200 = "300";
         String file1 = "EA_MLU_"; //size 300
         String file2 = "EA_MLU_"; // size 1200
+        String mode = "mlu";
 
         NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
 
-        List<Request> req = SRSolutionLoader.loadResultsFromJson(requestsFile+file1+req300+".json");
+        IGPWeightsOptimizationInputObject req = SRSolutionLoader.loadResultsFromJson(mode,requestsFile+file1+req300+".json");
         ParamsNFV params = new ParamsNFV();
         params.setArchiveSize(100);
         params.setPopulationSize(populationSize);
         params.setNumberGenerations(numberOfGenerations);
         params.setCriteria(ParamsNFV.TerminationCriteria.ITERATION);
 
-        JecoliWeights ea = new JecoliWeights(topology,req);
+        JecoliWeights ea = new JecoliWeights(topology,req.getRequestList(),req.getMilpResult());
         ea.configureEvolutionaryAlgorithm(params);
         ea.run();
 
@@ -50,7 +53,7 @@ public class ComparisonTests
         List<IntegerSolution> sol = p.getLowestValuedSolutions(15);
         for(IntegerSolution s : sol)
         {
-            double[] result = evaluate(topology,req,s);
+            double[] result = evaluate(topology,req.getRequestList(),s);
             save(s,topology,result[0],result[1], size3);
         }
         System.out.println("Ended first analysis");
@@ -96,11 +99,13 @@ public class ComparisonTests
         weightsOSPF.setWeights(weights,topology);
 
         SRSimulator simulator = new SRSimulator(topology,weightsOSPF);
-        int i = 0;
-        for(i = 0; i < numberOfRequests ; i++)
+        for(int i = 0; i < numberOfRequests ; i++)
         {
             Request r = requests.get(i);
-            simulator.addFlow(r.getFlow(), r.getPath());
+            for(Flow f : r.getFlow())
+            {
+                simulator.addFlow(f);
+            }
         }
 
         result[0] = simulator.getCongestionValue();// new Double(object.getPhiValue());

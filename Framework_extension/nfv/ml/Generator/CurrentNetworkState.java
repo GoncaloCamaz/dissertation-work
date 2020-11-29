@@ -58,7 +58,7 @@ public class CurrentNetworkState
     public OptimizationResultObject evaluateState(NetworkTopology topology, NFVState state) throws IloException {
         OptimizationResultObject ob = new OptimizationResultObject(topology.getDimension());
 
-        NFV_DataSetMILPSolver solver = new NFV_DataSetMILPSolver(topology, state, this.requestsQueue,this.currentRequest,50, 0.5); // remove DataSetEntry
+        NFV_DataSetMILPSolver solver = new NFV_DataSetMILPSolver(topology, state, this.requestsQueue,this.currentRequest,35, 0.5); // remove DataSetEntry
 
         ob = solver.solve();
         for(OnlineNFRequest r : this.requestsQueue)

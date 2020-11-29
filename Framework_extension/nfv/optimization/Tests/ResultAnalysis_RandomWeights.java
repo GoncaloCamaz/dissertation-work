@@ -1,10 +1,12 @@
 package pt.uminho.algoritmi.netopt.nfv.optimization.Tests;
 
+import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.IGPWeightsOptimizationInputObject;
 import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.Request;
 import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.SRSolutionLoader;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
 import pt.uminho.algoritmi.netopt.ospf.simulation.OSPFWeights;
 import pt.uminho.algoritmi.netopt.ospf.simulation.net.NetGraph;
+import pt.uminho.algoritmi.netopt.ospf.simulation.sr.Flow;
 import pt.uminho.algoritmi.netopt.ospf.simulation.sr.SRSimulator;
 
 import java.io.FileInputStream;
@@ -30,6 +32,7 @@ public class ResultAnalysis_RandomWeights
         String req1200 = "1200";
         String file2 = "RR_MLU_300.json";
         Boolean low = false;
+        String mode = "mlu";
 
         /*
         InputStream inputStream = new FileInputStream(topoFile);
@@ -53,8 +56,8 @@ public class ResultAnalysis_RandomWeights
         double mlu = 0;
         for(int i = 0; i<15; i++)
         {
-            List<Request> req = SRSolutionLoader.loadResultsFromJson(requestsFile+file2);
-            double[] result = evaluate(topology,req);
+            IGPWeightsOptimizationInputObject req = SRSolutionLoader.loadResultsFromJson(mode,requestsFile+file2);
+            double[] result = evaluate(topology,req.getRequestList());
             mlu += result[1];
             phi += result[0];
         }
@@ -78,9 +81,10 @@ public class ResultAnalysis_RandomWeights
         for(i = 0; i < numberOfRequests ; i++)
         {
             Request r = requests.get(i);
-            simulator.addFlow(r.getFlow(), r.getPath());
+            for(Flow f : r.getFlow())
+                simulator.addFlow(f);
         }
-        result[0] = simulator.getCongestionValue();// new Double(object.getPhiValue());
+        result[0] = simulator.getCongestionValue();
         result[1] = simulator.getMLU();
 
         return result;

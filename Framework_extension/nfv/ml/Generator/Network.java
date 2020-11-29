@@ -69,7 +69,7 @@ public class Network
 
         for(NFRequest request : requestsMap.getRequestMap().values())
         {
-            int duration = 10 + rand.nextInt(this.maxRequestDuration);
+            int duration = 5 + rand.nextInt(this.maxRequestDuration);
             OnlineNFRequest onlineNFRequest = new OnlineNFRequest(request,duration, this.state.getServices().getServices().size());
             requests.add(onlineNFRequest);
         }

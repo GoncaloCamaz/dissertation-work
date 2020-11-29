@@ -1,6 +1,7 @@
 package pt.uminho.algoritmi.netopt.nfv.optimization.Tests;
 
 import pt.uminho.algoritmi.netopt.nfv.optimization.ParamsNFV;
+import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.IGPWeightsOptimizationInputObject;
 import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.Request;
 import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.SRSolutionLoader;
 import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.WeightsSolutionSaver;
@@ -55,20 +56,19 @@ public class WeightsAllocationTest_GML
                 }
         }
 
-        List<Request> req = SRSolutionLoader.loadResultsFromJson(requestsFile);
-        double congestion = SRSolutionLoader.loadCongestionval(requestsFile, mode);
+        IGPWeightsOptimizationInputObject req = SRSolutionLoader.loadResultsFromJson(mode,requestsFile);
         ParamsNFV params = new ParamsNFV();
         params.setArchiveSize(100);
         params.setPopulationSize(populationSize);
         params.setNumberGenerations(numberOfGenerations);
         params.setCriteria(ParamsNFV.TerminationCriteria.ITERATION);
 
-        JecoliWeights ea = new JecoliWeights(topology,req, congestion);
+        JecoliWeights ea = new JecoliWeights(topology,req.getRequestList(), req.getMilpResult());
         ea.configureEvolutionaryAlgorithm(params);
         ea.run();
 
         Population p = new NondominatedPopulation(ea.getSolutionSet());
-        save(p, topology, req.size());
+        save(p, topology, req.getRequestList().size());
     }
 
     public static void save(Population p, NetworkTopology topology, int s){

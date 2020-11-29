@@ -1,6 +1,7 @@
 package pt.uminho.algoritmi.netopt.nfv.optimization.Tests;
 
 import pt.uminho.algoritmi.netopt.nfv.optimization.ParamsNFV;
+import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.IGPWeightsOptimizationInputObject;
 import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.Request;
 import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.SRSolutionLoader;
 import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.WeightsSolutionSaver;
@@ -13,6 +14,7 @@ import pt.uminho.algoritmi.netopt.ospf.simulation.Population;
 import pt.uminho.algoritmi.netopt.ospf.simulation.exception.DimensionErrorException;
 import pt.uminho.algoritmi.netopt.ospf.simulation.net.NetGraph;
 import pt.uminho.algoritmi.netopt.ospf.simulation.solution.IntegerSolution;
+import pt.uminho.algoritmi.netopt.ospf.simulation.sr.Flow;
 import pt.uminho.algoritmi.netopt.ospf.simulation.sr.SRSimulator;
 
 import java.io.FileInputStream;
@@ -36,7 +38,7 @@ public class ComparisonTestsGML
         String file1 = "EA_MLU_300.json";
         String file2 = "EA_ResultMLU.json";
         Boolean low = false;
-
+        String mode = "mlu";
 
         InputStream inputStream = new FileInputStream(topoFile);
         NetGraph netgraph = readGML(inputStream);
@@ -54,14 +56,14 @@ public class ComparisonTestsGML
                 }
         }
 
-        List<Request> req = SRSolutionLoader.loadResultsFromJson(requestsFile+"\\"+file1);
+        IGPWeightsOptimizationInputObject req = SRSolutionLoader.loadResultsFromJson(mode,requestsFile+"\\"+file1);
         ParamsNFV params = new ParamsNFV();
         params.setArchiveSize(100);
         params.setPopulationSize(populationSize);
         params.setNumberGenerations(numberOfGenerations);
         params.setCriteria(ParamsNFV.TerminationCriteria.ITERATION);
 
-        JecoliWeights ea = new JecoliWeights(topology,req);
+        JecoliWeights ea = new JecoliWeights(topology,req.getRequestList(),req.getMilpResult());
         ea.configureEvolutionaryAlgorithm(params);
         ea.run();
 
@@ -69,7 +71,7 @@ public class ComparisonTestsGML
         List<IntegerSolution> sol = p.getLowestValuedSolutions(15);
         for(IntegerSolution s : sol)
         {
-            double[] result = evaluate(topology,req,s);
+            double[] result = evaluate(topology,req.getRequestList(),s);
             save(s,topology,result[0],result[1], size3);
         }
         System.out.println("Ended first analysis");
@@ -119,7 +121,10 @@ public class ComparisonTestsGML
         for(i = 0; i < numberOfRequests ; i++)
         {
             Request r = requests.get(i);
-            simulator.addFlow(r.getFlow(), r.getPath());
+            for(Flow f : r.getFlow())
+            {
+                simulator.addFlow(f);
+            }
         }
         result[0] = simulator.getCongestionValue();// new Double(object.getPhiValue());
         result[1] = simulator.getMLU();

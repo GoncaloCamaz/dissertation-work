@@ -40,8 +40,9 @@ public class SRSolutionLoader
      * @throws IOException
      * @throws ParseException
      */
-    public static ArrayList<Request> loadResultsFromJson(String filename) throws IOException, ParseException {
+    public static IGPWeightsOptimizationInputObject loadResultsFromJson(String mode, String filename) throws IOException, ParseException {
         JSONObject obj = loadObject(filename);
+        double metric = Double.parseDouble((String) obj.get(mode));
         JSONArray array = (JSONArray) obj.get("Configurations");
         ArrayList<Request> ret = new ArrayList<>();
         for(Object o : array)
@@ -66,6 +67,7 @@ public class SRSolutionLoader
             LabelPath path = new LabelPath(source,dest);
             ArrayList<Segment> segments = new ArrayList<>();
             int old = -1;
+            List<Flow> flows = new ArrayList<>();
             for(Integer i : nodesIDByOrder)
             {
                 if(i != Integer.parseInt(origin) && i != Integer.parseInt(destination))
@@ -79,16 +81,19 @@ public class SRSolutionLoader
                         else
                             s.setSrcNodeId(Integer.parseInt(origin));
                         segments.add(s);
+                        Flow f = new Flow(s.getSrcNodeId(), s.getDstNodeId(), Flow.FlowType.NFV, false,Double.parseDouble(bandwidth));
+                        flows.add(f);
                         old = i;
                     }
                 }
             }
             path.setLabels(segments);
-            Flow flow = new Flow(Integer.parseInt(id),Integer.parseInt(origin), Integer.parseInt(destination), Flow.FlowType.NFV,false,Double.parseDouble(bandwidth));
-            Request request = new Request(Integer.parseInt(id),flow,path);
+            Request request = new Request(Integer.parseInt(id),flows,path);
             ret.add(request);
         }
-        return ret;
+        IGPWeightsOptimizationInputObject result = new IGPWeightsOptimizationInputObject(metric,ret);
+
+        return result;
     }
 
     public static double loadCongestionval(String filename, String mode) throws IOException, ParseException {

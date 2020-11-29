@@ -9,6 +9,7 @@ import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.Request;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
 import pt.uminho.algoritmi.netopt.ospf.simulation.OSPFWeights;
 
+import pt.uminho.algoritmi.netopt.ospf.simulation.sr.Flow;
 import pt.uminho.algoritmi.netopt.ospf.simulation.sr.SRSimulator;
 
 import java.util.List;
@@ -56,7 +57,10 @@ public class NFVWeightsEvaluation extends AbstractEvaluationFunction<ILinearRepr
         for(int i = 0; i < numberOfRequests ; i++)
         {
             Request r = requests.get(i);
-            simulator.addFlow(r.getFlow(), r.getPath());
+            for(Flow f : r.getFlow())
+            {
+                simulator.addFlow(f);
+            }
         }
         result = simulator.getCongestionValue();// new Double(object.getPhiValue());
 

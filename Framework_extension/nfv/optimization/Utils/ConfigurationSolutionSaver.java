@@ -95,7 +95,10 @@ public class ConfigurationSolutionSaver
             for(int j = 0; j < numberOfRequests ; j++)
             {
                 Request r = requests.get(j);
-                simulator.addFlow(r.getFlow(), r.getPath());
+                for(Flow f : r.getFlow())
+                {
+                    simulator.addFlow(f);
+                }
             }
             result = simulator.getCongestionValue();
             mluRes = simulator.getMLU();
@@ -527,7 +530,8 @@ public class ConfigurationSolutionSaver
         int old = -1;
         int i;
         int it = 0;
-        int index = 0;
+        int index;
+        List<Flow> flows = new ArrayList<>();
         for(index = 0; index < srPath.size(); index++)
         {
             i = srPath.get(index);
@@ -551,10 +555,8 @@ public class ConfigurationSolutionSaver
             }
             it++;
         }
-
         path.setLabels(segments);
-        Flow flow = new Flow(req.getRequestID(), origin, destination, Flow.FlowType.NFV,false, bandwidth);
-        Request request = new Request(req.getRequestID(),flow,path);
+        Request request = new Request(req.getRequestID(),flows,path);
 
         return request;
     }

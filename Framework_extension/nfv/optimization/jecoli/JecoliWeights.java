@@ -80,19 +80,6 @@ public class JecoliWeights
         this.milpcongestionVal = milpcongestionVal;
     }
 
-    public JecoliWeights(NetworkTopology topology,List<Request> requests) {
-        this.topology = topology.copy();
-        this.requests = requests;
-        this.algorithm = null;
-        this.results = null;
-        this.statistics = null;
-        randomNumberGenerator = new DefaultRandomNumberGenerator();
-        MAXWeight = SystemConf.getPropertyInt("ospf.maxweight", 20);
-        MINWeight = SystemConf.getPropertyInt("ospf.minweight", 1);
-        this.milpcongestionVal = 0;
-    }
-
-
     /**
      * Runs the optimization
      *

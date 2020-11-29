@@ -14,6 +14,7 @@ import pt.uminho.algoritmi.netopt.nfv.optimization.OptimizationResultObject;
 import pt.uminho.algoritmi.netopt.nfv.optimization.ParamsNFV;
 import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.EASolutionParser;
 import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.Request;
+import pt.uminho.algoritmi.netopt.nfv.optimization.Utils.SolutionDecoders;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
 import pt.uminho.algoritmi.netopt.ospf.simulation.OSPFWeights;
 import pt.uminho.algoritmi.netopt.ospf.simulation.net.NetNode;
@@ -119,7 +120,10 @@ public class HybridEvaluation extends AbstractMultiobjectiveEvaluationFunction<I
         for(int i = 0; i < numberOfRequests ; i++)
         {
             Request r = requests.get(i);
-            simulator.addFlow(r.getFlow(), r.getPath());
+            for(Flow f : r.getFlow())
+            {
+                simulator.addFlow(f);
+            }
         }
         if(this.algorithm.equals(ParamsNFV.EvaluationAlgorithm.PHI_MPTCP) || this.algorithm.equals(ParamsNFV.EvaluationAlgorithm.PHI))
             result = simulator.getCongestionValue();
@@ -131,48 +135,7 @@ public class HybridEvaluation extends AbstractMultiobjectiveEvaluationFunction<I
 
     private Request decodeRequests(NFVRequestConfiguration req)
     {
-        int origin = req.getRequestOrigin();
-        NetNode source = new NetNode(origin);
-        int destination = req.getRequestDestination();
-        NetNode dest = new NetNode(destination);
-        double bandwidth = req.getBandwidth();
-        List<Integer> srPath = req.genSRPath();
-        LabelPath path = new LabelPath(source,dest);
-
-        ArrayList<Segment> segments = new ArrayList<>();
-        int old = -1;
-        int it = 0;
-        int i;
-        int index = 0;
-        for(index = 0; index < srPath.size(); index++)
-        {
-            i = srPath.get(index);
-            if(i != old)
-            {
-                if(i != origin && i != destination || i == origin && old != -1 || i == destination && destination != origin && it < srPath.size())
-                {
-                    Segment s = new Segment(String.valueOf(i), Segment.SegmentType.NODE);
-                    s.setDstNodeId(i);
-                    if( old == -1)
-                    {
-                        s.setSrcNodeId(origin);
-                    }
-                    else
-                    {
-                        s.setSrcNodeId(old);
-                    }
-                    segments.add(s);
-                }
-                old = i;
-            }
-            it++;
-        }
-
-        path.setLabels(segments);
-        Flow flow = new Flow(req.getRequestID(), origin, destination, Flow.FlowType.NFV,false, bandwidth);
-        Request request = new Request(req.getRequestID(),flow,path);
-
-        return request;
+        return SolutionDecoders.decodeRequests(req);
     }
 
     private double[] evaluateConfiguration(ILinearRepresentation<Integer> solution)
@@ -232,18 +195,7 @@ public class HybridEvaluation extends AbstractMultiobjectiveEvaluationFunction<I
 
     private double decodeNodesProcessCapacity()
     {
-        double nodesCapacity = 0;
-        boolean breakcycle = false;
-        for(int i = 0; i < topology.getDimension() && !breakcycle; i++)
-        {
-            if(state.getNodes().getNodes().get(i).getProcessCapacity() > 0)
-            {
-                nodesCapacity = state.getNodes().getNodes().get(i).getProcessCapacity();
-                breakcycle = true;
-            }
-        }
-
-        return nodesCapacity;
+        return SolutionDecoders.decodeNodesProcessCapacity(topology, state);
     }
 
     private double checkIfSolutions(OptimizationResultObject object)

@@ -12,8 +12,8 @@ public class ParetoFrontCSVFileGenerator
 {
     public static void main(String[] args) throws IOException, ParseException {
         int i;
-        String filename = "C:\\Users\\gcama\\Desktop\\Dissertacao\\NewAnalysisConfigurations\\BT\\Pareto\\new\\newpareto\\phi";
-        int max = 71;
+        String filename = "C:\\Users\\gcama\\Desktop\\Dissertacao\\NewAnalysisConfigurations\\BT\\Pareto\\new\\newpareto\\mlu";
+        int max = 111;
         List<ResultAnalystParserObject> list = new ArrayList<>();
         for(i=1; i <= max;i++)
         {
