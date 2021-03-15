@@ -11,6 +11,7 @@ public class DataSetEntry
     private double[] nodesState;
     private int[] processmentLocation;
 
+
     public DataSetEntry(int numberOfNodes, int numberOfEdges, int numberOfServices, boolean binaryOutput)
     {
         this.origin = -1;

@@ -20,25 +20,26 @@ import java.util.List;
 
 public class ComparisonTests
 {
-    private static String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";// args[0];
-    private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abileneHalfCapacity.edges";//args[1];
-    private static String requestsFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\NewAnalysisConfigurations\\Abilene\\SOEA\\Analise\\";// args[3]
+    private static String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.nodes";// args[0];
+    private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2Low.edges";//args[1];
+    private static String requestsFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\NewAnalysisConfigurations\\30\\SOEA\\Analise\\";// args[3]
     private static int populationSize = 100;
-    private static int numberOfGenerations = 100;
+    private static int numberOfGenerations = 150;
 
     public static void main(String[] args) throws Exception {
 
         int size3 = 300;
         int size12 = 1200;
         String req300 = "LC";
-        String req1200 = "300";
-        String file1 = "EA_MLU_"; //size 300
+        String req1200 = "LC";
+        String file1 = "EA_PHI_"; //size 300
         String file2 = "EA_MLU_"; // size 1200
-        String mode = "mlu";
+        String mode1 = "phi";
+        String mode2 = "mlu";
 
         NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
 
-        IGPWeightsOptimizationInputObject req = SRSolutionLoader.loadResultsFromJson(mode,requestsFile+file1+req300+".json");
+        IGPWeightsOptimizationInputObject req = SRSolutionLoader.loadResultsFromJson(mode1,requestsFile+file1+req300+".json");
         ParamsNFV params = new ParamsNFV();
         params.setArchiveSize(100);
         params.setPopulationSize(populationSize);
@@ -49,7 +50,7 @@ public class ComparisonTests
         ea.configureEvolutionaryAlgorithm(params);
         ea.run();
 
-        Population p = new NondominatedPopulation(ea.getSolutionSet());
+        Population p = new Population(ea.getSolutionSet());
         List<IntegerSolution> sol = p.getLowestValuedSolutions(15);
         for(IntegerSolution s : sol)
         {
@@ -57,28 +58,26 @@ public class ComparisonTests
             save(s,topology,result[0],result[1], size3);
         }
         System.out.println("Ended first analysis");
-/*
-        List<Request> req1 = SRSolutionLoader.loadResultsFromJson(requestsFile+file2+req1200+".json");
+
+        IGPWeightsOptimizationInputObject req1 = SRSolutionLoader.loadResultsFromJson(mode2,requestsFile+file2+req1200+".json");
         ParamsNFV params1 = new ParamsNFV();
         params1.setArchiveSize(100);
         params1.setPopulationSize(populationSize);
         params1.setNumberGenerations(numberOfGenerations);
         params1.setCriteria(ParamsNFV.TerminationCriteria.ITERATION);
 
-        JecoliWeights ea1 = new JecoliWeights(topology,req1);
+        JecoliWeights ea1 = new JecoliWeights(topology,req1.getRequestList(),req1.getMilpResult());
         ea1.configureEvolutionaryAlgorithm(params1);
         ea1.run();
 
-        Population p1 = new NondominatedPopulation(ea1.getSolutionSet());
+        Population p1 = new Population(ea1.getSolutionSet());
         List<IntegerSolution> sol1 = p1.getLowestValuedSolutions(15);
         for(IntegerSolution s1 : sol1)
         {
-            double[] result = evaluate(topology,req1,s1);
-            save(s1,topology,result[1], size12);
+            double[] result1 = evaluate(topology,req1.getRequestList(),s1);
+            save(s1,topology,result1[0],result1[1], size12);
         }
         System.out.println("Ended second analysis");
-
- */
     }
 
     public static void save(IntegerSolution p, NetworkTopology topology,double phi ,double mlu, int s){

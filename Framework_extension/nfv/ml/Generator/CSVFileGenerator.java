@@ -41,23 +41,25 @@ public class CSVFileGenerator
                 {
                     row[j+4+numberOfServices] = String.valueOf(entry.getLinksState()[j]);
                 }
+
+                int aux1 = 4+numberOfServices+numberOfEdges;
                 for(int k = 0; k < numberOfNodes; k++)
                 {
-                    row[k+4+numberOfServices+numberOfEdges] = String.valueOf(entry.getNodesState()[k]);
-
+                    row[k+aux1] = String.valueOf(entry.getNodesState()[k]);
                 }
 
                 if(binaryOutput)
                 {
                     int index = 0;
+                    int aux2 = 4 + numberOfServices + numberOfEdges + numberOfNodes;
                     for(int l = 0; l < numberOfServices; l++)
                     {
                         for(int n = 0; n < numberOfNodes; n++)
                         {
                             if (entry.getProcessmentLocation()[l] == n) {
-                                row[index + 4 + numberOfServices + numberOfEdges + numberOfNodes] = "1";
+                                row[index + aux2] = "1";
                             } else {
-                                row[index + 4 + numberOfServices + numberOfEdges + numberOfNodes] = "0";
+                                row[index + aux2] = "0";
 
                             }
                             index++;
@@ -66,15 +68,16 @@ public class CSVFileGenerator
                 }
                 else
                 {
+                    int aux3 = 4+numberOfServices+numberOfEdges+numberOfNodes;
                     for(int l = 0; l < numberOfServices; l++)
                     {
                         if(entry.getProcessmentLocation()[l] == -1)
                         {
-                            row[l+4+numberOfServices+numberOfEdges+numberOfNodes] = "NR";
+                            row[l+aux3] = "NR";
                         }
                         else
                         {
-                            row[l+4+numberOfServices+numberOfEdges+numberOfNodes] = String.valueOf(entry.getProcessmentLocation()[l]);
+                            row[l+aux3] = String.valueOf(entry.getProcessmentLocation()[l]);
 
                         }
                     }
@@ -113,6 +116,7 @@ public class CSVFileGenerator
             headers[k+4+numberOfServices+numberOfEdges] = "N"+k;
         }
 
+        int aux4 = 4+numberOfServices+numberOfEdges+numberOfNodes;
         if(binaryOutput)
         {
             int index = 0;
@@ -120,7 +124,7 @@ public class CSVFileGenerator
             {
                 for(int n = 0; n < numberOfNodes; n++)
                 {
-                    headers[index+4+numberOfServices+numberOfEdges+numberOfNodes] = "RN" + n + "S" + l1;
+                    headers[index+aux4] = "RN" + n + "S" + l1;
                     index++;
                 }
             }
@@ -129,7 +133,7 @@ public class CSVFileGenerator
         {
             for(int l = 0; l < numberOfServices; l++)
             {
-                headers[l+4+numberOfServices+numberOfEdges+numberOfNodes] = "RPL" + l;
+                headers[l+aux4] = "RPL" + l;
             }
         }
 
@@ -180,6 +184,7 @@ public class CSVFileGenerator
 
         }
 
+        int aux5 = 4 + numberOfServices + numberOfEdges + numberOfNodes;
         if(binaryOutput)
         {
             int index = 0;
@@ -188,9 +193,9 @@ public class CSVFileGenerator
                 for(int n = 0; n < numberOfNodes; n++)
                 {
                     if (entry.getProcessmentLocation()[l] == n) {
-                        row[index + 4 + numberOfServices + numberOfEdges + numberOfNodes] = "1";
+                        row[index + aux5] = "1";
                     } else {
-                        row[index + 4 + numberOfServices + numberOfEdges + numberOfNodes] = "0";
+                        row[index + aux5] = "0";
 
                     }
                     index++;

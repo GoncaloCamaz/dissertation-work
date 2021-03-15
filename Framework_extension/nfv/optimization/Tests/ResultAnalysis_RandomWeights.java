@@ -20,7 +20,7 @@ public class ResultAnalysis_RandomWeights
 {
     private static String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.nodes";// args[0];
     private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.edges";//args[1];
-    private static String requestsFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\NewAnalysisConfigurations\\30\\SOEA\\Analise\\";// args[3]
+    private static String requestsFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\NewAnalysisConfigurations\\BT\\SOEA\\Analise\\";// args[3]
     private static String topoFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/BT Europe/BtEurope.gml";
 
     public ResultAnalysis_RandomWeights() throws Exception {
@@ -30,28 +30,36 @@ public class ResultAnalysis_RandomWeights
         int size3 = 300;
         int size12 = 1200;
         String req1200 = "1200";
-        String file2 = "RR_MLU_300.json";
+        String file2 = "EA_PHI_1200.json";
         Boolean low = false;
-        String mode = "mlu";
+        String mode = "phi";
 
-        /*
+
         InputStream inputStream = new FileInputStream(topoFile);
         NetGraph netgraph = readGML(inputStream);
-        NetworkTopology topology = new NetworkTopology(netgraph);
+       NetworkTopology topology = new NetworkTopology(netgraph);
 
         if(low)
         {
             double[][] capacity = topology.getNetGraph().createGraph().getCapacitie();
             int nodesNumber = 24;
+            for(int i = 0; i < nodesNumber; i++)
                 for (int j = 0; j < nodesNumber; j++) {
                     if (capacity[i][j] > 0) {
                         topology.getNetGraph().setBandwidth(i,j,750);
                     }
                 }
         }
-         */
-        NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
 
+      //  NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
+        double[][] capacity = topology.getNetGraph().createGraph().getCapacitie();
+        int nodesNumber = 24;
+        for(int i = 0; i < nodesNumber; i++)
+            for (int j = 0; j < nodesNumber; j++) {
+                if (capacity[i][j] > 0) {
+                    System.out.println(capacity[i][j]);
+                }
+            }
         double phi = 0;
         double mlu = 0;
         for(int i = 0; i<15; i++)

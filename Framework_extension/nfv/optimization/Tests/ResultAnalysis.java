@@ -13,7 +13,7 @@ public class ResultAnalysis
         double mlu = 0;
         double phi = 0;
 
-        String filename = "C:\\Users\\gcama\\Desktop\\Tese_final\\pesosIGP\\Abilene\\LC\\mlu\\weights (";
+        String filename = "C:\\Users\\gcama\\Desktop\\Tese_final\\pesosIGP\\BT\\1200\\ea\\mlu\\weights (";
         int i;
 
         for(i = 1; i <= 15; i++)

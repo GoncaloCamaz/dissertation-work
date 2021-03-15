@@ -63,7 +63,6 @@ public class NFVWeightsEvaluation extends AbstractEvaluationFunction<ILinearRepr
             }
         }
         result = simulator.getCongestionValue();// new Double(object.getPhiValue());
-
         return Math.abs(result-this.milpCongestionVal);
     }
 

@@ -42,7 +42,10 @@ public class SRSolutionLoader
      */
     public static IGPWeightsOptimizationInputObject loadResultsFromJson(String mode, String filename) throws IOException, ParseException {
         JSONObject obj = loadObject(filename);
-        double metric = Double.parseDouble((String) obj.get(mode));
+        double metric = 1;
+        if(obj.containsKey(mode))
+            metric = Double.parseDouble(String.valueOf(obj.get(mode)));
+
         JSONArray array = (JSONArray) obj.get("Configurations");
         ArrayList<Request> ret = new ArrayList<>();
         for(Object o : array)
@@ -64,31 +67,37 @@ public class SRSolutionLoader
                 nodesIDByOrder.add(Integer.parseInt(String.valueOf(oSegments)));
             }
 
-            LabelPath path = new LabelPath(source,dest);
-            ArrayList<Segment> segments = new ArrayList<>();
             int old = -1;
             List<Flow> flows = new ArrayList<>();
-            for(Integer i : nodesIDByOrder)
+            for(int i = 0; i < nodesIDByOrder.size(); i++)
             {
-                if(i != Integer.parseInt(origin) && i != Integer.parseInt(destination))
+                int node = nodesIDByOrder.get(i);
+                if(old == -1)
                 {
-                    if(i != old)
-                    {
-                        Segment s = new Segment(i.toString(), Segment.SegmentType.NODE);
-                        s.setDstNodeId(i);
-                        if(old != -1)
-                            s.setSrcNodeId(old);
-                        else
-                            s.setSrcNodeId(Integer.parseInt(origin));
-                        segments.add(s);
-                        Flow f = new Flow(s.getSrcNodeId(), s.getDstNodeId(), Flow.FlowType.NFV, false,Double.parseDouble(bandwidth));
-                        flows.add(f);
-                        old = i;
-                    }
+                    Flow f = new Flow(source.getNodeId(),node, Flow.FlowType.NFV,false, Double.parseDouble(bandwidth));
+                    flows.add(f);
+                    old = node;
+                }
+                else
+                {
+                    Flow f = new Flow(old,node, Flow.FlowType.NFV,false, Double.parseDouble(bandwidth));
+                    flows.add(f);
+                    old = node;
                 }
             }
-            path.setLabels(segments);
-            Request request = new Request(Integer.parseInt(id),flows,path);
+            Flow f = new Flow(old, Integer.parseInt(destination), Flow.FlowType.NFV, false, Double.parseDouble(bandwidth));
+            flows.add(f);
+
+            List<Flow> updatedFlows = new ArrayList<>();
+            for(Flow fl : flows)
+            {
+                if(fl.getSource() != fl.getDestination())
+                {
+                    updatedFlows.add(fl);
+                }
+            }
+
+            Request request = new Request(Integer.parseInt(id),updatedFlows);
             ret.add(request);
         }
         IGPWeightsOptimizationInputObject result = new IGPWeightsOptimizationInputObject(metric,ret);

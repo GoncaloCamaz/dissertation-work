@@ -17,7 +17,7 @@ import java.util.List;
 
 public class NFVServiceAllocationTest
 {
-  //  /** Debug mode
+    /** Debug mode
     private static String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";// args[0];
     private static String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abileneHalfCapacity.edges";//args[1];
     private static String servicesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/NetOpt-master/frameworkConfiguration_AbileneML.json";
@@ -31,9 +31,9 @@ public class NFVServiceAllocationTest
     private static double maxServices = 0;
     private static int cplexTimeLimit = 25;
     private static double alpha = 0.5;
-  // */
+   */
     public static void main(String[] args) throws Exception {
-/*
+
         if(args.length!=13)
            System.exit(1);
 
@@ -50,7 +50,7 @@ public class NFVServiceAllocationTest
         double alpha = Double.parseDouble(args[10]);
         int cplexTimeLimit = Integer.parseInt(args[11]);
         String evaluation = args[12].toLowerCase();
-*/
+
         NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
         NFVState state = new NFVState(servicesFile, requests);
 

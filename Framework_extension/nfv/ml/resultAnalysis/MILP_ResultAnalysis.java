@@ -1,4 +1,4 @@
-package pt.uminho.algoritmi.netopt.cplex;
+package pt.uminho.algoritmi.netopt.nfv.ml.resultAnalysis;
 
 import ilog.concert.IloException;
 import ilog.concert.IloIntVar;
@@ -8,31 +8,28 @@ import ilog.cplex.IloCplex;
 import pt.uminho.algoritmi.netopt.cplex.utils.Arc;
 import pt.uminho.algoritmi.netopt.cplex.utils.Arcs;
 import pt.uminho.algoritmi.netopt.nfv.*;
-import pt.uminho.algoritmi.netopt.nfv.ml.Generator.OnlineNFRequest;
+import pt.uminho.algoritmi.netopt.nfv.ml.Generator.DataSetEntry;
 import pt.uminho.algoritmi.netopt.nfv.optimization.OptimizationResultObject;
-import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkLoads;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
-import pt.uminho.algoritmi.netopt.ospf.simulation.Simul;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class NFV_DataSetMILPSolver
+public class MILP_ResultAnalysis
 {
     private NetworkTopology topology;
     private NFVState state;
-    private List<OnlineNFRequest> requests;
+    private DataSetEntry entry;
     private int cplexTimeLimit;
-    private int currentRequestID;
     private double alpha;
 
-    public NFV_DataSetMILPSolver(NetworkTopology topology, NFVState state, List<OnlineNFRequest> requests, int currentRequestID, int cplexTimeLimit, double alpha)
+    public MILP_ResultAnalysis(NetworkTopology topology, NFVState state, DataSetEntry entry, int cplexTimeLimit, double alpha)
     {
         this.topology = topology;
         this.state = state;
-        this.requests = requests;
-        this.currentRequestID = currentRequestID;
+        this.entry = entry;
         this.cplexTimeLimit = cplexTimeLimit;
         this.alpha = alpha;
     }
@@ -47,8 +44,8 @@ public class NFV_DataSetMILPSolver
     {
         double[][] cp = topology.getNetGraph().createGraph().getCapacitie();
         Map<Integer, NFService> serv = this.state.getServices().getServices();
-        Map<Integer, NFRequest> r = decodeOnlineRequests(this.requests);
-        Map<Integer, NFNode> n = this.state.getNodes().getNodes();
+        Map<Integer, NFRequest> r = decodeEntryRequest(entry);
+        Map<Integer, NFNode> n = decodeNodes(entry);
         OptimizationResultObject res = new OptimizationResultObject(n.size());
         try {
             res = optimize(cp, serv, r, n, this.alpha);
@@ -59,11 +56,34 @@ public class NFV_DataSetMILPSolver
         return res;
     }
 
+    private Map<Integer, NFRequest> decodeEntryRequest(DataSetEntry entry) {
+        List<Integer> servicesRequired = decodeServicesRequired(entry);
+        NFRequest request = new NFRequest(0, entry.getOrigin(), entry.getDestination(), entry.getBandwidth(), servicesRequired);
+        Map<Integer, NFRequest> requestMap = new HashMap<>();
+
+        requestMap.put(0,request);
+
+        return requestMap;
+    }
+
+    private List<Integer> decodeServicesRequired(DataSetEntry entry) {
+        List<Integer> result = new ArrayList<>();
+        for(int i = 0; i < entry.getRequests().length; i++)
+        {
+            if(entry.getRequests()[i] > 0)
+            {
+                result.add(entry.getRequests()[i]);
+            }
+        }
+
+        return result;
+    }
+
     private OptimizationResultObject optimize(double[][] cp, Map<Integer, NFService> serv, Map<Integer, NFRequest> r, Map<Integer, NFNode> n, double alpha) throws IloException {
         IloCplex cplex = new IloCplex();
         cplex.setName("Multi commodity flow Phi and Node optimization");
         // Set of arcs regarding the topology
-        Arcs arcs = new Arcs();
+        Arcs arcs = decodeLinksCapacity(cp,entry.getLinksState(),28);
 
         cplex.setParam(IloCplex.Param.TimeLimit, this.cplexTimeLimit);
         // number of nodes
@@ -82,16 +102,6 @@ public class NFV_DataSetMILPSolver
         points[4] = 1468.0 / 3;
         points[5] = 16318.0 / 3;
         double[] slopes = new double[] { 1, 3, 10, 70, 500, 5000 };
-
-        int arcID = 0;
-        for (int i = 0; i < nodesNumber; i++)
-            for (int j = 0; j < nodesNumber; j++) {
-                if (cp[i][j] > 0) {
-                    Arc a = new Arc(arcID, i, j, cp[i][j]);
-                    arcID++;
-                    arcs.add(a);
-                }
-            }
 
         // number of arcs; Arc a => int fromNode; int toNode; double capacity;
         // int index;
@@ -151,7 +161,7 @@ public class NFV_DataSetMILPSolver
         // a[i][n][s] i -> request id; n -> node; s -> service
         // a either 1 or 0 if n is the node that will execute the s service for
         // the i request
-        IloIntVar[][][] a = new IloIntVar[this.currentRequestID+1][nodesNumber][servicesNumber];
+        IloIntVar[][][] a = new IloIntVar[1][nodesNumber][servicesNumber];
         for (NFRequest req : r.values()) {
             int reqID = req.getId();
             for (NFNode nd : n.values()) {
@@ -165,24 +175,15 @@ public class NFV_DataSetMILPSolver
             }
         }
 
-        for(OnlineNFRequest request : this.requests)
+
+        int[] resultP = entry.getProcessmentLocation();
+        for(int j = 0; j < nodesNumber; j++)
         {
-            if(request.getRequest().getId() != this.currentRequestID)
+            for(int i = 0; i < servicesNumber; i++)
             {
-                int[] result = request.getProcessmentLocation();
-                for(int j = 0; j < nodesNumber; j++)
+                if(resultP[i] == j)
                 {
-                    for(int i = 0; i < servicesNumber; i++)
-                    {
-                        if(result[i] == j)
-                        {
-                            cplex.addEq(a[request.getRequest().getId()][j][i],1);
-                        }
-                        else
-                        {
-                            cplex.addEq(a[request.getRequest().getId()][j][i],0);
-                        }
-                    }
+                    cplex.addEq(a[0][j][i],1);
                 }
             }
         }
@@ -317,29 +318,29 @@ public class NFV_DataSetMILPSolver
 
         HashMap<NFRequestSegment,HashMap<Arc, IloIntVar>> beta = new HashMap<>();
 
+        for (NFRequest request : r.values()) {
+            for (NFRequestSegment s : request.getRequestSegments()) {
+                HashMap<Arc, IloIntVar> l = new HashMap<>();
+                for (Arc arc : arcs) {
+                    int source = arc.getFromNode();
+                    int dest = arc.getToNode();
+                    l.put(arc, cplex.intVar(0, 1, "beta_"+s.getRequestID()+"_"+s.getFrom()+ "_"+s.getTo() + "_" + source + "_" + dest));
+                }
+                beta.put(s,l);
+            }
+        }
+
+        // EQUATION 20
+        // laik = baik * xik
+        for (Arc arc : arcs) {
             for (NFRequest request : r.values()) {
                 for (NFRequestSegment s : request.getRequestSegments()) {
-                    HashMap<Arc, IloIntVar> l = new HashMap<>();
-                    for (Arc arc : arcs) {
-                        int source = arc.getFromNode();
-                        int dest = arc.getToNode();
-                        l.put(arc, cplex.intVar(0, 1, "beta_"+s.getRequestID()+"_"+s.getFrom()+ "_"+s.getTo() + "_" + source + "_" + dest));
-                    }
-                    beta.put(s,l);
+                    IloLinearNumExpr la = cplex.linearNumExpr();
+                    la.addTerm(s.getBandwidth(), beta.get(s).get(arc));
+                    cplex.addEq(s_loads.get(s).get(arc), la, "EQ20_Arc_" + arc.getFromNode() + "_" + arc.getToNode() + "_Req_" + request.getId() + "_Seg_" + s.getFrom() + "_" + s.getTo());
                 }
             }
-
-            // EQUATION 20
-            // laik = baik * xik
-            for (Arc arc : arcs) {
-                for (NFRequest request : r.values()) {
-                    for (NFRequestSegment s : request.getRequestSegments()) {
-                        IloLinearNumExpr la = cplex.linearNumExpr();
-                        la.addTerm(s.getBandwidth(), beta.get(s).get(arc));
-                        cplex.addEq(s_loads.get(s).get(arc), la, "EQ20_Arc_" + arc.getFromNode() + "_" + arc.getToNode() + "_Req_" + request.getId() + "_Seg_" + s.getFrom() + "_" + s.getTo());
-                    }
-                }
-            }
+        }
 
         OptimizationResultObject object = new OptimizationResultObject(nodesNumber);
         // Solve
@@ -353,81 +354,125 @@ public class NFV_DataSetMILPSolver
             for(int j = 0; j < topology.getDimension(); j++)
                 u[i][j] = 0;
 
+
+        double phi = 0;
+        double arcUtl = 0;
+        double la = 0;
+        double ca = 0;
         for (Arc arc : arcs) {
-            double utilization = cplex.getValue(l_a.get(arc));
-            u[arc.getFromNode()][arc.getToNode()] = utilization;
-            double result = utilization/arc.getCapacity();
-            result =  Math.floor(result*100) / 100;
-            links[arc.getIndex()] = result;
-        }
-        object.setLinksLoad1D(links);
-        object.setLinkLoads(u);
-
-
-        double[] uNodes = new double[nodesNumber];
-        double val = 0;
-        for (NFNode node : n.values()) {
-            double utNode = cplex.getValue(r_n.get(node.getId()));
-            val += cplex.getValue(gamma_n.get(node.getId()));
-            double result =  utNode/node.getProcessCapacity();
-            result = Math.floor(result*100)/100;
-            uNodes[node.getId()] = result;
-        }
-        object.setGammaValue(val);
-
-        object.setNodeUtilization(uNodes);
-        object.setLoadValue(res);
-
-        int[] serviceProcessmentLocation = new int[servicesNumber];
-        NFRequest request = new NFRequest();
-        for(OnlineNFRequest reqs : requests)
-        {
-            if(reqs.getRequest().getId() == this.currentRequestID)
+            phi+= cplex.getValue(phi_a.get(arc));
+            la = cplex.getValue(l_a.get(arc));
+            ca = arc.getCapacity();
+            if((la/ca) >= arcUtl)
             {
-                request = reqs.getRequest();
+                arcUtl = (la/ca);
             }
         }
+        object.setPhiValue(phi);
+        double mlu = arcUtl;
+        object.setMlu(mlu);
 
-        List<Integer> requestedServices = request.getServiceList();
-
-        for(int i = 0; i < servicesNumber; i++)
-        {
-            if(requestedServices.contains(i))
+        double val = 0;
+        double nodeUtl = 0;
+        double rn = 0;
+        double qn = 0;
+        for (NFNode node : n.values()) {
+            int nodeID = node.getId();
+            if(nodeID == 1 || nodeID == 4 || nodeID == 5 || nodeID == 9 || nodeID == 10)
             {
-                for(int j = 0; j < nodesNumber; j++)
+                val += cplex.getValue(gamma_n.get(node.getId()));
+                rn = cplex.getValue(r_n.get(node.getId()));
+                qn = node.getProcessCapacity();
+                if((rn/qn) >= nodeUtl)
                 {
-                    NFNode node = this.state.getNodes().getNodes().get(j);
-                    if(cplex.getValue(a[request.getId()][node.getId()][i]) > 0)
-                    {
-                        serviceProcessmentLocation[i] = node.getId();
-                    }
+                    nodeUtl = (rn/qn);
                 }
             }
-            else
+        }
+        object.setMnu(nodeUtl);
+        object.setGammaValue(val);
+        object.setLoadValue(res);
+
+        for(NFNode node : n.values())
+        {
+            int nodeID = node.getId();
+            for(NFService service : serv.values())
             {
-                serviceProcessmentLocation[i] = -1;
+                int sID = service.getId();
+                if(cplex.getValue(a[0][nodeID][sID]) > 0)
+                {
+                    System.out.println("Service " + sID + " executed on " + nodeID );
+                }
             }
         }
-        object.setServiceProcessmentLocation(serviceProcessmentLocation);
 
         cplex.end();
         return object;
     }
 
-    private Map<Integer, NFRequest> decodeOnlineRequests(List<OnlineNFRequest> requests)
+    private Arcs decodeLinksCapacity(double[][] topoCapacities, double[] percentages, int topoSize)
     {
-        Map<Integer, NFRequest> reqs = new HashMap<>();
+        Arcs arcs = new Arcs();
+        int arcID = 0;
 
-        for(OnlineNFRequest request : requests)
+        for(int i = 0; i < 11; i++)
         {
-            if(request.getDuration() > 0)
+            for(int j = 0; j < 11; j++)
             {
-                NFRequest r = request.getRequest();
-                reqs.put(r.getId(), r);
+                if(topoCapacities[i][j] > 0)
+                {
+                    double newcapacity = 0;
+                    if(percentages[arcID] >= 1.0)
+                    {
+                        newcapacity = calculateCapacity(42,1);
+
+                    }
+                    else
+                    {
+                        newcapacity = calculateCapacity(42, percentages[arcID]);
+                    }
+                    Arc arc = new Arc(arcID,i,j,newcapacity);
+                    arcs.add(arc);
+                    arcID++;
+                }
             }
         }
 
-        return reqs;
+        return arcs;
+    }
+
+    private Map<Integer, NFNode> decodeNodes(DataSetEntry entry) {
+        double[] nodes = entry.getNodesState();
+        Map<Integer, NFNode> nodesM = state.getNodes().getNodes();
+
+        for(int i = 0; i < nodes.length; i++)
+        {
+            double newCap = 0;
+            if(i == 1 || i ==4 || i == 5 || i ==9 || i==10)
+            {
+                if(nodes[i] >= 1.0)
+                {
+                    newCap = calculateCapacity(90, 90 );
+                }
+                else
+                {
+                    newCap = calculateCapacity(90, nodes[i]);
+
+                }
+            }
+            nodesM.get(i).setProcessCapacity(newCap);
+        }
+
+
+        return nodesM;
+    }
+
+
+    private double calculateCapacity(double fullcapacity, double percentage)
+    {
+        double percentageLeft = 1 - percentage;
+
+        return fullcapacity * percentageLeft;
     }
 
     public NetworkTopology getTopology() {
@@ -446,28 +491,12 @@ public class NFV_DataSetMILPSolver
         this.state = state;
     }
 
-    public List<OnlineNFRequest> getRequests() {
-        return requests;
-    }
-
-    public void setRequests(List<OnlineNFRequest> requests) {
-        this.requests = requests;
-    }
-
     public int getCplexTimeLimit() {
         return cplexTimeLimit;
     }
 
     public void setCplexTimeLimit(int cplexTimeLimit) {
         this.cplexTimeLimit = cplexTimeLimit;
-    }
-
-    public int getCurrentRequestID() {
-        return currentRequestID;
-    }
-
-    public void setCurrentRequestID(int currentRequestID) {
-        this.currentRequestID = currentRequestID;
     }
 
     public double getAlpha() {

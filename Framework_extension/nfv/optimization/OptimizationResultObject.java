@@ -176,6 +176,27 @@ public class OptimizationResultObject
 
     public double getNodeLoad(int i) {return this.nodeUtilization[i]; }
 
+    public double calculateAverageLinksLoad()
+    {
+        double res = 0;
+        for(int i = 0; i < linksLoad1D.length; i++)
+            res+=linksLoad1D[i];
+
+        return res/linksLoad1D.length;
+
+    }
+
+    public double calculateAverageNodesLoad()
+    {
+        double res = 0;
+        for(int i = 0; i < nodeUtilization.length; i++)
+        {
+            res += nodeUtilization[i];
+        }
+
+        return res/nodeUtilization.length;
+    }
+
     @Override
     public String toString() {
         return "OptimizationResultObject{" +

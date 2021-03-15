@@ -17,14 +17,12 @@ public class Network
     private CurrentNetworkState currentState;
     private NetworkTopology topology;
     private NFVState state;
-    private int numberOfEntries;
     private int maxRequestDuration;
     private List<OnlineNFRequest> requests;
 
-    public Network(NetworkTopology topology, NFVState state, int numberOfEntries, int maxRequestDuration) {
+    public Network(NetworkTopology topology, NFVState state, int maxRequestDuration) {
         this.topology = topology;
         this.state = state;
-        this.numberOfEntries = numberOfEntries;
         this.maxRequestDuration = maxRequestDuration;
         this.requests = getOnlineRequests();
         this.currentState = new CurrentNetworkState(topology.getDimension(), topology.getNumberEdges());
@@ -75,14 +73,6 @@ public class Network
         }
 
         return requests;
-    }
-
-    public int getNumberOfEntries() {
-        return numberOfEntries;
-    }
-
-    public void setNumberOfEntries(int numberOfEntries) {
-        this.numberOfEntries = numberOfEntries;
     }
 
     public int getMaxRequestDuration() {

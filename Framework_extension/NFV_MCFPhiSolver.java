@@ -25,6 +25,7 @@ import pt.uminho.algoritmi.netopt.cplex.utils.Arc;
 import pt.uminho.algoritmi.netopt.cplex.utils.Arcs;
 import pt.uminho.algoritmi.netopt.cplex.utils.SourceDestinationPair;
 import pt.uminho.algoritmi.netopt.nfv.*;
+import pt.uminho.algoritmi.netopt.nfv.ml.Generator.OnlineNFRequest;
 import pt.uminho.algoritmi.netopt.nfv.optimization.NFVRequestConfiguration;
 import pt.uminho.algoritmi.netopt.nfv.optimization.NFVRequestsConfigurationMap;
 import pt.uminho.algoritmi.netopt.nfv.optimization.OptimizationResultObject;
@@ -34,10 +35,7 @@ import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import ilog.concert.*;
 import pt.uminho.algoritmi.netopt.ospf.simulation.OSPFWeights;
@@ -59,6 +57,7 @@ public class NFV_MCFPhiSolver {
 	private double alpha;
 	private boolean saveLoads;
 	private boolean saveConfigurations;
+	private boolean randomSRRequests;
 
 	public NFV_MCFPhiSolver(NetworkTopology topology, NFServicesMap servicesMap, NFRequestsMap r,
 							NFNodesMap n) {
@@ -66,7 +65,7 @@ public class NFV_MCFPhiSolver {
 		this.services = servicesMap;
 		this.NFRequestsMap = r;
 		this.nodesMap = n;
-		this.cplexTimeLimit = 86400;
+		this.cplexTimeLimit = 6400;
 		this.alpha = 0.5;
 		this.mptcpenabled = true;
 		this.setSaveLoads(true);
@@ -86,18 +85,17 @@ public class NFV_MCFPhiSolver {
 	}
 
 	public static void main(String[] args) {
-		String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";// args[0];
-		String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.edges";//args[1];
+		String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.nodes";// args[0];
+		String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.edges";//args[1];
 		String topoFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/BT Europe/BtEurope.gml";
-		String servicesFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\frameworkConfiguration_BTEurope.json";
-		String requests = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\pedidosBTEurope_1200.csv";
+		String servicesFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\frameworkConfiguration.json";
+		String requests = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\pedidos300.csv";
 
 		try {
-			InputStream inputStream = new FileInputStream(topoFile);
-			NetGraph netgraph = readGML(inputStream);
-
-			NetworkTopology topology = new NetworkTopology(netgraph);
-			//NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
+		//	InputStream inputStream = new FileInputStream(topoFile);
+		//	NetGraph netgraph = readGML(inputStream);
+		//	NetworkTopology topology = new NetworkTopology(netgraph);
+			NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
 			NFVState state = new NFVState(servicesFile, requests);
 			NFServicesMap services = state.getServices();
 			NFNodesMap map = state.getNodes();
@@ -110,21 +108,23 @@ public class NFV_MCFPhiSolver {
 			for (int i = 0; i < nodesNumber; i++)
 				for (int j = 0; j < nodesNumber; j++) {
 					if (capacity[i][j] > 0) {
-						Arc a = new Arc(arcID, i, j, 1000);
+						Arc a = new Arc(arcID, i, j, capacity[i][j]);
 						arcID++;
 						arcs.add(a);
+						topology.getNetGraph().setBandwidth(i,j,capacity[i][j]);
 					}
 				}
 
 			NFV_MCFPhiSolver solver = new NFV_MCFPhiSolver(topology, services, req, map);
 			solver.setMptcpenabled(true);
 			solver.setSaveLoads(true);
+			solver.setRandomSRRequests(false);
 			solver.setSaveConfigurations(true);
-			solver.setCplexTimeLimit(300);
+			solver.setCplexTimeLimit(60);
 			OptimizationResultObject obj = solver.optimize();
-			saveToCSV(obj,arcs,map,"Phi_allAvailable");
-			OSPFWeights res = new OSPFWeights(topology.getDimension());
-			ConfigurationSolutionSaver.saveToJSON(obj,arcs,map,"Result",res,0,0);
+		//	saveToCSV(obj,arcs,map,"Phi_allAvailable");
+		//	OSPFWeights res = new OSPFWeights(topology.getDimension());
+		//	ConfigurationSolutionSaver.saveToJSON(obj,arcs,map,"Result",res,0,0);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -389,18 +389,18 @@ public class NFV_MCFPhiSolver {
 
 
 					if(s.isRequestSource() && nd.getId()==s.getFrom() && s.isRequestDestination() && nd.getId()==s.getTo()){
-						cplex.addEq(ev, 0);
+						cplex.addEq(ev, 0); // se pedido não requisita serviços
 					}else if(s.isRequestSource() && nd.getId()!=s.getFrom() && s.isRequestDestination() && nd.getId()!=s.getTo()){
-						cplex.addEq(ev, 0);
+						cplex.addEq(ev, 0); // se nãorequisita serviços
 					}
-					else if(s.isRequestSource() && nd.getId()==s.getFrom()){
-						if(!s.isRequestDestination())
-							ev.addTerm(1*s.getBandwidth(),a[s.getRequestID()][nd.getId()][s.getTo()]);
+					else if(s.isRequestSource() && nd.getId()==s.getFrom()){ // como é a origem, então o nd poderá ser igual ao s.getFrom
+						if(!s.isRequestDestination()) // se é origem do pedido e não é destino
+							ev.addTerm(1*s.getBandwidth(),a[s.getRequestID()][nd.getId()][s.getTo()]); // vai produzir para o próximo serviço a ser requisitado
 						cplex.addEq(ev, s.getBandwidth());
 					}
-					else if(s.isRequestDestination() && nd.getId()==s.getTo()){
-						if(!s.isRequestSource())
-							ev.addTerm(-1*s.getBandwidth(),a[s.getRequestID()][nd.getId()][s.getFrom()]);
+					else if(s.isRequestDestination() && nd.getId()==s.getTo()){ // como é destino, o n poderá ser igual ao s.getTo
+						if(!s.isRequestSource()) // se não for a origem do pedido, vai consumir...
+							ev.addTerm(-1*s.getBandwidth(),a[s.getRequestID()][nd.getId()][s.getFrom()]); // vai consumir o que veio do serviço anterior
 						cplex.addEq(ev, -1* s.getBandwidth());
 					}
 					else{
@@ -414,9 +414,34 @@ public class NFV_MCFPhiSolver {
 			}
 		}
 
+	//	if(this.randomSRRequests == true)
+	//	{
+			/*
+			Random random = new Random();
+
+			for(NFRequest request : requests.values())
+			{
+				List<Integer> requested = request.getServiceList();
+				for(int i = 0; i < requested.size(); i++)
+				{
+					int randomNode = random.nextInt(nodesNumber);
+
+					for(int j = 0; j < nodesNumber; j++)
+					{
+						if(randomNode != j)
+						{
+							cplex.addEq(a[request.getId()][j][requested.get(i)],0);
+						}
+					}
+				}
+			}
+			 */
+	//	}
+
 		if(this.mptcpenabled == false)
 		{
 			HashMap<NFRequestSegment,HashMap<Arc, IloIntVar>> beta = new HashMap<NFRequestSegment,HashMap<Arc, IloIntVar>>();
+			System.out.println("Applying Betas");
 
 			for (NFRequest request : requests.values()) {
 				for (NFRequestSegment s : request.getRequestSegments()) {
@@ -443,13 +468,9 @@ public class NFV_MCFPhiSolver {
 			}
 		}
 
-
-		// Saves the model
-		cplex.exportModel("phigammaSolver.lp");
 		OptimizationResultObject object = new OptimizationResultObject(nodesNumber);
 		// Solve
 		cplex.solve();
-
 		//===================================================================================================
 		
 		// SAVE RESULTS
@@ -494,7 +515,7 @@ public class NFV_MCFPhiSolver {
 					}
 				}
 			}
-			object.setPhiValue(simul.congestionMeasure(loads,demands));
+			simul.setLoads(loads);
 			object.setLinkLoads(u);
 
 			double[] uNodes = new double[nodesNumber];
@@ -510,12 +531,15 @@ public class NFV_MCFPhiSolver {
 			object.setLoadValue(res);
 
 			this.loads = new NetworkLoads(u, topology);
-			this.loads.printLoads();
-
 			HashMap<Integer, Integer> servicesDeployed = new HashMap<>();
 			servicesDeployed = getServicesDeployed(this.nodesMap.getNodes());
 			object.setServicesDeployed(servicesDeployed);
 
+			double phiValue = simul.congestionMeasure(loads,demands);
+			double mlu = this.loads.getMLU();
+			System.out.println("MLU" + mlu);
+			object.setPhiValue(phiValue);
+			System.out.println("PHI: " + phiValue);
 			boolean nodesInfo = allServicesDeployed(this.nodesMap.getNodes());
 			object.setAllservicesDeployed(nodesInfo);
 		}
@@ -699,5 +723,13 @@ public class NFV_MCFPhiSolver {
 
 	public void setAlpha(double alpha) {
 		this.alpha = alpha;
+	}
+
+	public boolean isRandomSRRequests() {
+		return randomSRRequests;
+	}
+
+	public void setRandomSRRequests(boolean randomSRRequests) {
+		this.randomSRRequests = randomSRRequests;
 	}
 }

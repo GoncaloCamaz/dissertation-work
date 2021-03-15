@@ -3,10 +3,7 @@ package pt.uminho.algoritmi.netopt.nfv.optimization.Utils;
 import pt.uminho.algoritmi.netopt.nfv.NFVState;
 import pt.uminho.algoritmi.netopt.nfv.optimization.NFVRequestConfiguration;
 import pt.uminho.algoritmi.netopt.ospf.simulation.NetworkTopology;
-import pt.uminho.algoritmi.netopt.ospf.simulation.net.NetNode;
 import pt.uminho.algoritmi.netopt.ospf.simulation.sr.Flow;
-import pt.uminho.algoritmi.netopt.ospf.simulation.sr.LabelPath;
-import pt.uminho.algoritmi.netopt.ospf.simulation.sr.Segment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,45 +13,39 @@ public class SolutionDecoders
     public static Request decodeRequests(NFVRequestConfiguration req)
     {
         int origin = req.getRequestOrigin();
-        NetNode source = new NetNode(origin);
         int destination = req.getRequestDestination();
-        NetNode dest = new NetNode(destination);
         double bandwidth = req.getBandwidth();
         List<Integer> srPath = req.genSRPath();
-        LabelPath path = new LabelPath(source,dest);
-
-        ArrayList<Segment> segments = new ArrayList<>();
         int old = -1;
-        int it = 0;
-        int i;
         List<Flow> flows = new ArrayList<>();
-        for(int index = 0; index < srPath.size(); index++)
+        for(int i = 0; i <srPath.size(); i++)
         {
-            i = srPath.get(index);
-            if(i != old)
+            int node = srPath.get(i);
+            if(old == -1)
             {
-                if(i != origin && i != destination || i == origin && old != -1 || i == destination && destination != origin && it < srPath.size())
-                {
-                    Segment s = new Segment(String.valueOf(i), Segment.SegmentType.NODE);
-                    s.setDstNodeId(i);
-                    if( old == -1)
-                    {
-                        s.setSrcNodeId(origin);
-                    }
-                    else
-                    {
-                        s.setSrcNodeId(old);
-                    }
-                    segments.add(s);
-                    Flow f = new Flow(s.getSrcNodeId(), s.getDstNodeId(), Flow.FlowType.NFV, false, bandwidth);
-                    flows.add(f);
-                }
-                old = i;
+                Flow f = new Flow(origin,node, Flow.FlowType.NFV,false, bandwidth);
+                flows.add(f);
+                old = node;
             }
-            it++;
+            else
+            {
+                Flow f = new Flow(old,node, Flow.FlowType.NFV,false, bandwidth);
+                flows.add(f);
+                old = node;
+            }
         }
-        path.setLabels(segments);
-        Request request = new Request(req.getRequestID(),flows,path);
+        Flow f = new Flow(old, destination, Flow.FlowType.NFV, false, bandwidth);
+        flows.add(f);
+
+        List<Flow> updatedFlows = new ArrayList<>();
+        for(Flow fl : flows)
+        {
+            if(fl.getSource() != fl.getDestination())
+            {
+                updatedFlows.add(fl);
+            }
+        }
+        Request request = new Request(req.getRequestID(),flows);
 
         return request;
     }

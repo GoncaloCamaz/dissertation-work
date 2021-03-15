@@ -20,10 +20,7 @@ import pt.uminho.algoritmi.netopt.ospf.simulation.net.NetGraph;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static pt.uminho.algoritmi.netopt.nfv.optimization.Utils.ConfigurationSolutionSaver.saveToCSV;
 import static pt.uminho.algoritmi.netopt.ospf.utils.io.GraphReader.readGML;
@@ -39,6 +36,8 @@ public class NFV_MCFPMLUSolver
     private boolean mptcpenabled;
     private boolean saveLoads;
     private boolean saveConfigurations;
+    private boolean randomSRRequests;
+
 
     public NFV_MCFPMLUSolver(NetworkTopology topology, NFServicesMap servicesMap, NFRequestsMap r,
                              NFNodesMap n) {
@@ -46,7 +45,7 @@ public class NFV_MCFPMLUSolver
         this.services = servicesMap;
         this.NFRequestsMap = r;
         this.nodesMap = n;
-        this.cplexTimeLimit = 86400;
+        this.cplexTimeLimit = 6400;
         this.mptcpenabled = true;
         this.setSaveLoads(true);
         this.saveConfigurations = false;
@@ -63,18 +62,21 @@ public class NFV_MCFPMLUSolver
         this.saveConfigurations = false;
     }
     public static void main(String[] args) {
-        String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.nodes";// args[0];
-        String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/abilene/abilene.edges";//args[1];
+
+        String nodesFile ="/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.nodes";// args[0];
+        String edgesFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/30_2/isno_30_2.edges";//args[1];
         String topoFile = "/Users/gcama/Desktop/Dissertacao/Work/Framework/topos/BT Europe/BtEurope.gml";
-        String servicesFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\frameworkConfiguration_BTEurope.json";
-        String requests = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\pedidosBTEurope_1200.csv";
+        String servicesFile = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\frameworkConfiguration.json";
+        String requests = "C:\\Users\\gcama\\Desktop\\Dissertacao\\Work\\Framework\\NetOpt-master\\pedidos300.csv";
 
         try {
-            InputStream inputStream = new FileInputStream(topoFile);
-            NetGraph netgraph = readGML(inputStream);
+            /** GML
+             *  InputStream inputStream = new FileInputStream(topoFile);
+             *  NetGraph netgraph = readGML(inputStream);
+             *  NetworkTopology topology = new NetworkTopology(netgraph);
+             */
 
-            NetworkTopology topology = new NetworkTopology(netgraph);
-            //NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
+            NetworkTopology topology = new NetworkTopology(nodesFile, edgesFile);
             NFVState state = new NFVState(servicesFile, requests);
             NFServicesMap services = state.getServices();
             NFNodesMap map = state.getNodes();
@@ -87,25 +89,33 @@ public class NFV_MCFPMLUSolver
             for (int i = 0; i < nodesNumber; i++)
                 for (int j = 0; j < nodesNumber; j++) {
                     if (capacity[i][j] > 0) {
-                        Arc a = new Arc(arcID, i, j, 1000);
+                        Arc a = new Arc(arcID, i, j, capacity[i][j]);
                         arcID++;
                         arcs.add(a);
+                        topology.getNetGraph().setBandwidth(i,j,capacity[i][j]);
+
                     }
                 }
 
             NFV_MCFPMLUSolver solver = new NFV_MCFPMLUSolver(topology, services, req, map);
+            solver.setRandomSRRequests(false);
             solver.setSaveLoads(true);
             solver.setSaveConfigurations(true);
-            solver.setCplexTimeLimit(800);
+            solver.setMptcpenabled(false);
+            solver.setCplexTimeLimit(60);
             OptimizationResultObject obj = solver.optimize();
-            saveToCSV(obj,arcs,map,"MLU_allAvailable");
-            OSPFWeights res = new OSPFWeights(topology.getDimension());
-            ConfigurationSolutionSaver.saveToJSON(obj,arcs,map,"Result",res,0,0);
+            System.out.println("MLU: " + obj.getMlu());
+            System.out.println("MNU: " + obj.getMnu());
+
+      //      saveToCSV(obj,arcs,map,"MLU_allAvailable");
+        //    OSPFWeights res = new OSPFWeights(topology.getDimension());
+        //    ConfigurationSolutionSaver.saveToJSON(obj,arcs,map,"Result",res,0,0);
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
     public int getCplexTimeLimit() {
         return cplexTimeLimit;
     }
@@ -275,6 +285,7 @@ public class NFV_MCFPMLUSolver
 
         if(this.mptcpenabled == false)
         {
+            System.out.println("Applying Betas");
             HashMap<NFRequestSegment,HashMap<Arc, IloIntVar>> beta = new HashMap<NFRequestSegment,HashMap<Arc, IloIntVar>>();
 
             for (NFRequest request : requests.values()) {
@@ -393,16 +404,34 @@ public class NFV_MCFPMLUSolver
             }
         }
 
+        if(this.randomSRRequests == true)
+        {
+            Random random = new Random();
 
+            for(NFRequest request : requests.values())
+            {
+                List<Integer> requested = request.getServiceList();
+                for(int i = 0; i < requested.size(); i++)
+                {
+                    int randomNode = random.nextInt(nodesNumber);
 
-        // Saves the model
-        //cplex.exportModel("mlumnuSolver.lp");
+                    for(int j = 0; j < nodesNumber; j++)
+                    {
+                        if(randomNode != j)
+                        {
+                            cplex.addEq(a[request.getId()][j][requested.get(i)],0);
+                        }
+                    }
+                }
+            }
+        }
+
         OptimizationResultObject object = new OptimizationResultObject(nodesNumber);
+
         // Solve
         cplex.solve();
 
         //===================================================================================================
-
         // SAVE RESULTS
         double res = cplex.getObjValue();
         if (this.saveLoads) {
@@ -430,13 +459,11 @@ public class NFV_MCFPMLUSolver
             object.setLinkLoads(u);
 
             double mnuVal = cplex.getValue(mnu);
-            object.setMnu(mnuVal / nodesNumber);
+            object.setMnu(mnuVal);
 
             object.setLoadValue(res);
 
             this.loads = new NetworkLoads(u, topology);
-            this.loads.printLoads();
-
             HashMap<Integer, Integer> servicesDeployed = new HashMap<>();
             servicesDeployed = getServicesDeployed(this.nodesMap.getNodes());
             object.setServicesDeployed(servicesDeployed);
@@ -446,6 +473,7 @@ public class NFV_MCFPMLUSolver
         }
 
         NFVRequestsConfigurationMap configurationMap = new NFVRequestsConfigurationMap();
+
         // if true, save NFV Configurations
         if(isSaveConfigurations())
         {
@@ -617,5 +645,13 @@ public class NFV_MCFPMLUSolver
 
     public void setMptcpenabled(boolean mptcpenabled) {
         this.mptcpenabled = mptcpenabled;
+    }
+
+    public boolean isRandomSRRequests() {
+        return randomSRRequests;
+    }
+
+    public void setRandomSRRequests(boolean randomSRRequests) {
+        this.randomSRRequests = randomSRRequests;
     }
 }
