@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Public License
  *  along with this code.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  @author Vítor Pereira
+ *  @author Vï¿½tor Pereira
  ******************************************************************************/
 
 package pt.uminho.algoritmi.netopt.cplex;
@@ -389,18 +389,18 @@ public class NFV_MCFPhiSolver {
 
 
 					if(s.isRequestSource() && nd.getId()==s.getFrom() && s.isRequestDestination() && nd.getId()==s.getTo()){
-						cplex.addEq(ev, 0); // se pedido não requisita serviços
+						cplex.addEq(ev, 0);
 					}else if(s.isRequestSource() && nd.getId()!=s.getFrom() && s.isRequestDestination() && nd.getId()!=s.getTo()){
-						cplex.addEq(ev, 0); // se nãorequisita serviços
+						cplex.addEq(ev, 0);
 					}
-					else if(s.isRequestSource() && nd.getId()==s.getFrom()){ // como é a origem, então o nd poderá ser igual ao s.getFrom
-						if(!s.isRequestDestination()) // se é origem do pedido e não é destino
-							ev.addTerm(1*s.getBandwidth(),a[s.getRequestID()][nd.getId()][s.getTo()]); // vai produzir para o próximo serviço a ser requisitado
+					else if(s.isRequestSource() && nd.getId()==s.getFrom()){ 
+						if(!s.isRequestDestination())
+							ev.addTerm(1*s.getBandwidth(),a[s.getRequestID()][nd.getId()][s.getTo()]);
 						cplex.addEq(ev, s.getBandwidth());
 					}
-					else if(s.isRequestDestination() && nd.getId()==s.getTo()){ // como é destino, o n poderá ser igual ao s.getTo
-						if(!s.isRequestSource()) // se não for a origem do pedido, vai consumir...
-							ev.addTerm(-1*s.getBandwidth(),a[s.getRequestID()][nd.getId()][s.getFrom()]); // vai consumir o que veio do serviço anterior
+					else if(s.isRequestDestination() && nd.getId()==s.getTo()){ 
+						if(!s.isRequestSource())
+							ev.addTerm(-1*s.getBandwidth(),a[s.getRequestID()][nd.getId()][s.getFrom()]);
 						cplex.addEq(ev, -1* s.getBandwidth());
 					}
 					else{
@@ -414,9 +414,8 @@ public class NFV_MCFPhiSolver {
 			}
 		}
 
-	//	if(this.randomSRRequests == true)
-	//	{
-			/*
+		if(this.randomSRRequests == true)
+		{
 			Random random = new Random();
 
 			for(NFRequest request : requests.values())
@@ -435,8 +434,7 @@ public class NFV_MCFPhiSolver {
 					}
 				}
 			}
-			 */
-	//	}
+		}
 
 		if(this.mptcpenabled == false)
 		{
@@ -525,7 +523,7 @@ public class NFV_MCFPhiSolver {
 				val += cplex.getValue(gamma_n.get(node.getId()));
 				uNodes[node.getId()] = utNode;
 			}
-			object.setGammaValue(val / nodesNumber);
+			object.setGammaValue(val);
 
 			object.setNodeUtilization(uNodes);
 			object.setLoadValue(res);
